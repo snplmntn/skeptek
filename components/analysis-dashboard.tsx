@@ -5,6 +5,7 @@ import React from "react"
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Check, AlertTriangle, Play } from 'lucide-react';
 
 interface AnalysisDashboardProps {
   search: { title: string; url: string };
@@ -116,8 +117,8 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
                 <h3 className="text-sm font-semibold text-emerald-700 mb-2">Verified Strengths</h3>
                 <ul className="space-y-1 text-sm text-slate-700">
                   {product.pros.map((pro) => (
-                    <li key={pro} className="flex gap-2">
-                      <span className="text-emerald-600 flex-shrink-0">✓</span>
+                    <li key={pro} className="flex gap-2 items-start">
+                      <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
                       <span>{pro}</span>
                     </li>
                   ))}
@@ -127,8 +128,8 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">Considerations</h3>
                 <ul className="space-y-1 text-sm text-slate-700">
                   {product.cons.map((con) => (
-                    <li key={con} className="flex gap-2">
-                      <span className="text-amber-600 flex-shrink-0">⚠</span>
+                    <li key={con} className="flex gap-2 items-start">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                       <span>{con}</span>
                     </li>
                   ))}
@@ -153,9 +154,7 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
               >
                 {/* Placeholder for video thumbnail */}
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center">
-                  <svg className="h-8 w-8 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  <Play className="w-8 h-8 text-slate-600 opacity-80" fill="currentColor" />
                 </div>
 
                 {/* Timestamp Badge */}

@@ -24,7 +24,18 @@ Continue building your app on:
 
 ## How It Works
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+Skeptek operates as a "Precision Optics" engine for product intelligence, filtering out noise to find the signal.
+
+1.  **The Fan-Out (Data Gathering)**:
+    *   **MarketMercenary**: Scrapes official specs and pricing from varied retailers (Shopee, Amazon).
+    *   **RedditScout**: Aggregates real user discussions using the **Reddit API** (`asyncpraw`), filtering for high-value comments.
+    *   **VideoSniper**: Analyzes YouTube transcripts to find timestamps where reviewers discuss physical defects (hinges, scratches).
+
+2.  **The Logic (Gemini 3.0 Agents)**:
+    *   **Global Sentry** (`gemini-3.0-flash`): Checks voltage/region compatibility and estimates import taxes.
+    *   **Arbitrage Detector** (`gemini-3.0-pro`): Detects if a product is a dropshipped white-label item by reverse-searching images.
+    *   **The Watcher** (`gemini-3.0-pro-vision`): Watches 10s video clips to visually confirm defects reported in text.
+    *   **The Judge** (`gemini-3.0-pro`): Synthesizes all data into a final "Truth Score" and verdict.
+
+3.  **The Presentation**:
+    *   A Next.js frontend displays the "Truth Score", verified pros/cons, and interactive fairness meter.

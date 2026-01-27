@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ForensicLensLoader } from '@/components/forensic-lens-loader';
+import Link from 'next/link';
 import { FocalAlignmentLoader } from '@/components/focal-alignment-loader'; // Import FocalAlignmentLoader
 
 interface LensSearchProps {
   onSearch: (title: string, url: string) => void;
 }
+
 
 const recentScans = [
   { name: 'Sony WH-1000XM5', score: 9.2, status: 'verified' },
@@ -20,7 +21,6 @@ const recentScans = [
 
 export function LensSearch({ onSearch }: LensSearchProps) {
   const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [displayedScans, setDisplayedScans] = useState<typeof recentScans>([]);
   const [scanIndex, setScanIndex] = useState(0);
 
@@ -43,26 +43,16 @@ export function LensSearch({ onSearch }: LensSearchProps) {
 
   const handleSearch = () => {
     if (query.trim()) {
-      setIsLoading(true);
-      setTimeout(() => {
-        onSearch(query, `/product/${query.toLowerCase().replace(/\s+/g, '-')}`);
-        setIsLoading(false);
-      }, 4000);
+      onSearch(query, `/product/${query.toLowerCase().replace(/\s+/g, '-')}`);
     }
   };
 
   const handleExampleClick = (example: string) => {
     setQuery(example);
-    setIsLoading(true);
-    setTimeout(() => {
-      onSearch(example, `/product/${example.toLowerCase().replace(/\s+/g, '-')}`);
-      setIsLoading(false);
-    }, 4000);
+    // Add small delay to let state update reflect in UI inputs if needed, 
+    // or just call immediately. Calling immediately for responsiveness.
+    onSearch(example, `/product/${example.toLowerCase().replace(/\s+/g, '-')}`);
   };
-
-  if (isLoading) {
-    return <ForensicLensLoader />;
-  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 py-16">
@@ -165,10 +155,13 @@ export function LensSearch({ onSearch }: LensSearchProps) {
         </div>
 
         {/* Minimalist Footer */}
-        <div className="border-t border-slate-200 pt-8 flex justify-center gap-6 text-xs text-slate-600">
-          <button className="hover:text-slate-900 transition-colors">How it Works</button>
-          <span className="text-slate-300">•</span>
-          <button className="hover:text-slate-900 transition-colors">Install Extension</button>
+        <div className="border-t border-slate-200 pt-8 flex justify-center pb-8">
+          <Link href="/how-it-works">
+            <Button variant="outline" className="gap-2 rounded-full border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 shadow-sm transition-all">
+              <span className="font-semibold">How Skeptek Works</span>
+              <span className="text-slate-400">→</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
