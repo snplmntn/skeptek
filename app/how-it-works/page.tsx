@@ -50,9 +50,8 @@ export default function HowItWorks() {
                 <p className="text-slate-600 leading-relaxed mb-6">
                     Our <strong>AI Vision</strong> watches video reviews frame-by-frame. It spots physical defects—like a wobbly hinge or cheap plastic—that text reviews often miss. We also reverse-search images to detect overpriced rebrands.
                 </p>
-                <div className="flex flex-wrap gap-2">
-                    <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-md text-xs font-bold border border-emerald-100">✓ Dropship Detection</span>
-                    <span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-md text-xs font-bold border border-amber-100">⚠ Defect Spotter</span>
+                <div className="bg-emerald-50 text-emerald-700 px-4 py-3 rounded-lg text-sm font-medium border border-emerald-100">
+                    We spot the red flags—like dropshipping and defects—that glossy photos hide.
                 </div>
             </div>
 
@@ -85,9 +84,9 @@ export default function HowItWorks() {
                 <p className="text-slate-600 leading-relaxed mb-6">
                     We synthesize all this data into a single <strong>Trust Score</strong>. You get a clear, unbiased recommendation: is this product a hidden gem, or is it just great marketing?
                 </p>
-                <div className="inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-lg">
-                    <span>Trust Score:</span>
-                    <span className="text-emerald-400">9.2/10</span>
+                <div className="bg-purple-50 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium border border-purple-100 flex items-center justify-between">
+                    <span>A definitive verdict.</span>
+                    <span className="bg-slate-900 text-emerald-400 text-xs px-2 py-1 rounded font-bold">9.2/10</span>
                 </div>
             </div>
         </div>
