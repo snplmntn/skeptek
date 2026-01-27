@@ -84,9 +84,8 @@ export default function HowItWorks() {
                 <p className="text-slate-600 leading-relaxed mb-6">
                     We synthesize all this data into a single <strong>Trust Score</strong>. You get a clear, unbiased recommendation: is this product a hidden gem, or is it just great marketing?
                 </p>
-                <div className="bg-purple-50 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium border border-purple-100 flex items-center justify-between">
-                    <span>A definitive verdict.</span>
-                    <span className="bg-slate-900 text-emerald-400 text-xs px-2 py-1 rounded font-bold">9.2/10</span>
+                <div className="bg-purple-50 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium border border-purple-100">
+                    We give you a definitive answer—no fluff, just facts.
                 </div>
             </div>
         </div>
