@@ -85,7 +85,7 @@ export default function HowItWorks() {
                     We synthesize all this data into a single <strong>Trust Score</strong>. You get a clear, unbiased recommendation: is this product a hidden gem, or is it just great marketing?
                 </p>
                 <div className="bg-purple-50 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium border border-purple-100">
-                    We give you a definitive answer—no fluff, just facts.
+                    Get a final, data-backed verdict that weighs every pro and con so you can buy with total confidence.
                 </div>
             </div>
         </div>
