@@ -63,7 +63,7 @@ export function LensSearch({ onSearch }: LensSearchProps) {
             Skeptek
           </h1>
           <p className="text-base font-medium text-slate-600">
-            Precision Optics for Product Intelligence
+            Be Skeptek. Question Everything.
           </p>
         </div>
 

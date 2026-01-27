@@ -1,43 +1,66 @@
 'use client';
 
-import React from "react"
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, AlertTriangle, Play } from 'lucide-react';
+import { Check, AlertTriangle, Play, HelpCircle } from 'lucide-react';
 
 interface AnalysisDashboardProps {
   search: { title: string; url: string };
+  data?: any; // Accepting the AI result
   onBack: () => void;
 }
 
-export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardProps) {
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
 
-  const product = {
+  // Use real data if available, otherwise fallback to mock (or empty)
+  const product = data ? {
+    name: data.productName || search.title,
+    rating: data.score || 0,
+    recommendation: (data.recommendation || (data.score > 80 ? 'BUY' : data.score > 50 ? 'CONSIDER' : 'AVOID')) as 'BUY' | 'CONSIDER' | 'AVOID',
+    verdict: data.verdict || "Analysis Inconclusive",
+    verdictType: (data.score > 80 ? 'positive' : data.score > 60 ? 'caution' : 'alert') as 'positive' | 'caution' | 'alert',
+    pros: data.pros || [],
+    cons: data.cons || [],
+  } : {
     name: search.title,
     rating: 8.2,
+    recommendation: 'CONSIDER' as const,
     verdict: 'Exceptional build quality with premium features, but pricing is 25% above fair market value.',
-    verdictType: 'positive', // positive, caution, alert
+    verdictType: 'positive' as const,
     pros: ['Superior durability', 'Industry-leading performance', 'Premium materials'],
     cons: ['Price premium justified', 'Steeper learning curve'],
   };
 
-  const videos = [
-    { id: 'hinge', name: 'Hinge Durability', timestamp: '02:45', tag: '✅ Confirmed', tagType: 'success' },
-    { id: 'water', name: 'Waterproof Test', timestamp: '04:12', tag: '✅ Passed', tagType: 'success' },
-    { id: 'drop', name: 'Drop Test 6ft', timestamp: '01:30', tag: '⚠ Minor Issue', tagType: 'warning' },
-    { id: 'screen', name: 'Scratch Resistance', timestamp: '03:05', tag: '✅ Excellent', tagType: 'success' },
-  ];
+  // Use real video data if available from the Video Scout
+  const videos = data?.sources?.video?.length > 0 ? data.sources.video.map((v: { id: string; title: string; url: string; thumbnail: string; moment: string; tag: string; tagType: 'success' | 'warning' | 'alert' }) => ({
+    id: v.id,
+    title: v.title,
+    moment: v.moment,
+    tag: v.tag,
+    tagType: v.tagType,
+    thumbnail: v.thumbnail,
+    url: v.url
+  })) : [];
 
-  const fairnessData = {
+  // Use real Price Analysis if available
+  const fairnessData = data?.priceAnalysis ? {
+    min: 0,
+    max: data.priceAnalysis.fairValueMax * 1.5,
+    fairValue: { 
+        min: data.priceAnalysis.fairValueMin, 
+        max: data.priceAnalysis.fairValueMax 
+    },
+    current: data.priceAnalysis.currentPrice,
+    url: data.priceAnalysis.sourceUrl,
+  } : {
     min: 0,
     max: 100,
     fairValue: { min: 30, max: 40 },
     current: 50,
+    url: null,
   };
 
   const getVerdictColor = () => {
@@ -51,6 +74,20 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
       default:
         return 'bg-blue-50 border-blue-200';
     }
+  };
+
+  const getRecommendationBadge = () => {
+      const styles = {
+         BUY: 'bg-emerald-600 text-white shadow-emerald-200',
+         CONSIDER: 'bg-amber-500 text-white shadow-amber-200',
+         AVOID: 'bg-rose-600 text-white shadow-rose-200' 
+      };
+      
+      return (
+        <span className={`px-4 py-1 rounded-full text-xs font-bold tracking-widest shadow-lg ${styles[product.recommendation]}`}>
+            {product.recommendation}
+        </span>
+      );
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -87,10 +124,11 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
                   cy="50"
                   r="45"
                   fill="none"
-                  stroke="#2563eb"
+                  stroke={product.verdictType === 'alert' ? '#e11d48' : '#2563eb'}
                   strokeWidth="6"
-                  strokeDasharray={`${(product.rating / 10) * 282.7} 282.7`}
+                  strokeDasharray={`${(product.rating / 100) * 282.7} 282.7`}
                   strokeLinecap="round"
+                  transform="rotate(-90 50 50)"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
@@ -107,7 +145,10 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
         <Card className={`mb-8 p-8 border ${getVerdictColor()}`}>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 mb-2">The Bottom Line</h2>
+              <div className="flex items-center gap-3 mb-3">
+                  <h2 className="text-lg font-semibold text-slate-900">The Bottom Line</h2>
+                  {getRecommendationBadge()}
+              </div>
               <p className="text-slate-700 leading-relaxed">
                 {product.verdict}
               </p>
@@ -116,7 +157,7 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
               <div>
                 <h3 className="text-sm font-semibold text-emerald-700 mb-2">Verified Strengths</h3>
                 <ul className="space-y-1 text-sm text-slate-700">
-                  {product.pros.map((pro) => (
+                  {product.pros.map((pro: string) => (
                     <li key={pro} className="flex gap-2 items-start">
                       <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
                       <span>{pro}</span>
@@ -127,7 +168,7 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">Considerations</h3>
                 <ul className="space-y-1 text-sm text-slate-700">
-                  {product.cons.map((con) => (
+                  {product.cons.map((con: string) => (
                     <li key={con} className="flex gap-2 items-start">
                       <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                       <span>{con}</span>
@@ -139,27 +180,67 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
           </div>
         </Card>
 
+        {/* Reddit Sources */}
+        {data?.sources?.reddit?.sources && data.sources.reddit.sources.length > 0 && (
+          <Card className="mb-8 p-6 border-slate-200">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Community Discussion Sources</h3>
+            <div className="flex flex-wrap gap-3">
+              {data.sources.reddit.sources.map((source: { title: string; url: string }) => (
+                <a
+                  key={source.url}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-orange-50/50 text-slate-500 hover:text-orange-700 text-xs font-medium rounded-lg border border-slate-100 hover:border-orange-200 transition-all group"
+                >
+                  <img 
+                    src={`https://www.google.com/s2/favicons?domain=${new URL(source.url).hostname}&sz=32`} 
+                    alt="site icon"
+                    className="w-4 h-4 grayscale group-hover:grayscale-0 transition-all opacity-70 group-hover:opacity-100"
+                  />
+                  <span className="max-w-[200px] truncate">{source.title}</span>
+                  <span className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-orange-600">↗</span>
+                </a>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* Forensic Video Reel */}
         <div className="mb-8">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Forensic Video</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {videos.map((video) => (
+          {videos.length === 0 ? (
+             <div className="p-6 bg-slate-100 rounded-lg text-center text-slate-500 text-sm">
+                No video reviews analyzed for this product.
+             </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {videos.map((video: { id: string; title: string; url: string; thumbnail: string; moment: string; tag: string; tagType: string }) => (
               <button
                 key={video.id}
-                onClick={() => setSelectedVideo(video.id)}
+                onClick={() => window.open(video.url, '_blank')}
                 onMouseMove={handleMouseMove}
                 onMouseEnter={() => setHoveredVideo(video.id)}
                 onMouseLeave={() => setHoveredVideo(null)}
-                className="group relative aspect-video rounded-lg overflow-hidden bg-slate-200 hover:ring-2 hover:ring-blue-600 transition-all cursor-pointer"
+                className="group relative aspect-video rounded-lg overflow-hidden bg-slate-900 border border-slate-200 hover:ring-2 hover:ring-blue-600 transition-all cursor-pointer shadow-sm"
               >
-                {/* Placeholder for video thumbnail */}
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center">
-                  <Play className="w-8 h-8 text-slate-600 opacity-80" fill="currentColor" />
+                {/* Thumbnail Image */}
+                <img 
+                  src={video.thumbnail} 
+                  alt={video.title}
+                  className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                />
+                
+                {/* Play Button Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/40 group-hover:scale-110 transition-transform">
+                     <Play className="w-5 h-5 text-white" fill="currentColor" />
+                  </div>
                 </div>
 
                 {/* Timestamp Badge */}
                 <div className="absolute bottom-2 right-2 bg-slate-900/80 text-white text-xs font-mono px-2 py-1 rounded">
-                  {video.timestamp}
+                  {video.moment}
                 </div>
 
                 {/* Status Tag */}
@@ -173,9 +254,9 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
                   {video.tag}
                 </div>
 
-                {/* Video Name - appears on hover */}
+                {/* Video Title - appears on hover */}
                 <div className="absolute inset-0 bg-slate-900/60 flex items-end p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-white text-sm font-medium">{video.name}</p>
+                  <p className="text-white text-sm font-medium">{video.title}</p>
                 </div>
 
                 {/* Magnifying Glass Lens Effect - appears on hover */}
@@ -198,11 +279,22 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
               </button>
             ))}
           </div>
+          )}
         </div>
 
         {/* Fairness Meter */}
         <div className="mb-12">
-          <h2 className="mb-6 text-lg font-semibold text-slate-900">Fairness Meter</h2>
+          <h2 className="mb-6 text-lg font-semibold text-slate-900 flex items-center gap-2">
+            Fairness Meter
+            <div className="group relative">
+                <HelpCircle className="w-4 h-4 text-slate-400 cursor-help" />
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-xl border border-slate-700">
+                    <p className="font-semibold mb-1 text-emerald-400">How is this calculated?</p>
+                    We analyze specs, build quality, and user sentiment. If a product has a low Trust Score (bad reputation), its "Fair Value" drops significantly, even if it's cheap.
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-800" />
+                </div>
+            </div>
+          </h2>
           <Card className="p-6 border-slate-200">
             <div className="space-y-4">
               {/* Scale Labels */}
@@ -248,23 +340,54 @@ export function AnalysisDashboard({ search, onBack }: AnalysisDashboardProps) {
                 )}
               </div>
 
-              {/* Legend */}
-              <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-slate-200">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="h-3 w-3 rounded-full bg-emerald-200" />
-                  <span className="text-slate-600">Estimated Fair Value: <span className="font-semibold text-slate-900">${fairnessData.fairValue.min}-${fairnessData.fairValue.max}</span></span>
+              {/* Legend with Tooltips */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-4 border-t border-slate-200">
+                <div className="flex items-center gap-2 text-sm group relative">
+                  <div className="h-3 w-3 rounded-full bg-emerald-200 shrink-0" />
+                  <span className="text-slate-600 border-b border-dotted border-slate-300 cursor-help">Estimated Fair Value</span>
+                  <HelpCircle className="w-3 h-3 text-slate-300" />
+                  
+                  <span className="font-semibold text-slate-900">${fairnessData.fairValue.min}-${fairnessData.fairValue.max}</span>
+                  
+                  {/* Tooltip */}
+                  <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 border border-slate-700">
+                    What this product <span className="text-emerald-400 font-bold">should cost</span> based on its actual quality, specs, and competitor pricing.
+                    <div className="absolute left-4 top-full border-4 border-transparent border-t-slate-800" />
+                  </div>
                 </div>
+
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="h-1 w-4 bg-blue-600" />
+                  <div className="h-1 w-4 bg-blue-600 shrink-0" />
                   <span className="text-slate-600">Current Price: <span className="font-semibold text-blue-600">${fairnessData.current}</span></span>
                 </div>
+
                 {fairnessData.current > fairnessData.fairValue.max && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-1 w-4 bg-rose-600" />
-                    <span className="text-slate-600">Premium: <span className="font-semibold text-rose-600">${fairnessData.current - fairnessData.fairValue.max}</span></span>
+                  <div className="flex items-center gap-2 text-sm group relative">
+                    <div className="h-1 w-4 bg-rose-600 shrink-0" />
+                    <span className="text-slate-600 border-b border-dotted border-slate-300 cursor-help">Overpriced by</span>
+                    <span className="font-semibold text-rose-600">${(fairnessData.current - fairnessData.fairValue.max).toFixed(2)}</span>
+                    
+                     {/* Tooltip */}
+                    <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 border border-slate-700">
+                        The "Premium" you are paying purely for the brand (or due to shortages). <span className="text-rose-400 font-bold">High premium = Bad Deal.</span>
+                        <div className="absolute left-4 top-full border-4 border-transparent border-t-slate-800" />
+                    </div>
                   </div>
                 )}
               </div>
+              
+              {/* View Deal Button */}
+              {fairnessData.url && (
+                <div className="mt-4 pt-4 border-t border-slate-200 flex justify-end">
+                  <Button 
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                    onClick={() => window.open(fairnessData.url, '_blank')}
+                  >
+                    View Deal <span className="text-xs opacity-75">↗</span>
+                  </Button>
+                </div>
+              )}
             </div>
           </Card>
         </div>

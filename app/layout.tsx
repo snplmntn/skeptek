@@ -12,10 +12,6 @@ export const metadata: Metadata = {
   description: 'Get honest, data-driven insights about products before you buy. Skeptek analyzes real reviews, pricing history, and video tests to help you make confident decisions.',
   generator: 'v0.app',
   keywords: ['product reviews', 'product comparison', 'consumer insights', 'price analysis', 'reliability ratings'],
-  icons: {
-    icon: '/icon.png',
-    apple: '/icon.png',
-  },
 };
 
 export const viewport = {
