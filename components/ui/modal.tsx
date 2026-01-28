@@ -47,7 +47,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleOverlayClick}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#0a0c10]/80 backdrop-blur-md"
           />
 
           {/* Modal Content */}
@@ -55,24 +55,24 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: "spring", duration: 0.3 }}
-            className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5"
+            transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
+            className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-card border border-border shadow-[0_0_50px_-12px_rgba(59,130,246,0.2)] backdrop-blur-xl ring-1 ring-primary/10"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-              <h3 className="text-lg font-semibold text-slate-900">
+            <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-muted/50">
+              <h3 className="text-lg font-semibold text-foreground tracking-tight">
                 {title}
               </h3>
               <button
                 onClick={onClose}
-                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="p-6">
+            <div className="p-6 text-muted-foreground">
               {children}
             </div>
           </motion.div>

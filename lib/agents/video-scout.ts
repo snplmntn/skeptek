@@ -19,26 +19,29 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
     const result = await withRetry(
       async () => {
         const prompt = `
-          Find grounded video reviews for: "${query}" on YouTube.
+          Find video reviews for: "${query}".
+          
+          SEARCH STRATEGY:
+          1. Look for YouTube links (youtube.com/watch, youtu.be).
+          2. Look for "Video" sections in Google Search results.
+          3. Look for Reddit threads that might *contain* video links (e.g. "Review of InPlay GS650").
           
           STRICT GROUNDING RULES:
-          1. **Use Search Results**: You must ONLY use data that appears in the Google Search results.
-          2. **Extract Real IDs**: multiple search results might be YouTube videos.
-             - Look for "youtube.com/watch?v=..."
-             - Look for "youtu.be/..."
-             - Look for Google redirects (vertexaisearch...)
-          3. **No Invention**: If you cannot find a link in the results, DO NOT invent one.
+          1. **NO INVENTION**: You must ONLY use links/IDs that appear in the search results.
+          2. **Link Extraction**: If you see a Google Redirect (vertexaisearch...), trust it if the context implies it's a video.
+          3. **Title Match**: The title must closely match the product.
           
           Format:
           [
             {
               "id": "11_CHAR_ID",
-              "title": "Exact Title from Search Result",
-              "url": "Original URL found"
+              "title": "Actual Title Found",
+              "url": "https://www.youtube.com/watch?v=..."
             }
           ]
         `;
 
+        // Strategy Pivot: Remove strict 'site:youtube.com' to allow finding videos via other platforms/aggregators
         return await geminiFlash.generateContent({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           tools: [{ googleSearch: {} }] as any, 

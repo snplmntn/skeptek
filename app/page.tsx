@@ -88,7 +88,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-background">
       <Navigation 
         currentView={currentView === 'analyzing' ? 'lens-search' : currentView as any} 
         onViewChange={handleViewChange} 
@@ -101,7 +101,7 @@ export default function Home() {
         
         {/* Loader State */}
         {currentView === 'analyzing' && (
-             <div className="fixed inset-0 z-50 bg-white">
+             <div className="fixed inset-0 z-50 bg-background">
                 <ForensicLensLoader 
                     isFinishing={isAnalysisFinishing}
                     onComplete={handleAnalysisComplete}
@@ -130,25 +130,35 @@ export default function Home() {
       <Modal 
         isOpen={isErrorOpen} 
         onClose={() => setIsErrorOpen(false)}
-        title="Analysis Interrupted"
+        title="Analysis Paused"
       >
-        <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <p className="text-sm font-medium">{errorMsg || "An unknown error occurred."}</p>
+        <div className="flex flex-col gap-6">
+            <div className="flex items-start gap-4 text-rose-500 bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">
+                <AlertCircle className="w-6 h-6 flex-shrink-0 mt-0.5" />
+                <div>
+                   <p className="text-sm font-bold uppercase tracking-wider mb-1">Insufficient Data</p>
+                   <p className="text-sm text-rose-400 font-medium">{errorMsg || "An unknown error occurred."}</p>
+                </div>
             </div>
             
-            <p className="text-slate-600 text-sm">
-                We couldn't find enough reliable data sources (Reddit/YouTube) to give you an honest verdict. 
-                Instead of hallucinating a result, we aborted the process.
+            <p className="text-muted-foreground text-sm leading-relaxed font-mono">
+                We couldn't verify enough reliable data sources regarding this product to generate a confident verdict. 
+                To ensure accuracy, the analysis was paused. Please try a different product or specific model name.
             </p>
 
-            <div className="flex justify-end gap-2 mt-2">
-                <Button variant="outline" onClick={() => setIsErrorOpen(false)}>
-                    Close
+            <div className="flex justify-end gap-3 mt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsErrorOpen(false)}
+                  className="rounded-xl border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                >
+                    Dismiss
                 </Button>
-                <Button onClick={() => setIsErrorOpen(false)}>
-                    Try Another Search
+                <Button 
+                  onClick={() => setIsErrorOpen(false)}
+                  className="rounded-xl bg-primary hover:bg-blue-500 text-white shadow-lg shadow-primary/20"
+                >
+                    Try New Search
                 </Button>
             </div>
         </div>

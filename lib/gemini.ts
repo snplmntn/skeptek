@@ -26,7 +26,7 @@ const safetySettings = [
 // The Flash model is used for high-volume text processing (Scouts)
 // SOTA 2026: gemini-1.5-flash provides 1500 req/day vs 20 req/day for flash-latest
 export const geminiFlash = genAI.getGenerativeModel({ 
-  model: "gemini-flash-latest", 
+  model: "gemini-3-flash-preview", 
   safetySettings,
   generationConfig: {
     temperature: 0.7, 
