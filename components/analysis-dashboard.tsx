@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, AlertTriangle, Play, HelpCircle, MessageSquare } from 'lucide-react';
+import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shield, Plus, Search, ExternalLink } from 'lucide-react';
 
 interface AnalysisDashboardProps {
   search: { title: string; url: string };
@@ -66,13 +66,13 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
   const getVerdictStyle = () => {
     switch (product.verdictType) {
       case 'positive':
-        return 'border-emerald-500/30 bg-emerald-500/5 text-emerald-200';
+        return 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-200';
       case 'caution':
-        return 'border-amber-500/30 bg-amber-500/5 text-amber-200';
+        return 'border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-200';
       case 'alert':
-        return 'border-rose-500/30 bg-rose-500/5 text-rose-200';
+        return 'border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-200';
       default:
-        return 'border-blue-500/30 bg-blue-500/5 text-blue-200';
+        return 'border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-200';
     }
   };
 
@@ -106,40 +106,62 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
       </div>
 
       {/* Sticky Glass Header */}
-      <div className="sticky top-0 z-40 forensic-glass border-b border-white/5">
+      {/* Sticky Glass Header */}
+      <div className="sticky top-[68px] z-40 forensic-glass border-b border-foreground/5 dark:border-white/5">
         <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
           <div className="flex-1">
             <Button
               variant="ghost"
               onClick={onBack}
-              className="mb-2 text-slate-400 hover:text-white text-xs font-mono uppercase tracking-widest gap-2 pl-0"
+              className="mb-2 text-muted-foreground hover:text-foreground text-xs font-mono uppercase tracking-widest gap-2 pl-0"
             >
-              <span className="opacity-50">←</span> Back to Search
+              <span className="opacity-50 group-hover:-translate-x-1 transition-transform">←</span> Back to Search
             </Button>
-            <h1 className="text-3xl font-black tracking-tight text-white">{product.name}</h1>
+            <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-white">{product.name}</h1>
           </div>
 
-          {/* Ring Chart Score */}
-          <div className="flex flex-col items-center">
-            <div className="relative h-20 w-20">
-              <svg className="h-full w-full drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke={product.verdictType === 'alert' ? '#f43f5e' : product.verdictType === 'positive' ? '#10b981' : '#f59e0b'}
-                  strokeWidth="6"
-                  strokeDasharray={`${(product.rating / 100) * 282.7} 282.7`}
-                  strokeLinecap="round"
-                  transform="rotate(-90 50 50)"
-                  className="transition-all duration-1000 ease-out"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-white font-mono leading-none tracking-tighter">{product.rating.toFixed(1)}</span>
-                <span className="text-[8px] font-mono text-slate-400 uppercase tracking-widest mt-0.5">Score</span>
+          {/* Right Section: Price, Deal & Score */}
+          <div className="flex items-center gap-6">
+            {fairnessData.current > 0 && (
+              <div className="hidden md:flex flex-col items-end gap-1">
+                <span className="text-xl font-black text-primary font-mono tracking-tighter italic">
+                  ${fairnessData.current}
+                </span>
+                {fairnessData.url && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-auto p-0 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                    onClick={() => window.open(fairnessData.url, '_blank')}
+                  >
+                    View Deal <ExternalLink className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Ring Chart Score */}
+            <div className="flex flex-col items-center">
+              <div className="relative h-20 w-20">
+                <svg className="h-full w-full drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeOpacity="0.05" strokeWidth="6" className="text-foreground" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke={product.verdictType === 'alert' ? '#f43f5e' : product.verdictType === 'positive' ? '#10b981' : '#f59e0b'}
+                    strokeWidth="6"
+                    strokeDasharray={`${(product.rating / 100) * 282.7} 282.7`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 50 50)"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-black text-foreground dark:text-white font-mono leading-none tracking-tighter">{product.rating.toFixed(1)}</span>
+                  <span className="text-[8px] font-mono text-muted-foreground uppercase tracking-widest mt-0.5">Score</span>
+                </div>
               </div>
             </div>
           </div>
@@ -156,35 +178,35 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                   <h2 className="text-xs font-mono uppercase tracking-[0.3em] text-slate-400">Our Verdict</h2>
                   {getRecommendationBadge()}
               </div>
-              <p className="text-lg font-medium leading-relaxed font-sans text-slate-100">
+              <p className="text-lg font-medium leading-relaxed font-sans text-foreground dark:text-slate-100">
                 {product.verdict}
               </p>
             </div>
             <div className="space-y-6">
               <div>
-                <h3 className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80 mb-3 flex items-center gap-2">
+                <h3 className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-500/80 mb-3 flex items-center gap-2">
                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 glow-sm" />
                    The Good
                 </h3>
-                <ul className="space-y-2 text-sm text-slate-300">
+                <ul className="space-y-2 text-sm text-foreground/80 dark:text-slate-300">
                   {product.pros.map((pro: string) => (
                     <li key={pro} className="flex gap-3 items-center">
                       <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="font-mono text-xs">{pro}</span>
+                      <span className="font-mono text-xs text-foreground dark:text-slate-200">{pro}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h3 className="text-[10px] font-mono uppercase tracking-widest text-amber-500/80 mb-3 flex items-center gap-2">
+                <h3 className="text-[10px] font-mono uppercase tracking-widest text-amber-600 dark:text-amber-500/80 mb-3 flex items-center gap-2">
                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 glow-sm" />
                    The Bad
                 </h3>
-                <ul className="space-y-2 text-sm text-slate-300">
+                <ul className="space-y-2 text-sm text-foreground/80 dark:text-slate-300">
                   {product.cons.map((con: string) => (
                     <li key={con} className="flex gap-3 items-center">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span className="font-mono text-xs">{con}</span>
+                      <span className="font-mono text-xs text-foreground dark:text-slate-200">{con}</span>
                     </li>
                   ))}
                 </ul>
@@ -206,7 +228,7 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                   key={source.url}
                   href={source.url}
                   target="_blank"
-                  className="inline-flex items-center gap-3 px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[11px] font-mono rounded-lg border border-white/5 hover:border-primary/50 transition-all group"
+                  className="inline-flex items-center gap-3 px-4 py-2 bg-foreground/5 dark:bg-white/5 hover:bg-foreground/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground dark:hover:text-white text-[11px] font-mono rounded-lg border border-foreground/5 dark:border-white/5 hover:border-primary/50 transition-all group"
                 >
                   <div className="relative w-3.5 h-3.5 flex-shrink-0">
                       <MessageSquare className="absolute inset-0 w-full h-full text-slate-600" />
@@ -249,9 +271,11 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                        <Play className="w-5 h-5 text-white" fill="currentColor" />
                     </div>
                   </div>
-                  <div className="absolute bottom-2 right-2 bg-slate-900/80 text-white text-xs font-mono px-2 py-1 rounded">
-                    {video.moment}
-                  </div>
+                  {video.moment && video.moment !== "0:00" && (
+                    <div className="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1.5">
+                      <Play className="w-2.5 h-2.5 fill-current" /> {video.moment}
+                    </div>
+                  )}
                   <div className={`absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full ${
                     video.tagType === 'success' ? 'bg-emerald-100 text-emerald-700' : 
                     video.tagType === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
@@ -293,30 +317,33 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                 </div>
             </div>
           </h2>
-          <div className="p-8 forensic-glass rounded-2xl border border-white/5 relative">
+          <div className="p-8 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden">
+            {/* Background Accent */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            
             
             {/* Visual Guide to the Graph */}
             <div className="mb-6 flex items-end justify-between px-2">
                 <div className="text-left">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-mono mb-1">Scale Start</p>
-                  <p className="text-lg font-mono text-slate-400">$0</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono mb-1">Scale Start</p>
+                  <p className="text-lg font-mono text-foreground">$0</p>
                 </div>
                  {/* Legend (Middle) */}
                  <div className="flex gap-6 pb-2">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] uppercase tracking-widest text-emerald-400">Fair Price</span>
+                        <span className="text-[10px] uppercase tracking-widest text-emerald-500 dark:text-emerald-400">Fair Price</span>
                     </div>
                     {fairnessData.current > fairnessData.fairValue.max && (
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-rose-500" />
-                            <span className="text-[10px] uppercase tracking-widest text-rose-400">Overpriced</span>
+                            <span className="text-[10px] uppercase tracking-widest text-rose-500 dark:text-rose-400">Overpriced</span>
                         </div>
                     )}
                  </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-mono mb-1">Scale End</p>
-                  <p className="text-lg font-mono text-slate-400">${Math.round(fairnessData.max)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono mb-1">Scale End</p>
+                  <p className="text-lg font-mono text-foreground">${Math.round(fairnessData.max)}</p>
                 </div>
             </div>
 
@@ -334,7 +361,7 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                      {/* Label Below */}
                      <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap z-10 flex flex-col items-center">
                         <div className="w-px h-2 bg-emerald-500/50" />
-                        <div className="bg-emerald-950 border border-emerald-500/50 text-emerald-200 px-3 py-1.5 rounded-lg text-xs font-mono font-bold shadow-xl">
+                        <div className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-500/50 dark:text-emerald-200 border px-3 py-1.5 rounded-lg text-xs font-mono font-bold shadow-xl">
                             FAIR: ${fairnessData.fairValue.min}-${fairnessData.fairValue.max}
                         </div>
                      </div>
@@ -350,8 +377,8 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                         <div className="w-px h-12 bg-blue-500/50 mb-[-2px] absolute bottom-full left-1/2 -translate-x-1/2" />
                         <div className={`px-4 py-2.5 rounded-xl border-2 shadow-2xl text-center flex flex-col gap-1 min-w-[100px] ${
                             fairnessData.current > fairnessData.fairValue.max 
-                            ? 'bg-rose-950 border-rose-500 text-rose-100' 
-                            : 'bg-blue-950 border-blue-500 text-white'
+                            ? 'bg-rose-100 border-rose-500 text-rose-900 dark:bg-rose-950 dark:text-rose-100' 
+                            : 'bg-blue-100 border-blue-500 text-blue-900 dark:bg-blue-950 dark:text-white'
                         }`}>
                             <span className="text-[10px] uppercase tracking-widest font-bold opacity-70">You Pay</span>
                             <span className="text-xl font-black font-mono tracking-tight">${fairnessData.current}</span>
@@ -371,9 +398,27 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                 )}
             </div>
               
+              {/* Price Health Summary */}
+              <div className="mt-8 mb-4 p-4 rounded-xl bg-foreground/5 border border-foreground/5 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                  <div className={`p-2 rounded-lg ${fairnessData.current > fairnessData.fairValue.max ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                      {fairnessData.current > fairnessData.fairValue.max ? <AlertTriangle className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
+                  </div>
+                  <div>
+                      <h4 className={`text-xs font-black uppercase tracking-widest mb-1 ${fairnessData.current > fairnessData.fairValue.max ? 'text-rose-500' : 'text-emerald-500'}`}>
+                          Price Health: {fairnessData.current > fairnessData.fairValue.max ? 'Overpriced' : 'Fair Market Value'}
+                      </h4>
+                      <p className="text-[11px] text-muted-foreground font-mono leading-relaxed max-w-xl">
+                          {fairnessData.current > fairnessData.fairValue.max 
+                            ? `Current pricing is $${fairnessData.current - fairnessData.fairValue.max} above the identified fair market valuation. Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
+                            : `The current list price of $${fairnessData.current} aligns with our forensic data model. This represents a transparent transaction with no identified "skeptic" red flags.`
+                          }
+                      </p>
+                  </div>
+              </div>
+
               {/* View Deal Button */}
               {fairnessData.url && (
-                <div className="mt-12 pt-6 border-t border-white/5 flex justify-end">
+                <div className="mt-12 pt-6 border-t border-foreground/5 dark:border-white/5 flex justify-end">
                   <Button 
                     size="sm"
                     className="bg-primary hover:bg-blue-500 text-white gap-3 rounded-xl px-6 font-mono text-[10px] tracking-widest uppercase py-6 pl-5"
@@ -392,6 +437,23 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
             </div>
           </div>
 
+        </div>
+
+        {/* Quick Nav: Search Again */}
+        <div className="mt-12 mb-24 flex flex-col items-center gap-6">
+            <div className="h-px w-24 bg-gradient-to-r from-transparent via-border to-transparent" />
+            <Button
+                onClick={onBack}
+                className="bg-primary hover:bg-blue-500 text-white px-12 py-8 rounded-2xl gap-4 group transition-all hover:scale-105 active:scale-95 shadow-[0_20px_50px_rgba(59,130,246,0.2)] border-none"
+            >
+                <div className="bg-white/10 p-2.5 rounded-xl group-hover:bg-white/20 transition-colors">
+                    <Plus className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] opacity-70">Analysis Complete</p>
+                    <p className="text-lg font-black uppercase tracking-tighter italic">Search Again</p>
+                </div>
+            </Button>
         </div>
       </div>
   );

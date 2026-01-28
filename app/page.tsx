@@ -59,6 +59,11 @@ export default function Home() {
             throw new Error("No data received");
         }
 
+        // Check for Backend Reports Errors (like 429s)
+        if (finalData.isError || finalData.error) {
+            throw new Error(finalData.error || "Analysis was halted due to a system error.");
+        }
+
         // Trigger finish animation only after we have data
         setIsAnalysisFinishing(true);
 
@@ -74,9 +79,15 @@ export default function Home() {
   const handleAnalysisComplete = () => {
         if (!selectedSearch || !analysisResult) return; 
         
+        // Check for specific backend signal first
+        if (analysisResult.type === 'comparison') {
+             setCurrentView('versus');
+             return;
+        }
+
         const lowerTitle = selectedSearch.title.toLowerCase();
-        // Check for comparison intent
-        if (lowerTitle.includes(' vs ') || lowerTitle.includes(' versus ') || lowerTitle.includes(' compare ')) {
+        // Fallback intent check
+        if (lowerTitle.includes(' vs ') || lowerTitle.includes(' versus ') || lowerTitle.includes(' compare ') || lowerTitle.includes(' or ')) {
             setCurrentView('versus');
         } else {
              setCurrentView('analysis');
@@ -119,7 +130,10 @@ export default function Home() {
           />
         )}
         {currentView === 'versus' && (
-          <VersusArena />
+          <VersusArena 
+            data={analysisResult} 
+            onBack={() => setCurrentView('lens-search')}
+          />
         )}
         {currentView === 'discovery' && (
           <DiscoveryPodium />

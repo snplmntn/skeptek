@@ -17,8 +17,6 @@ interface NavigationProps {
 export function Navigation({ currentView = 'lens-search', onViewChange, mode = 'app' }: NavigationProps) {
   const navItems = [
     { id: 'lens-search', label: 'Search', icon: Search },
-    { id: 'analysis', label: 'Analysis', icon: BarChart2 },
-    { id: 'versus', label: 'Versus', icon: Scale },
     { id: 'discovery', label: 'Trending', icon: Flame },
   ];
 
