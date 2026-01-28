@@ -6,10 +6,10 @@ import { Rocket, Search, Scale, AlertTriangle, ShieldCheck } from 'lucide-react'
 import { useTheme } from 'next-themes';
 
 const statuses = [
-  '> SCOUTING_MARKET_DATA...',
-  '> SCANNING_REDDIT_THREADS...',
-  '> ANALYZING_VIDEO_FEEDS...',
-  '> SYNTHESIZING_NEURAL_PATHWAYS...',
+  'Gathering Market Data...',
+  'Reading User Reviews...',
+  'Analyzing Video Reviews...',
+  'Finalizing Verdict...',
 ];
 
 interface ForensicLensLoaderProps {
@@ -213,7 +213,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status }: Forensic
       ctx.fillStyle = colors.text;
       ctx.font = 'bold 10px "Geist Mono", monospace';
       ctx.textAlign = 'center';
-      const lensLabels = ['SCANNING_ARTIFACTS', 'VERIFYING_SOURCES', 'NEURAL_FILTERING', 'TRUTH_EXTRACTION'];
+      const lensLabels = ['SCANNING', 'VERIFYING', 'FILTERING SPAM', 'EXTRACTING TRUTH'];
       const labelIdx = Math.floor(loopTime * 1.5) % lensLabels.length;
       ctx.fillText(`STATUS: ${lensLabels[labelIdx]}`, x, y + radius + 25);
 
@@ -341,7 +341,7 @@ return (
         >
           <span className="px-5 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[10px] font-black tracking-[0.2em] uppercase shadow-lg shadow-primary/5 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            {isFinishing ? 'VERDICT_READY' : 'ACTIVE_SCOUT'}
+            {isFinishing ? 'Verdict Ready' : 'Active Scan'}
           </span>
           <div className="flex items-center gap-4">
              {getStatusIcon()}

@@ -114,8 +114,18 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         return true;
     });
 
-    console.log(`[Video Scout] Validated ${videos.length}/${rawVideos.length} videos`);
-    return videos;
+    const enrichedVideos = videos.map((v: any) => ({
+      id: v.id,
+      title: v.title,
+      url: v.url || `https://www.youtube.com/watch?v=${v.id}`,
+      thumbnail: `https://img.youtube.com/vi/${v.id}/mqdefault.jpg`,
+      moment: "0:00",
+      tag: "Review",
+      tagType: "warning" as const
+    }));
+
+    console.log(`[Video Scout] Validated ${enrichedVideos.length}/${rawVideos.length} videos`);
+    return enrichedVideos;
 
   } catch (error: any) {
     console.error(`[Video Scout] Failed after retries:`, {
