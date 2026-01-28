@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Crown, Plus, Check, Activity, ThumbsUp, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Crown, Plus, Check, Activity, ThumbsUp, AlertTriangle, AlertCircle, TrendingUp, Zap, Shield, Sparkles, ShoppingCart, MessageCircle, PlayCircle, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function VersusArena() {
-  const [selectedComparison, setSelectedComparison] = useState(0);
 
+// Shared Types (ideally move to types file)
   interface ProductDetails {
     trustScore: { score: number; label: string };
     sentiment: { positive: number; neutral: number; negative: number };
@@ -23,13 +24,22 @@ export function VersusArena() {
         name: string; 
         score: number; 
         isWinner: boolean;
+        recommendation?: 'BUY' | 'CONSIDER' | 'AVOID';
+        verdictType?: 'positive' | 'caution' | 'alert';
+        verdict?: string;
         details?: ProductDetails; 
+        sources?: {
+            market?: { productUrl: string; price: string };
+            reddit?: { relevantThreads: string[] };
+            video?: { videoId: string; title: string; url?: string; thumbnail?: string }[];
+        };
     }>;
     winReason: string;
     differences: Array<{ category: string; scores: Record<string, number> }>;
   }
 
-  const comparisons: Comparison[] = [
+  // --- MOCK DATA (Fallback) ---
+  const MOCK_COMPARISONS: Comparison[] = [
     {
       id: 1,
       title: 'Flagship Phones',
@@ -39,350 +49,506 @@ export function VersusArena() {
             name: 'Apple iPhone 15 Pro', 
             score: 8.5, 
             isWinner: true,
+            recommendation: 'BUY',
+            verdictType: 'positive',
+            verdict: 'The gold standard for mobile cinematography and performance.',
             details: {
                 trustScore: { score: 9.8, label: 'High Trust' },
                 sentiment: { positive: 85, neutral: 10, negative: 5 },
                 pros: ['Exceptional Video Quality', 'Titanium Build', 'Action Button'],
                 cons: ['Slow Charging', 'Expensive Repairs']
-            }
-        },
-        { 
-            id: 'p2', 
-            name: 'Samsung Galaxy S24', 
-            score: 7.8, 
-            isWinner: false,
-            details: {
-                trustScore: { score: 8.5, label: 'Good' },
-                sentiment: { positive: 70, neutral: 20, negative: 10 },
-                pros: ['Amazing Screen', 'Galaxy AI Features', '7 Years Updates'],
-                cons: ['Exynos Variance', 'Shutter Lag']
-            }
-        },
-        { 
-            id: 'p3', 
-            name: 'Google Pixel 8 Pro', 
-            score: 8.2, 
-            isWinner: false,
-            details: {
-                trustScore: { score: 9.2, label: 'Very Good' },
-                sentiment: { positive: 78, neutral: 15, negative: 7 },
-                pros: ['Best Still Photos', 'Helpful Software', 'Screen Brightness'],
-                cons: ['Battery Life', 'Tensor G3 Heat']
+            },
+            sources: {
+                market: { productUrl: 'https://apple.com/iphone', price: '$999' },
+                reddit: { sources: [{ title: 'Reddit Thread', url: 'https://reddit.com/r/apple' }] } as any,
+                video: [{ videoId: 'dQw4w9WgXcQ', title: 'Video Review', url: 'https://youtube.com' }] as any
             }
         },
       ],
-      winReason: 'Better Battery Life (+4hrs)',
-      differences: [
-        { category: 'Camera', scores: { p1: 9.1, p2: 8.7, p3: 8.9 } },
-        { category: 'Battery', scores: { p1: 7.8, p2: 8.2, p3: 7.5 } },
-        { category: 'Design', scores: { p1: 8.9, p2: 8.3, p3: 8.5 } },
-        { category: 'Performance', scores: { p1: 9.0, p2: 8.8, p3: 8.6 } },
-      ],
-    },
-    {
-      id: 2,
-      title: 'Pro Laptops',
-      products: [
-        { 
-            id: 'p1', 
-            name: 'MacBook Pro M3', 
-            score: 8.6, 
-            isWinner: true,
-            details: {
-                trustScore: { score: 9.9, label: 'Elite' },
-                sentiment: { positive: 90, neutral: 8, negative: 2 },
-                pros: ['Best-in-class Battery', 'Stunning Display'],
-                cons: ['Pricey Upgrades', 'Notch']
-            }
-        },
-        { 
-            id: 'p2', 
-            name: 'Dell XPS 15', 
-            score: 8.1, 
-            isWinner: false,
-            details: {
-                trustScore: { score: 8.8, label: 'Solid' },
-                sentiment: { positive: 75, neutral: 15, negative: 10 },
-                pros: ['InfinityEdge Display', 'Premium Build'],
-                cons: ['Webcam Quality', 'Thermals']
-            }
-        },
-      ],
-      winReason: 'Superior Build Quality',
-      differences: [
-        { category: 'Performance', scores: { p1: 9.2, p2: 8.9 } },
-        { category: 'Build Quality', scores: { p1: 9.0, p2: 8.4 } },
-        { category: 'Battery', scores: { p1: 8.5, p2: 7.3 } },
-        { category: 'Price Value', scores: { p1: 7.0, p2: 8.2 } },
-      ],
-    },
-    {
-      id: 3,
-      title: 'Noise Cancelling Headphones',
-      products: [
-        { 
-            id: 'p1', 
-            name: 'Sony WH-1000XM5', 
-            score: 8.9, 
-            isWinner: true,
-            details: {
-                 trustScore: { score: 9.5, label: 'Industry Leader' },
-                 sentiment: { positive: 88, neutral: 10, negative: 2 },
-                 pros: ['Features Count', 'Lightweight'],
-                 cons: ['No Folding', 'Fingerprints']
-            }
-        },
-        { 
-            id: 'p2', 
-            name: 'Bose QC 45', 
-            score: 8.2, 
-            isWinner: false,
-            details: {
-                 trustScore: { score: 9.0, label: 'Reliable' },
-                 sentiment: { positive: 80, neutral: 15, negative: 5 },
-                 pros: ['Comfort King', 'Simple Controls'],
-                 cons: ['Design Dated', 'Micro USB lol jk']
-            }
-        },
-        { 
-            id: 'p3', 
-            name: 'AirPods Max', 
-            score: 8.4, 
-            isWinner: false, 
-             details: {
-                 trustScore: { score: 8.7, label: 'Premium' },
-                 sentiment: { positive: 75, neutral: 15, negative: 10 },
-                 pros: ['Build Quality', 'Transparency Mode'],
-                 cons: ['Heavy', 'Case is a joke']
-            }
-        },
-      ],
-      winReason: 'Best Noise Cancellation',
-      differences: [
-        { category: 'Noise Cancellation', scores: { p1: 9.3, p2: 8.8, p3: 8.9 } },
-        { category: 'Sound Quality', scores: { p1: 8.7, p2: 8.5, p3: 8.4 } },
-        { category: 'Connectivity', scores: { p1: 8.8, p2: 8.2, p3: 9.0 } },
-        { category: 'Comfort', scores: { p1: 8.5, p2: 8.9, p3: 8.1 } },
-      ],
-    },
+      winReason: 'Better Battery Life',
+      differences: [] 
+    }
   ];
 
-  const comparisonRaw = comparisons[selectedComparison];
-  // Sort products by score descending to organize them
+interface VersusArenaProps {
+    data?: Comparison; // The real data from backend (optional)
+    onBack?: () => void;
+}
+
+export function VersusArena({ data, onBack }: VersusArenaProps) {
+  // If real data is passed (Comparison mode active), use it. 
+  // Otherwise default to the first mock item for "Discovery" mode.
+  
+  // Transform backend data format to internal format if necessary or use directly if schema matches.
+  // The schema from analyze.ts matches 'Comparison' interface reasonably well, but key names need alignment.
+  
+  const activeComparison = data || MOCK_COMPARISONS[0];
+  
+  // Sort products by score for layout
   const comparison = {
-    ...comparisonRaw,
-    products: [...comparisonRaw.products].sort((a, b) => b.score - a.score)
+    ...activeComparison,
+    products: [...activeComparison.products].sort((a, b) => b.score - a.score)
+  };
+
+  const [selectedComparison, setSelectedComparison] = useState(0);
+  const [hoveredStat, setHoveredStat] = useState<string | null>(null);
+
+  // If using real data, we don't need the mock selector at the top
+  const showSelector = !data;
+  const comparisons = MOCK_COMPARISONS; // Use mock list for selector if in discovery mode
+
+  const getRecommendationBadge = (recommendation: string) => {
+    const styles = {
+       BUY: 'bg-emerald-600 text-white shadow-emerald-200',
+       CONSIDER: 'bg-amber-500 text-white shadow-amber-200',
+       AVOID: 'bg-rose-600 text-white shadow-rose-200' 
+    };
+    
+    return (
+      <span className={cn(
+        "px-4 py-1 rounded-full text-[10px] font-black tracking-[0.2em] shadow-lg inline-block uppercase",
+        styles[recommendation as keyof typeof styles]
+      )}>
+          {recommendation}
+      </span>
+    );
+  };
+
+  const getVerdictStyle = (verdictType?: string) => {
+    switch (verdictType) {
+      case 'positive':
+        return 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-200';
+      case 'caution':
+        return 'border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-200';
+      case 'alert':
+        return 'border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-200';
+      default:
+        return 'border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-200';
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-12">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="mb-2 text-3xl font-bold text-slate-900">Versus Arena</h1>
-        <p className="mb-8 text-slate-600">Compare products side by side to find the clear winner</p>
+    <div className="min-h-screen bg-background px-6 py-12 transition-colors duration-500">
+      <div className="mx-auto max-w-7xl">
+        <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-10 text-center"
+        >
+            <h1 className="mb-3 text-4xl font-black tracking-tighter text-foreground uppercase italic pb-2">
+                Comparison<span className="text-primary">Matrix</span>
+            </h1>
+            <p className="text-muted-foreground font-mono text-xs tracking-[0.3em] uppercase opacity-70">
+                Forensic Analysis Unit // Comparative Data
+            </p>
+        </motion.div>
 
-        {/* Comparison Selector */}
-        <div className="mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {comparisons.map((comp, idx) => (
-            <Button
-              key={comp.id}
-              variant={selectedComparison === idx ? 'default' : 'outline'}
-              onClick={() => setSelectedComparison(idx)}
-              className="whitespace-nowrap text-sm"
-            >
-              {comp.title}
-            </Button>
-          ))}
-        </div>
 
-        {/* Dynamic Product Grid */}
-        <div className={`grid gap-6 mb-8 ${
-            comparison.products.length === 2 ? 'md:grid-cols-2' : 
-            comparison.products.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'
-        }`}>
-          {comparison.products.map((product) => (
-            <div
-              key={product.id}
-              className={`transition-all duration-300 ${
-                product.isWinner ? 'scale-105 z-10' : 'hover:scale-[1.02]'
-              }`}
-            >
-              <Card className={`relative p-6 h-full border-2 flex flex-col items-center ${
-                product.isWinner ? 'border-blue-600 shadow-xl bg-white' : 'border-slate-200 shadow-sm hover:shadow-md bg-white'
-              }`}>
-                {product.isWinner && (
-                  <div className="absolute -top-4 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 shadow-md">
-                    <Crown className="w-3 h-3 text-yellow-300" /> Top Pick
-                  </div>
+        {/* Comparison Selector - Only Show in Discovery/Demo Mode */}
+        {showSelector && (
+            <div className="mb-12 flex justify-center gap-4 flex-wrap">
+            {comparisons.map((comp, idx) => (
+                <button
+                key={comp.id}
+                onClick={() => setSelectedComparison(idx)}
+                className={cn(
+                    "px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 border backdrop-blur-sm",
+                    selectedComparison === idx 
+                        ? "bg-primary text-primary-foreground border-primary shadow-[0_0_20px_rgba(59,130,246,0.3)] scale-105" 
+                        : "bg-background/50 hover:bg-muted border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
                 )}
-
-                <div className="text-center w-full">
-                  <h3 className="mb-6 text-lg font-bold text-slate-900 min-h-[3rem] flex items-center justify-center">
-                    {product.name}
-                  </h3>
-                  
-                  <div className="relative h-28 w-28 mx-auto mb-6">
-                    <svg className="h-full w-full rotate-[-90deg]" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" strokeWidth="8" />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        fill="none"
-                        stroke={product.isWinner ? "#2563eb" : "#64748b"}
-                        strokeWidth="8"
-                        strokeDasharray={`${(product.score / 10) * 282.7} 282.7`}
-                        strokeLinecap="round"
-                        className="transition-all duration-1000 ease-out"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className={`text-2xl font-bold font-mono ${product.isWinner ? 'text-blue-600' : 'text-slate-700'}`}>
-                        {product.score.toFixed(1)}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Score</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+                >
+                {comp.title}
+                </button>
+            ))}
             </div>
-          ))}
-
-          {/* Add Product Button Prototype */}
-           <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group min-h-[300px]">
-                <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-slate-200 transition-colors">
-                    <Plus className="w-6 h-6 text-slate-400 group-hover:text-slate-600" />
-                </div>
-                 <span className="text-sm font-semibold text-slate-500 group-hover:text-slate-700">Add Product</span>
-           </div>
-        </div>
-
-        {/* Why It Won Chip */}
-        {comparison.winReason && (
-          <div className="mb-8 flex justify-center">
-            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 px-6 py-2 rounded-full font-medium text-sm shadow-sm">
-              <Check className="w-4 h-4" />
-              <span>Winner Distinction: {comparison.winReason}</span>
-            </div>
-          </div>
         )}
 
-        {/* Smart Diff Table */}
-        <Card className="border-slate-200 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-             <h2 className="text-lg font-semibold text-slate-900">Detailed Breakdown</h2>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-             {/* Header Row */}
-             <div className="flex items-center bg-slate-50/80 px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <div className="w-1/4">Category</div>
-                {comparison.products.map(p => (
-                    <div key={p.id} className="flex-1 text-center truncate px-2">{p.name}</div>
-                ))}
-             </div>
-
-            {/* Rows */}
-            {comparison.differences.map((item, idx) => {
-              // Find max score for this category to highlight
-              const maxScore = Math.max(...comparison.products.map(p => item.scores[p.id] || 0));
-
-              return (
-                <div key={idx} className="flex items-center px-4 py-4 hover:bg-slate-50 transition-colors">
-                  <span className="font-medium text-slate-700 w-1/4">{item.category}</span>
-                  
-                  {comparison.products.map(product => {
-                    const score = item.scores[product.id] || 0;
-                    const isBest = score === maxScore;
-
-                    return (
-                        <div key={product.id} className="flex-1 flex justify-center items-center">
-                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${isBest ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600'}`}>
-                                <span className="font-mono text-sm">{score.toFixed(1)}</span>
-                            </div>
-                        </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        {/* Deep Dive Analysis Section */}
-        <div className="mt-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Deep Dive Analysis</h2>
+        {/* Battle Station Grid */}
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
             
-            <div className={`grid gap-6 ${
-                comparison.products.length === 2 ? 'md:grid-cols-2' : 
-                comparison.products.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'
-            }`}>
-              {comparison.products.map(product => product.details && (
-                <Card key={product.id} className="p-8 border-slate-200 bg-white shadow-sm flex flex-col h-full">
-                    {/* Header */}
-                    <div className="mb-6 pb-4 border-b border-slate-100">
-                        <h3 className="font-bold text-slate-900 text-lg mb-2">{product.name}</h3>
-                        <div className="flex items-center justify-between">
-                            <span className={`text-xs font-bold px-3 py-1 rounded-md ${
-                                product.details.trustScore.score >= 9 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                                product.details.trustScore.score >= 8 ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
-                            }`}>
-                                {product.details.trustScore.label}
-                            </span>
-                             <span className="text-sm font-mono text-slate-500 font-semibold">{product.details.trustScore.score}/10</span>
-                        </div>
-                    </div>
+            {/* LEFT: Product Cards */}
+            <div className="lg:col-span-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <AnimatePresence mode="popLayout">
+                    {comparison.products.map((product, i) => (
+                        <motion.div
+                            key={product.id}
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                            transition={{ duration: 0.4, delay: i * 0.1, type: "spring", bounce: 0.3 }}
+                            className={cn(
+                                "relative group perspective-1000",
+                                product.isWinner ? "z-10 md:-mt-4 lg:-mt-8" : ""
+                            )}
+                        >
+                            <a 
+                                href={product.sources?.market?.productUrl || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className={cn(
+                                    "relative overflow-hidden rounded-2xl border bg-card/80 backdrop-blur-md transition-all duration-500 block",
+                                    product.isWinner 
+                                        ? "border-primary/50 shadow-[0_0_40px_rgba(59,130,246,0.15)] h-[480px] dark:shadow-[0_0_50px_rgba(59,130,246,0.2)]" 
+                                        : "border-border hover:border-primary/30 h-[440px]"
+                                )}
+                            >
+                                {/* Winner Glow Effect */}
+                                {product.isWinner && (
+                                    <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
+                                )}
 
-                    {/* Sentiment Analysis (Simplified) */}
-                     <div className="mb-8">
-                        <div className="flex items-center justify-between mb-2">
-                             <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                                <Activity className="w-3 h-3" /> Sentiment
-                            </h4>
-                        </div>
-                        
-                        <div className="h-2 flex rounded-full overflow-hidden w-full bg-slate-100">
-                            <div style={{ width: `${product.details.sentiment.positive}%` }} className="bg-emerald-500" />
-                            <div style={{ width: `${product.details.sentiment.neutral}%` }} className="bg-slate-300" />
-                            <div style={{ width: `${product.details.sentiment.negative}%` }} className="bg-rose-500" />
-                        </div>
-                         <div className="flex justify-between mt-2 text-[10px] text-slate-400 font-medium">
-                             <span>{product.details.sentiment.positive}% Positive</span>
-                             <span>{product.details.sentiment.negative}% Negative</span>
-                         </div>
-                    </div>
+                                {/* Card Header */}
+                                <div className="p-6 text-center relative z-10 flex flex-col h-full">
+                                    {product.isWinner && (
+                                        <div className="inline-flex mx-auto items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary text-[10px] font-black uppercase tracking-wider mb-4 shadow-[0_0_10px_rgba(59,130,246,0.3)] animate-pulse">
+                                            <Crown className="w-3 h-3" /> Top Choice
+                                        </div>
+                                    )}
+                                    <h3 className="text-lg font-bold text-foreground leading-snug mb-3 min-h-[3.5rem] flex items-center justify-center px-2">
+                                        {product.name}
+                                    </h3>
 
-                    {/* Pros & Cons (Spaced out) */}
-                    <div className="space-y-6 flex-1">
-                        <div>
-                            <h4 className="text-xs font-bold text-emerald-700 mb-3 flex items-center gap-1.5 uppercase tracking-wide">
-                                <ThumbsUp className="w-3 h-3" /> Strengths
-                            </h4>
-                            <ul className="space-y-3">
-                                {product.details.pros.map((pro, i) => (
-                                    <li key={i} className="text-sm text-slate-700 flex items-start gap-2 leading-relaxed">
-                                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> 
-                                        <span>{pro}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="text-xs font-bold text-amber-700 mb-3 flex items-center gap-1.5 uppercase tracking-wide">
-                                <AlertTriangle className="w-3 h-3" /> Considerations
-                            </h4>
-                            <ul className="space-y-3">
-                                {product.details.cons.map((con, i) => (
-                                    <li key={i} className="text-sm text-slate-700 flex items-start gap-2 leading-relaxed">
-                                        <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                        <span>{con}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-                </Card>
-              ))}
+                                    {/* Forensic Verdict Badge */}
+                                    {product.recommendation && (
+                                        <div className="mb-6">
+                                            {getRecommendationBadge(product.recommendation)}
+                                        </div>
+                                    )}
+
+                                    {/* Score Ring */}
+                                    <div className="relative w-28 h-28 mx-auto mb-8 group-hover:scale-105 transition-transform duration-300">
+                                        <svg className="h-full w-full -rotate-90 text-muted/20" viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="6" />
+                                            <motion.circle
+                                                cx="50"
+                                                cy="50"
+                                                r="45"
+                                                fill="none"
+                                                stroke={product.isWinner ? "var(--primary)" : "var(--muted-foreground)"}
+                                                strokeWidth="6"
+                                                strokeLinecap="round"
+                                                initial={{ pathLength: 0 }}
+                                                animate={{ pathLength: product.score / 10 }}
+                                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                                className="drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                                            />
+                                        </svg>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span className={cn(
+                                                "text-3xl font-black font-mono tracking-tighter",
+                                                product.isWinner ? "text-primary" : "text-foreground dark:text-white"
+                                            )}>
+                                                {product.score.toFixed(1)}
+                                            </span>
+                                            <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground mt-1 group-hover:text-primary transition-colors">Trust Score</span>
+                                        </div>
+                                    </div>
+
+
+                                    {/* Card Footer: Price & Source */}
+                                    {(product.sources?.market?.price && product.sources.market.price !== 'Unknown' && product.sources.market.productUrl) && (
+                                        <div className="mt-auto pt-6 border-t border-border/30">
+                                            <div className="text-xl font-black text-primary font-mono tracking-tighter mb-1">
+                                                {product.sources.market.price}
+                                            </div>
+                                            <div className="text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground opacity-60 flex items-center justify-center gap-1.5 group-hover:text-primary transition-colors">
+                                                View Deal <ExternalLink className="w-3 h-3" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                </a>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
+
+            {/* RIGHT: Comparative Analytics */}
+            <div className="lg:col-span-4 space-y-6">
+                
+                {/* Winner Insight */}
+                {comparison.winReason && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        key={comparison.winReason}
+                        className="bg-primary/5 border border-primary/20 p-5 rounded-2xl relative overflow-hidden group hover:bg-primary/10 transition-all duration-500 shadow-[0_0_30px_rgba(59,130,246,0.05)] border-l-4 border-l-primary"
+                    >
+                        {/* Holographic Glow Layer */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        
+                        <div className="absolute -right-4 -top-4 text-primary/10 group-hover:text-primary/15 transition-colors">
+                            <Sparkles className="w-24 h-24 rotate-12" />
+                        </div>
+                        <h4 className="text-xs font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2 relative z-10">
+                            <Zap className="w-3.5 h-3.5" /> Competitive Edge
+                        </h4>
+                        <p className="text-foreground/90 font-medium text-[13px] leading-relaxed relative z-10">
+                            The <span className="text-primary font-bold">{comparison.products[0].name}</span> wins due to:
+                        </p>
+                        <div className="mt-3 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary font-bold text-xs leading-relaxed relative z-10 shadow-inner">
+                            {comparison.winReason}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Specs Breakdown */}
+                <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                    <div className="p-4 bg-muted/30 border-b border-border flex items-center justify-between">
+                         <h3 className="text-sm font-bold text-foreground uppercase tracking-wide flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-muted-foreground" /> Forensic Specs
+                         </h3>
+                    </div>
+                    <div className="p-3 space-y-1">
+                        {comparison.differences.map((item, idx) => {
+                             const maxScore = Math.max(...comparison.products.map(p => item.scores[p.id] || 0));
+                             
+                             return (
+                                <motion.div 
+                                    key={idx}
+                                    onHoverStart={() => setHoveredStat(item.category)}
+                                    onHoverEnd={() => setHoveredStat(null)}
+                                    className="p-3 hover:bg-muted/50 rounded-xl transition-colors cursor-default group/stat"
+                                >
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="text-xs font-bold text-muted-foreground group-hover/stat:text-foreground uppercase tracking-wide">{item.category}</span>
+                                    </div>
+                                    
+                                    {/* Stat Bars */}
+                                    <div className="space-y-3">
+                                        {comparison.products.map(product => {
+                                            const score = item.scores[product.id] || 0;
+                                            const isBest = score === maxScore;
+
+                                            return (
+                                                <div key={product.id} className="relative">
+                                                    <div className="flex justify-between text-[10px] mb-1">
+                                                        <span className={cn(
+                                                            "truncate max-w-[120px]",
+                                                            isBest ? "font-bold text-foreground" : "text-muted-foreground",
+                                                            hoveredStat === item.category && isBest ? "text-primary" : ""
+                                                        )}>
+                                                            {product.name}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "font-mono",
+                                                            isBest ? "text-primary font-bold" : "text-muted-foreground"
+                                                        )}>
+                                                            {score.toFixed(1)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
+                                                        <motion.div 
+                                                            initial={{ width: 0 }}
+                                                            whileInView={{ width: `${(score / 10) * 100}%` }}
+                                                            viewport={{ once: true }}
+                                                            transition={{ duration: 1, ease: "easeOut" }}
+                                                            className={cn(
+                                                                "h-full rounded-full transition-all duration-300",
+                                                                isBest ? "bg-primary shadow-[0_0_10px_rgba(59,130,246,0.4)]" : "bg-muted-foreground/30",
+                                                                hoveredStat === item.category && isBest ? "bg-primary shadow-[0_0_15px_rgba(59,130,246,0.6)] scale-y-110" : ""
+                                                            )}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </motion.div>
+                             );
+                        })}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Deep Dive Section */}
+        <div className={cn(
+            "mt-16 grid gap-6",
+            comparison.products.length <= 2 ? "md:grid-cols-2" : "md:grid-cols-3 lg:grid-cols-3"
+        )}>
+            {comparison.products.map((product, i) => product.details && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    key={product.id} className="space-y-4 p-5 rounded-2xl border border-transparent hover:border-border/50 bg-card/30 hover:bg-card/50 transition-all"
+                >
+                     <h4 className={cn(
+                        "text-xs font-black uppercase tracking-widest border-b pb-3 mb-4 flex items-center justify-between",
+                        product.isWinner ? "text-primary border-primary" : "text-muted-foreground border-border"
+                    )}>
+                        {product.name}
+                        {product.isWinner && <Crown className="w-4 h-4" />}
+                     </h4>
+                     
+                     <div className="space-y-6">
+                         <div>
+                             <div className="text-[10px] font-mono text-emerald-500 mb-3 flex items-center gap-2 font-bold uppercase tracking-wider">
+                                <ThumbsUp className="w-3.5 h-3.5" /> Strengths
+                             </div>
+                             <ul className="space-y-2.5">
+                                 {product.details.pros.map((pro, idx) => (
+                                     <li key={idx} className="text-xs text-foreground/80 flex items-start gap-2.5 leading-relaxed">
+                                         <span className="text-emerald-500 mt-0.5">●</span> {pro}
+                                     </li>
+                                 ))}
+                             </ul>
+                         </div>
+                         <div>
+                             <div className="text-[10px] font-mono text-amber-500 mb-3 flex items-center gap-2 font-bold uppercase tracking-wider">
+                                <AlertTriangle className="w-3.5 h-3.5" /> Weaknesses
+                             </div>
+                             <ul className="space-y-2.5">
+                                 {product.details.cons.map((con, idx) => (
+                                     <li key={idx} className="text-xs text-foreground/80 flex items-start gap-2.5 leading-relaxed">
+                                         <span className="text-amber-500 mt-0.5">●</span> {con}
+                                     </li>
+                                 ))}
+                             </ul>
+                         </div>
+                         
+                         {/* Verdict Panel */}
+                         <div className={cn("p-4 rounded-xl border transition-all duration-300", getVerdictStyle(product.verdictType))}>
+                            <div className="text-[10px] font-mono mb-2 flex items-center gap-2 font-black uppercase tracking-widest opacity-80">
+                                <Shield className="w-3.5 h-3.5" /> Forensic Verdict
+                            </div>
+                            <p className="text-xs leading-relaxed font-bold mb-1">
+                                {product.details.trustScore.label}
+                            </p>
+                            <p className="text-[11px] leading-relaxed opacity-90">
+                                {product.verdict || "Recommendation pending further analysis."}
+                            </p>
+                         </div>
+
+                         {/* Sources Panel */}
+                         {/* Data Source Verification */}
+                         {product.sources && (
+                            ((product.sources.market?.productUrl && product.sources.market.price !== 'Unknown') || 
+                             ((product.sources.reddit as any)?.sources?.length > 0) || 
+                             (product.sources.video?.length ?? 0) > 0)
+                         ) && (
+                             <div className="mt-6 pt-5 border-t border-border/50">
+                                 <div className="text-[9px] font-mono text-muted-foreground mb-3 flex items-center gap-2 font-bold uppercase tracking-wider opacity-70">
+                                     <Activity className="w-3 h-3" /> Evidence Sources
+                                 </div>
+                                 <div className="grid gap-2">
+                                     {/* 1. Market Source (View Deal) */}
+                                     {(product.sources.market?.productUrl && product.sources.market.price !== 'Unknown') && (
+                                         <a 
+                                            href={product.sources.market.productUrl} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="flex items-center justify-between p-3 bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/40 rounded-xl transition-all group/deal shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+                                         >
+                                             <div className="flex items-center gap-3">
+                                                 <div className="bg-primary/20 p-1.5 rounded-lg group-hover/deal:scale-110 transition-transform">
+                                                     <ShoppingCart className="w-4 h-4 text-primary" />
+                                                 </div>
+                                                 <div>
+                                                     <div className="text-[10px] uppercase font-bold tracking-wider text-primary">Market Listing</div>
+                                                     <div className="text-sm font-bold text-foreground truncate max-w-[150px]">{product.sources.market.productUrl.replace('https://', '').split('/')[0]}</div>
+                                                 </div>
+                                             </div>
+                                             <div className="text-right">
+                                                <div className="text-[10px] font-bold text-primary font-mono">{product.sources.market.price}</div>
+                                                <ExternalLink className="w-3.5 h-3.5 text-primary opacity-50 group-hover/deal:opacity-100 ml-auto mt-1" />
+                                             </div>
+                                         </a>
+                                     )}
+
+                                     {/* 2. Forensic Sources (Social/Video) */}
+                                     <div className="grid gap-2">
+                                         {/* Reddit Sources */}
+                                         {(product.sources.reddit as any)?.sources && (product.sources.reddit as any).sources.map((source: any, idx: number) => (
+                                             <a 
+                                                key={idx}
+                                                href={source.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/40 bg-foreground/5 dark:bg-white/5 hover:bg-foreground/10 dark:hover:bg-white/10 transition-all hover:border-orange-500/30 group/social"
+                                             >
+                                                <div className="relative w-4 h-4 flex-shrink-0">
+                                                    <MessageCircle className="absolute inset-0 w-full h-full text-orange-500 opacity-20" />
+                                                    <img 
+                                                        src={`https://www.google.com/s2/favicons?domain=reddit.com&sz=32`} 
+                                                        alt="Reddit"
+                                                        className="absolute inset-0 w-full h-full object-contain group-hover:scale-110 transition-transform"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[9px] uppercase font-black tracking-widest text-orange-500/80 mb-0.5">Reddit Thread</div>
+                                                    <div className="text-[10px] font-bold text-foreground truncate">{source.title || "Community Consensus"}</div>
+                                                </div>
+                                                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-30 group-hover/social:opacity-100 transition-opacity" />
+                                             </a>
+                                         ))}
+                                         
+                                         {/* Video Sources */}
+                                         {product.sources.video && product.sources.video.map((video: any, idx: number) => (
+                                              <a 
+                                                key={idx}
+                                                href={video.url || `https://www.youtube.com/watch?v=${video.videoId}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="relative group/video overflow-hidden rounded-xl border border-border/40 bg-foreground/5 dark:bg-white/5 hover:border-red-500/30 transition-all"
+                                              >
+                                                 <div className="flex items-center p-2.5 gap-3">
+                                                    <div className="relative w-16 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-slate-900 border border-white/5">
+                                                        {video.thumbnail ? (
+                                                            <img 
+                                                                src={video.thumbnail} 
+                                                                alt={video.title}
+                                                                className="w-full h-full object-cover opacity-80 group-hover/video:opacity-100 group-hover/video:scale-110 transition-all duration-500"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-red-500/10">
+                                                                <PlayCircle className="w-4 h-4 text-red-500" />
+                                                            </div>
+                                                        )}
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                            <PlayCircle className="w-4 h-4 text-white shadow-xl" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 text-left">
+                                                        <div className="text-[9px] uppercase font-black tracking-widest text-red-500/80 mb-0.5">Video Review</div>
+                                                        <div className="text-[10px] font-bold text-foreground truncate">{video.title || "User Verification"}</div>
+                                                        {video.moment && video.moment !== "0:00" && (
+                                                            <div className="text-[8px] font-mono text-muted-foreground mt-0.5 flex items-center gap-1">
+                                                                <Activity className="w-2.5 h-2.5" /> Found at {video.moment}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                 </div>
+                                              </a>
+                                         ))}
+                                     </div>
+                                 </div>
+                             </div>
+                         )}
+                     </div>
+                </motion.div>
+            ))}
+        </div>
+
+        {/* Quick Nav: Search Again */}
+        <div className="mt-20 mb-24 flex flex-col items-center gap-6">
+            <div className="h-px w-24 bg-gradient-to-r from-transparent via-border to-transparent" />
+            <Button
+                onClick={onBack}
+                className="bg-primary hover:bg-blue-500 text-white px-12 py-8 rounded-2xl gap-4 group transition-all hover:scale-105 active:scale-95 shadow-[0_20px_50px_rgba(59,130,246,0.2)]"
+            >
+                <div className="bg-white/10 p-2.5 rounded-xl group-hover:bg-white/20 transition-colors">
+                    <Plus className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] opacity-70">Ready for Next Investigation</p>
+                    <p className="text-lg font-black uppercase tracking-tighter italic">Search Again</p>
+                </div>
+            </Button>
         </div>
       </div>
     </div>

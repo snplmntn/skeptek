@@ -1,41 +1,66 @@
-# Skeptek app design
-
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+# Skeptek 👁️
+**Forensic Product Analysis Engine** | *Built for the Gemini 3 Hackathon*
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/snplmntns-projects/v0-skeptek)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/hzh3lPCUIo3)
+[![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Gemini%203-4E8BF4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
+[![Status](https://img.shields.io/badge/Status-Beta-orange?style=for-the-badge)]()
 
-## Overview
+> "The Minority Report for E-Commerce."
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## 🚀 The Pitch
+**Skeptek** is a "Precision Optics" engine designed to cut through the noise of the modern internet. In an era of AI-generated reviews, dropshipped white-label products, and inflated pricing, Skeptek acts as your forensic analyst.
 
-## Deployment
+It doesn't just "search" for a product. It **investigates** it. By deploying a swarm of specialized Gemini 3 agents, Skeptek triangulates data from official retailers, Reddit discussion threads, and YouTube video reviews to deliver a single, irrefutable **Truth Score**.
 
-Your project is live at:
+## 🧠 Powered by Gemini 3
+Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model family**. We leverage the massive context window and multimodal capabilities to perform deep forensic analysis that was previously impossible.
 
-**[https://vercel.com/snplmntns-projects/v0-skeptek](https://vercel.com/snplmntns-projects/v0-skeptek)**
+### The Agent Swarm
+1.  **🕵️ Market Scout (Grounding Agent)**
+    *   **Model**: `gemini-2.0-flash-exp` (via `latest` alias)
+    *   **Role**: The first line of defense. It uses **Google Search Grounding** to traverse the live web, verifying product existence, current street pricing, and official technical specifications. It employs advanced hallucination-check protocols to ensure every data point is cited.
 
-## Build your app
+2.  **🎥 Video Sniper (Multimodal Hunter)**
+    *   **Model**: `gemini-2.0-flash-exp`
+    *   **Role**: A specialized agent that hunts for visual proof. It bypasses generic "unboxing" videos to find critical "deep dive" reviews. It understands *context*—scanning video titles and metadata to distinguish between a paid promotion and a brutal, honest review.
 
-Continue building your app on:
+3.  **⚖️ The Judge (Reasoning Core)**
+    *   **Model**: `gemini-1.5-pro` / `gemini-3.0-pro`
+    *   **Role**: The synthesis engine. It ingests the raw data from the Scouts, cross-references Reddit user sentiment against official specs, and produces the final **Truth Score**.
+    *   **Output**: A detailed "Verdict" (Buy/Avoid/Consider) and a "Fairness Meter" calculation.
 
-**[https://v0.app/chat/hzh3lPCUIo3](https://v0.app/chat/hzh3lPCUIo3)**
+## ✨ Key Features
+*   **🔍 Lens Search**: A unified, "command-line" style input for rapid product investigation.
+*   **🆚 Versus Mode**: Compare two products side-by-side with forensic component-level analysis.
+*   **📉 Fairness Meter**: An algorithmic visualization that compares the *asking price* vs. the *fair market value* based on verified defects and competitor pricing.
+*   **🛡️ Forensic UI**: A "Glassmorphism" design system featuring scanlines, focal loaders, and high-contrast data displays.
 
-## How It Works
+## 🛠️ Tech Stack
+*   **Framework**: Next.js 14 (App Router)
+*   **AI SDK**: Google Generative AI SDK (`@google/generative-ai`)
+*   **Styling**: Tailwind CSS, Framer Motion, Lucide React
+*   **Deployment**: Vercel
 
-Skeptek operates as a "Precision Optics" engine for product intelligence, filtering out noise to find the signal.
+## 📦 Installation
+Clone the repository and install the dependencies:
 
-1.  **The Fan-Out (Data Gathering)**:
-    *   **MarketMercenary**: Scrapes official specs and pricing from varied retailers (Shopee, Amazon).
-    *   **RedditScout**: Aggregates real user discussions using the **Reddit API** (`asyncpraw`), filtering for high-value comments.
-    *   **VideoSniper**: Analyzes YouTube transcripts to find timestamps where reviewers discuss physical defects (hinges, scratches).
+```bash
+git clone https://github.com/your-username/skeptek.git
+cd skeptek
+npm install
+```
 
-2.  **The Logic (Gemini 3.0 Agents)**:
-    *   **Global Sentry** (`gemini-3.0-flash`): Checks voltage/region compatibility and estimates import taxes.
-    *   **Arbitrage Detector** (`gemini-3.0-pro`): Detects if a product is a dropshipped white-label item by reverse-searching images.
-    *   **The Watcher** (`gemini-3.0-pro-vision`): Watches 10s video clips to visually confirm defects reported in text.
-    *   **The Judge** (`gemini-3.0-pro`): Synthesizes all data into a final "Truth Score" and verdict.
+Set up your environment variables:
+```bash
+# .env.local
+GOOGLE_API_KEY=your_gemini_api_key_here
+```
 
-3.  **The Presentation**:
-    *   A Next.js frontend displays the "Truth Score", verified pros/cons, and interactive fairness meter.
+Run the forensic engine:
+```bash
+npm run dev
+```
+
+## 🏆 Hackathon Submission Details
+*   **Challenge**: Build a NEW application using the Gemini 3 API.
+*   **Innovation**: Skeptek moves beyond simple "chat" interfaces to a structured, agentic workflow that solves a real-world problem (consumer trust) using the speed and reasoning of Gemini 3.

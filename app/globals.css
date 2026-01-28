@@ -4,86 +4,58 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f8fafb;
-  --foreground: #1a1f36;
+  --background: #ffffff;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #1a1f36;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #1a1f36;
+  --popover-foreground: #0f172a;
   --primary: #2563eb;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
-  --secondary-foreground: #1a1f36;
-  --muted: #e2e8f0;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  --accent: #2563eb;
-  --accent-foreground: #ffffff;
-  --success: #10b981;
-  --success-foreground: #ffffff;
-  --warning: #f59e0b;
-  --warning-foreground: #ffffff;
-  --alert: #f43f5e;
-  --alert-foreground: #ffffff;
-  --destructive: #f43f5e;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
-  --input: #ffffff;
-  --input-border: #cbd5e1;
+  --input: #e2e8f0;
   --ring: #2563eb;
-  --chart-1: #2563eb;
-  --chart-2: #3b82f6;
-  --chart-3: #60a5fa;
-  --chart-4: #93c5fd;
-  --chart-5: #dbeafe;
   --radius: 0.625rem;
-  --sidebar: oklch(0.97 0.006 260);
-  --sidebar-foreground: oklch(0.18 0.01 260);
-  --sidebar-primary: oklch(0.35 0.15 260);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.92 0.01 260);
-  --sidebar-accent-foreground: oklch(0.18 0.01 260);
-  --sidebar-border: oklch(0.92 0.01 260);
-  --sidebar-ring: oklch(0.35 0.15 260);
+  --chart-1: #e76e50;
+  --chart-2: #2a9d8f;
+  --chart-3: #e9c46a;
+  --chart-4: #f4a261;
+  --chart-5: #e76e50;
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
+  --background: #0a0c10;
+  --foreground: #e2e8f0;
+  --card: #11141b;
+  --card-foreground: #e2e8f0;
+  --popover: #11141b;
+  --popover-foreground: #e2e8f0;
   --primary: #3b82f6;
-  --primary-foreground: #0f172a;
-  --secondary: #334155;
-  --secondary-foreground: #f8fafc;
-  --muted: #475569;
-  --muted-foreground: #cbd5e1;
-  --accent: #3b82f6;
-  --accent-foreground: #0f172a;
-  --success: #86efac;
-  --success-foreground: #166534;
-  --warning: #fca5a5;
-  --warning-foreground: #7f1d1d;
-  --destructive: #fca5a5;
-  --destructive-foreground: #7f1d1d;
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #e2e8f0;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fca5a5;
   --border: #334155;
-  --input: #1e293b;
-  --input-border: #475569;
+  --input: #11141b;
   --ring: #3b82f6;
   --chart-1: #3b82f6;
   --chart-2: #60a5fa;
   --chart-3: #93c5fd;
   --chart-4: #bfdbfe;
   --chart-5: #dbeafe;
-  --sidebar: #0f172a;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #0f172a;
-  --sidebar-accent: #334155;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #334155;
-  --sidebar-ring: #3b82f6;
 }
 
 @theme inline {
@@ -133,10 +105,37 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-position: 0 0;
+    background-image: 
+      radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+    background-size: 32px 32px;
     background-attachment: fixed;
+  }
+
+  /* Premium Glassmorphism */
+  .forensic-glass {
+    @apply bg-card/60 backdrop-blur-xl border border-white/10 ring-1 ring-black/20;
+  }
+
+  /* Forensic Scanline Effect */
+  .scanline {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scanline::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(59, 130, 246, 0.05) 50%,
+      transparent 50%,
+      transparent
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 10;
   }
 }
 

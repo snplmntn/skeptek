@@ -3,100 +3,140 @@
 import { Navigation } from '@/components/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Telescope, Microscope, ShieldCheck, Gavel } from 'lucide-react';
+import { Telescope, Microscope, ShieldCheck, Gavel, ScanSearch, ChevronRight, Fingerprint } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export default function HowItWorks() {
+  const steps = [
+    {
+      id: 1,
+      title: 'Wide-Net Search',
+      icon: Telescope,
+      desc: 'Our Smart Scouts fan out across the web to gather official specs, price history, and real user discussions, filtering out bot spam.',
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/20'
+    },
+    {
+      id: 2,
+      title: 'Visual Forensics',
+      icon: Microscope,
+      desc: 'AI Vision spots physical defects in video reviews that text misses. We reverse-search images to detect overpriced rebrands.',
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/20'
+    },
+    {
+      id: 3,
+      title: 'Global Sentry',
+      icon: ShieldCheck,
+      desc: 'We verify region locks, voltage compatibility, and import taxes so you avoid expensive "paperweights".',
+      color: 'text-indigo-500',
+      bg: 'bg-indigo-500/10',
+      border: 'border-indigo-500/20'
+    },
+    {
+      id: 4,
+      title: 'The Verdict',
+      icon: Gavel,
+      desc: 'Data synthesized into a single Trust Score. A clear, unbiased recommendation: hidden gem or marketing fluff?',
+      color: 'text-purple-500',
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/20'
+    }
+  ];
+
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-background relative overflow-hidden">
+        {/* Animated Background Mesh */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px]" />
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-background via-transparent to-background" />
+        </div>
+
       <Navigation mode="static" />
 
-      <div className="mx-auto max-w-5xl px-6 py-16">
-        <div className="text-center mb-16 space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
-                Inside the Lens
+      <div className="mx-auto max-w-5xl px-6 py-20 relative z-10">
+        <div className="text-center mb-24 space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary border border-primary/20 text-xs font-mono uppercase tracking-widest mb-4">
+                <ScanSearch className="w-4 h-4" /> System Architecture
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground mb-6">
+                Inside the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Lens</span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                Skeptek cuts through the noise of affiliate marketing and sponsored bias to deliver the raw, data-backed truth about any product.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-light">
+                Skeptek cuts through the noise of affiliate marketing and sponsored bias to deliver the raw, data-backed truth.
             </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-20">
-            {/* Step 1: The Scout */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <span className="text-9xl font-bold text-blue-600">1</span>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6 font-bold text-xl">
-                   <Telescope className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">1. Wide-Net Search</h3>
-                <p className="text-slate-600 leading-relaxed mb-6">
-                    Our <strong>Smart Scouts</strong> fan out across the web to gather official specs, price history, and real user discussions. We instantly filter thousands of comments to separate helpful reviews from paid bot spam.
-                </p>
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 text-sm text-slate-500 font-mono">
-                    We read the fine print so you don't have to.
-                </div>
-            </div>
+        {/* The Forensic Pipeline */}
+        <div className="relative">
+            {/* Animated Connector Line (Desktop) */}
+            <div className="absolute left-[28px] top-0 bottom-0 w-0.5 bg-border md:left-1/2 md:-ml-px md:hidden" />
+            <div className="hidden md:block absolute top-[50px] left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-border to-transparent" />
 
-            {/* Step 2: The Watcher */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <span className="text-9xl font-bold text-emerald-600">2</span>
-                </div>
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-6 font-bold text-xl">
-                   <Microscope className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">2. Visual Forensics</h3>
-                <p className="text-slate-600 leading-relaxed mb-6">
-                    Our <strong>AI Vision</strong> watches video reviews frame-by-frame. It spots physical defects—like a wobbly hinge or cheap plastic—that text reviews often miss. We also reverse-search images to detect overpriced rebrands.
-                </p>
-                <div className="bg-emerald-50 text-emerald-700 px-4 py-3 rounded-lg text-sm font-medium border border-emerald-100">
-                    We spot the red flags—like dropshipping and defects—that glossy photos hide.
-                </div>
-            </div>
+            <div className="grid md:grid-cols-4 gap-8 md:gap-4 relative">
+                {steps.map((step, idx) => (
+                    <motion.div
+                        key={step.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ delay: idx * 0.2 }}
+                        className="relative group"
+                    >
+                        {/* Step Connector Node */}
+                        <div className="hidden md:flex absolute -top-[58px] left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-background border-2 border-primary z-20 items-center justify-center">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        </div>
 
-            {/* Step 3: Global Sentry */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <span className="text-9xl font-bold text-indigo-600">3</span>
-                </div>
-                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6 font-bold text-xl">
-                   <ShieldCheck className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">3. Global Compatibility</h3>
-                <p className="text-slate-600 leading-relaxed mb-6">
-                    Buying internationally? Our <strong>Sentry System</strong> checks if the product will actually work in your country (voltage, region locks) and estimates hidden import taxes before you click buy.
-                </p>
-                <div className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg text-sm font-medium border border-indigo-100">
-                    Avoid expensive "paperweights" and surprise fees.
-                </div>
-            </div>
+                        <div className={cn(
+                            "relative h-full bg-card/50 backdrop-blur-sm border rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-card",
+                            step.border
+                        )}>
+                            {/* Number Watermark */}
+                            <div className="absolute right-4 top-2 text-6xl font-black opacity-5 select-none">
+                                {step.id}
+                            </div>
 
-            {/* Step 4: The Verdict */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <span className="text-9xl font-bold text-purple-600">4</span>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-6 font-bold text-xl">
-                   <Gavel className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">4. The Verdict</h3>
-                <p className="text-slate-600 leading-relaxed mb-6">
-                    We synthesize all this data into a single <strong>Trust Score</strong>. You get a clear, unbiased recommendation: is this product a hidden gem, or is it just great marketing?
-                </p>
-                <div className="bg-purple-50 text-purple-700 px-4 py-3 rounded-lg text-sm font-medium border border-purple-100">
-                    Get a final, data-backed verdict that weighs every pro and con so you can buy with total confidence.
-                </div>
+                            {/* Icon Scanner */}
+                            <div className={cn(
+                                "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-2xl transition-transform group-hover:scale-110 duration-300 shadow-lg",
+                                step.bg,
+                                step.color
+                            )}>
+                                <step.icon className="w-7 h-7" />
+                            </div>
+
+                            <h3 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
+                                {step.title}
+                            </h3>
+                            <p className="text-muted-foreground leading-relaxed text-sm">
+                                {step.desc}
+                            </p>
+
+                            {/* Active Scan Effect */}
+                            <div className={cn(
+                                "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none",
+                                "bg-gradient-to-b from-transparent via-transparent to-primary/5"
+                            )} />
+                        </div>
+                    </motion.div>
+                ))}
             </div>
         </div>
 
-        <div className="text-center">
+        <div className="text-center mt-24">
             <Link href="/">
-                <Button size="lg" className="h-14 px-10 rounded-full text-lg shadow-xl shadow-blue-900/10 hover:shadow-blue-900/20 transition-all hover:-translate-y-0.5">
+                <Button size="lg" className="h-16 px-12 rounded-full text-lg shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.6)] transition-all hover:-translate-y-1 group bg-primary hover:bg-primary/90">
+                    <Fingerprint className="w-6 h-6 mr-3" />
                     Start Your Investigation
+                    <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
             </Link>
-            <p className="mt-4 text-sm text-slate-500">
+            <p className="mt-6 text-sm text-muted-foreground font-mono">
                 Analysis takes seconds • No account required
             </p>
         </div>
