@@ -309,7 +309,7 @@ return (
       animate={{ opacity: 1, y: 0 }}
       className="mb-12 text-center"
     >
-      <h1 className="mb-2 text-4xl font-black text-foreground tracking-tighter uppercase italic">Forensic Lens</h1>
+      <h1 className="mb-2 text-4xl font-black text-foreground tracking-tighter uppercase italic">Analysis Lens</h1>
       <div className="flex items-center justify-center gap-3">
           <span className="h-px w-8 bg-primary/30" />
           <p className="text-[10px] tracking-[0.4em] uppercase text-primary font-bold font-mono">Autonomous Analysis Pipeline</p>

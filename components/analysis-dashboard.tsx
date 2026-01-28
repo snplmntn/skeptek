@@ -347,8 +347,8 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                 </div>
             </div>
 
-            {/* The Main Connective Bar */}
-            <div className="relative h-6 bg-slate-800/50 rounded-full mb-32 mt-8">
+            {/* The Main Connective Bar - Added mx-12 to prevent label clipping */}
+            <div className="relative h-6 bg-slate-800/50 rounded-full mb-32 mt-8 mx-12">
                 
                 {/* Fair Value Zone (Green Pill) */}
                 <div 
@@ -398,42 +398,41 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                 )}
             </div>
               
-              {/* Price Health Summary */}
-              <div className="mt-8 mb-4 p-4 rounded-xl bg-foreground/5 border border-foreground/5 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                  <div className={`p-2 rounded-lg ${fairnessData.current > fairnessData.fairValue.max ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                      {fairnessData.current > fairnessData.fairValue.max ? <AlertTriangle className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
-                  </div>
-                  <div>
-                      <h4 className={`text-xs font-black uppercase tracking-widest mb-1 ${fairnessData.current > fairnessData.fairValue.max ? 'text-rose-500' : 'text-emerald-500'}`}>
-                          Price Health: {fairnessData.current > fairnessData.fairValue.max ? 'Overpriced' : 'Fair Market Value'}
-                      </h4>
-                      <p className="text-[11px] text-muted-foreground font-mono leading-relaxed max-w-xl">
-                          {fairnessData.current > fairnessData.fairValue.max 
+            {/* Price Health Summary & View Deal */}
+            <div className="mt-8 mb-4 flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-foreground/5 border border-foreground/5 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                <div className="flex items-start gap-4 flex-1">
+                    <div className={`p-3 rounded-xl shrink-0 ${fairnessData.current > fairnessData.fairValue.max ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {fairnessData.current > fairnessData.fairValue.max ? <AlertTriangle className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
+                    </div>
+                    <div>
+                        <h4 className={`text-sm font-black uppercase tracking-widest mb-1.5 ${fairnessData.current > fairnessData.fairValue.max ? 'text-rose-500' : 'text-emerald-500'}`}>
+                            {fairnessData.current > fairnessData.fairValue.max ? 'Price Alert: Overpriced' : 'Verified: Fair Market Value'}
+                        </h4>
+                        <p className="text-xs text-muted-foreground font-mono leading-relaxed">
+                            {fairnessData.current > fairnessData.fairValue.max 
                             ? `Current pricing is $${fairnessData.current - fairnessData.fairValue.max} above the identified fair market valuation. Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
                             : `The current list price of $${fairnessData.current} aligns with our forensic data model. This represents a transparent transaction with no identified "skeptic" red flags.`
-                          }
-                      </p>
-                  </div>
-              </div>
-
-              {/* View Deal Button */}
-              {fairnessData.url && (
-                <div className="mt-12 pt-6 border-t border-foreground/5 dark:border-white/5 flex justify-end">
-                  <Button 
-                    size="sm"
-                    className="bg-primary hover:bg-blue-500 text-white gap-3 rounded-xl px-6 font-mono text-[10px] tracking-widest uppercase py-6 pl-5"
-                    onClick={() => window.open(fairnessData.url, '_blank')}
-                  >
-                     <img 
-                        src={`https://www.google.com/s2/favicons?domain=${new URL(fairnessData.url).hostname}&sz=64`}
-                        className="w-5 h-5 rounded bg-white p-0.5 object-contain"
-                        alt="store"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                     />
-                    View Deal <span className="text-xs opacity-50">↗</span>
-                  </Button>
+                            }
+                        </p>
+                    </div>
                 </div>
-              )}
+
+                {/* Integrated View Deal Button */}
+                {fairnessData.url && (
+                    <Button 
+                        size="sm"
+                        className="shrink-0 bg-primary hover:bg-blue-500 text-white gap-3 rounded-xl px-6 font-mono text-[10px] tracking-widest uppercase h-12 shadow-lg shadow-blue-500/20"
+                        onClick={() => window.open(fairnessData.url, '_blank')}
+                    >
+                        <img 
+                            src={`https://www.google.com/s2/favicons?domain=${new URL(fairnessData.url).hostname}&sz=64`}
+                            className="w-5 h-5 rounded bg-white p-0.5 object-contain"
+                            alt="store"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                        View Deal <span className="text-xs opacity-50">↗</span>
+                    </Button>
+                )}
             </div>
           </div>
 
@@ -456,5 +455,6 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
             </Button>
         </div>
       </div>
+    </div>
   );
 }

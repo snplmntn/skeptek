@@ -139,7 +139,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                 Comparison<span className="text-primary">Matrix</span>
             </h1>
             <p className="text-muted-foreground font-mono text-xs tracking-[0.3em] uppercase opacity-70">
-                Forensic Analysis Unit // Comparative Data
+                Deep Analysis Unit // Comparative Data
             </p>
         </motion.div>
 
@@ -209,7 +209,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                         {product.name}
                                     </h3>
 
-                                    {/* Forensic Verdict Badge */}
+                                    {/* Smart Verdict Badge */}
                                     {product.recommendation && (
                                         <div className="mb-6">
                                             {getRecommendationBadge(product.recommendation)}
@@ -297,7 +297,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                 <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
                     <div className="p-4 bg-muted/30 border-b border-border flex items-center justify-between">
                          <h3 className="text-sm font-bold text-foreground uppercase tracking-wide flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-muted-foreground" /> Forensic Specs
+                            <Activity className="w-4 h-4 text-muted-foreground" /> Technical Specs
                          </h3>
                     </div>
                     <div className="p-3 space-y-1">
@@ -413,7 +413,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                          {/* Verdict Panel */}
                          <div className={cn("p-4 rounded-xl border transition-all duration-300", getVerdictStyle(product.verdictType))}>
                             <div className="text-[10px] font-mono mb-2 flex items-center gap-2 font-black uppercase tracking-widest opacity-80">
-                                <Shield className="w-3.5 h-3.5" /> Forensic Verdict
+                                <Shield className="w-3.5 h-3.5" /> Smart Verdict
                             </div>
                             <p className="text-xs leading-relaxed font-bold mb-1">
                                 {product.details.trustScore.label}
@@ -459,7 +459,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                          </a>
                                      )}
 
-                                     {/* 2. Forensic Sources (Social/Video) */}
+                                     {/* 2. Evidence Sources (Social/Video) */}
                                      <div className="grid gap-2">
                                          {/* Reddit Sources */}
                                          {(product.sources.reddit as any)?.sources && (product.sources.reddit as any).sources.map((source: any, idx: number) => (

@@ -148,3 +148,26 @@
   0% { left: -100%; }
   100% { left: 100%; }
 }
+
+@keyframes vertical-marquee {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes horizontal-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-vertical-marquee {
+  animation: vertical-marquee 40s linear infinite;
+}
+
+.animate-horizontal-marquee {
+  animation: horizontal-marquee 40s linear infinite;
+}
+
+.pause-on-hover:hover .animate-vertical-marquee,
+.pause-on-hover:hover .animate-horizontal-marquee {
+  animation-play-state: paused;
+}

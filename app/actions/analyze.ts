@@ -5,12 +5,14 @@ import { marketScout } from '@/lib/agents/market-scout';
 import { redditScout } from '@/lib/agents/reddit-scout';
 import { videoScout } from '@/lib/agents/video-scout';
 import { geminiPro, geminiFlash } from '@/lib/gemini';
+import { supabase } from '@/lib/supabase';
 
 /**
  * The Orchestrator (Server Action)
  * This functions as the "Brain" that coordinates the "Fan-Out".
  */
-export async function analyzeProduct(query: string) {
+export async function analyzeProduct(rawQuery: string) {
+  const query = sanitizeInput(rawQuery);
   // Create a stream to send updates to the client
   const status = createStreamableValue("Initializing Agents...");
   const result = createStreamableValue<any>(null); // Final JSON payload
@@ -194,12 +196,35 @@ export async function analyzeProduct(query: string) {
 
       // Push final result and close streams
       result.done(fullReport);
+
+    // HACKATHON: Push to Supabase Realtime Feed
+      try {
+          // Data Sufficiency Check: Only save if we have REAL forensic data (Reddit comments or Videos)
+          // preventing "hallucinated" or "low confidence" scores from polluting the Watchtower.
+          const hasForensicData = (redditData?.comments?.length > 0) || (videoData?.length > 0);
+
+          if (!fullReport.isSimulated && hasForensicData) {
+             await supabase.from('scans').insert({
+                product_name: finalJson.productName,
+                trust_score: finalJson.score,
+                verdict: finalJson.verdict,
+                status: finalJson.score >= 80 ? 'verified' : finalJson.score >= 50 ? 'caution' : 'rejected'
+             });
+             console.log(`[Watchtower] Scan saved: ${finalJson.productName} (${finalJson.score})`);
+          } else {
+             console.log(`[Watchtower] Skipped saving: ${fullReport.isSimulated ? 'Simulated' : 'Insufficient Data'}`);
+          }
+      } catch (dbErr) {
+          console.error("Failed to push to Supabase", dbErr);
+      }
+
       status.done("Complete");
 
     } catch (e) {
       console.error(e);
       status.update("Analysis Error: " + (e as Error).message);
-      result.done(null);
+      // Return structured error instead of null so client can handle it gracefully
+      result.done({ isError: true, error: (e as Error).message });
       status.done();
     }
   })();
@@ -373,4 +398,97 @@ async function handleComparison(items: string[], status: any, result: any) {
          });
          status.done("Complete (Fallback)");
     }
+}
+
+// --- SECURITY HELPERS ---
+function sanitizeInput(input: string): string {
+  // Remove control characters and limit length to prevent injection attacks
+  return input.replace(/[\x00-\x1F\x7F]/g, "").slice(0, 500);
+}
+
+// --- VISUAL FORENSICS (HACKATHON) ---
+export async function analyzeImage(formData: FormData) {
+  try {
+    const file = formData.get("image") as File;
+    
+    // 1. Security: File Validation
+    if (!file) return { success: false, error: "No image file provided" };
+    if (!file.type.startsWith("image/")) return { success: false, error: "Invalid file type. Only images are allowed." };
+    if (file.size > 5 * 1024 * 1024) return { success: false, error: "File too large. Max 5MB." }; // Max 5MB
+
+    // Convert to base64 for Gemini
+    const arrayBuffer = await file.arrayBuffer();
+    const imageData = Buffer.from(arrayBuffer).toString("base64");
+
+    const prompt = `
+      Analyze this image for product details.
+      1. IDENTIFY the main product shown (Brand and Model Name).
+      2. If it's a generic/dropshipping product, verify if it looks like a known "scam" or "low effort" listing.
+      3. Return ONLY a JSON object:
+      {
+        "productName": "string",
+        "isScamLikely": boolean,
+        "scamReason": "string (optional)"
+      }
+    `;
+
+    const result = await geminiFlash.generateContent([
+      {
+        inlineData: {
+          data: imageData,
+          mimeType: file.type,
+        },
+      },
+      prompt,
+    ]);
+
+    const response = await result.response;
+    const text = response.text();
+    
+    // Extract JSON
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1) throw new Error("Could not parse visual analysis");
+    
+    const json = JSON.parse(text.substring(start, end + 1));
+
+    // HACKATHON: Push to Supabase Realtime Feed
+     try {
+          // Sanitize output before DB insert
+          await supabase.from('scans').insert({
+              product_name: sanitizeInput(json.productName),
+              trust_score: json.isScamLikely ? 10 : 90, 
+              verdict: sanitizeInput(json.scamReason || "Visual Analysis Complete"),
+              status: json.isScamLikely ? 'rejected' : 'verified'
+          });
+      } catch (dbErr) {
+          console.error("Failed to push visual scan to Supabase", dbErr);
+      }
+
+    return {
+      success: true,
+      data: json,
+    };
+  } catch (error: any) {
+    console.error("Gemini Vision Analysis Error:", error);
+
+    // RATE LIMIT (429) FALL BACK - Hackathon Survival Mode
+    if (error.message?.includes('429') || error.message?.includes('Quota exceeded') || error.status === 429) {
+         console.warn("⚠️ Vision Rate Limit Hit. Switching to Simulation.");
+         // Fallback to a safe simulation so the demo doesn't crash on stage
+         return {
+             success: true,
+             data: {
+                 productName: "Simulated Product (Rate Limit Protection)",
+                 isScamLikely: false,
+                 scamReason: "Analysis simulated due to high API traffic."
+             }
+         };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Visual Analysis Failed",
+    };
+  }
 }

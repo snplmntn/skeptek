@@ -42,7 +42,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
               <span className="text-lg font-black text-foreground tracking-tighter group-hover:text-primary transition-colors leading-none uppercase italic">
                   Skeptek
               </span>
-              <span className="text-[7px] font-mono tracking-[0.4em] text-muted-foreground uppercase mt-0.5">Forensic_Unit</span>
+              <span className="text-[7px] font-mono tracking-[0.4em] text-muted-foreground uppercase mt-0.5">Analysis_Unit</span>
             </div>
         </Link>
         

@@ -9,7 +9,7 @@ const statuses = [
   'COMPILING_FINAL_ANALYSIS...',
 ];
 
-export function FocalAlignmentLoader() {
+export function FocalAlignmentLoader({ status }: { status?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [statusIndex, setStatusIndex] = useState(0);
   const [phase, setPhase] = useState<'scatter' | 'scan' | 'resolve'>('scatter');
@@ -88,9 +88,8 @@ export function FocalAlignmentLoader() {
       const elapsed = Date.now() - startTime;
       const totalProgress = Math.min(elapsed / totalDuration, 1);
 
-      // Clear canvas
-      ctx.fillStyle = '#f8fafb';
-      ctx.fillRect(0, 0, width, height);
+      // Clear canvas (Transparent)
+      ctx.clearRect(0, 0, width, height);
 
       // Phase 1: Scatter (0 - 0.33)
       if (totalProgress < scatterDuration / totalDuration) {
@@ -109,7 +108,8 @@ export function FocalAlignmentLoader() {
           p.x = Math.max(0, Math.min(width, p.x));
           p.y = Math.max(0, Math.min(height, p.y));
 
-          ctx.fillStyle = `rgba(148, 163, 184, ${0.6 * (1 - progress * 0.5)})`;
+          // Theme-aware particle color (cyan/blue based)
+          ctx.fillStyle = `rgba(6, 182, 212, ${0.6 * (1 - progress * 0.5)})`; // Cyan-500 base
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
@@ -231,27 +231,30 @@ export function FocalAlignmentLoader() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6">
-      {/* Canvas */}
-      <canvas
-        ref={canvasRef}
-        width={640}
-        height={480}
-        className="mb-8 rounded-lg border border-slate-200 bg-white shadow-lg"
-      />
+    <div className="flex flex-col items-center justify-center w-full h-full p-4">
+      {/* Canvas - Responsive Container */}
+      <div className="relative w-full max-w-[320px] aspect-square mb-4">
+          <canvas
+            ref={canvasRef}
+            width={320}
+            height={320}
+            className="w-full h-full rounded-full border border-border/50 bg-background/50 dark:bg-black/20 shadow-inner"
+          />
+      </div>
 
       {/* Status Text - Monospaced */}
-      <div className="font-mono text-sm font-medium text-slate-700">
-        <span className="text-blue-600">&gt;</span> {statuses[statusIndex]}
+      <div className="font-mono text-xs font-medium text-muted-foreground animate-pulse text-center">
+        <span className="text-cyan-500 mr-2">&gt;</span>
+        {status || statuses[statusIndex]}
       </div>
 
       {/* Phase Indicator */}
-      <div className="mt-6 flex gap-2">
+      <div className="mt-4 flex gap-1.5">
         {['scatter', 'scan', 'resolve'].map((p) => (
           <div
             key={p}
-            className={`h-2 w-2 rounded-full transition-colors ${
-              phase === p ? 'bg-blue-600' : 'bg-slate-300'
+            className={`h-1.5 w-1.5 rounded-full transition-all duration-500 ${
+              phase === p ? 'bg-cyan-500 scale-125' : 'bg-muted/30'
             }`}
           />
         ))}

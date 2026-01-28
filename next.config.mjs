@@ -7,8 +7,8 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    turbopack: {
-        root: process.cwd(),
+    serverActions: {
+      bodySizeLimit: '5mb',
     },
   },
  

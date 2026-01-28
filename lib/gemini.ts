@@ -24,9 +24,9 @@ const safetySettings = [
 ];
 
 // The Flash model is used for high-volume text processing (Scouts)
-// SOTA 2026: gemini-1.5-flash provides 1500 req/day vs 20 req/day for flash-latest
+// SOTA 2026: gemini-2.5-flash provides Multimodal Vision support
 export const geminiFlash = genAI.getGenerativeModel({ 
-  model: "gemini-flash-latest", 
+  model: "gemini-2.5-flash", 
   safetySettings,
   generationConfig: {
     temperature: 0.7, 
@@ -34,9 +34,9 @@ export const geminiFlash = genAI.getGenerativeModel({
   }
 });
 
-// The Pro model is used for deep reasoning (The Judge)
+// The Pro model is used for deep reasoning (The Judge) -> Using 3-flash as superior model
 export const geminiPro = genAI.getGenerativeModel({
-  model: "gemini-pro-latest", 
+  model: "gemini-3-flash", 
   safetySettings,
   generationConfig: {
     temperature: 0.4, 

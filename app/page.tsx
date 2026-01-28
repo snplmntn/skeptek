@@ -11,7 +11,8 @@ import { DiscoveryPodium } from '@/components/discovery-podium';
 import { ForensicLensLoader } from '@/components/forensic-lens-loader';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
+import { getFriendlyErrorMessage } from '@/lib/error-mapping';
 
 type ViewType = 'lens-search' | 'analyzing' | 'analysis' | 'versus' | 'discovery';
 
@@ -20,18 +21,21 @@ export default function Home() {
   const [selectedSearch, setSelectedSearch] = useState<{
     title: string;
     url: string;
+    mode?: 'text' | 'image';
   } | null>(null);
+  
   const [isAnalysisFinishing, setIsAnalysisFinishing] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState<string>("");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   
   // Error Handling State
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'data' | 'network'>('data');
   const [isErrorOpen, setIsErrorOpen] = useState(false);
 
-  const handleSearch = async (title: string, url: string) => {
+  const handleSearch = async (title: string, url: string, metadata?: { mode: 'text' | 'image', isVersus: boolean }) => {
     // 1. Enter Analysis Mode (Loader)
-    setSelectedSearch({ title, url });
+    setSelectedSearch({ title, url, mode: metadata?.mode });
     setCurrentView('analyzing');
     setIsAnalysisFinishing(false);
     setAnalysisStatus("INITIALIZING_AGENTS...");
@@ -59,18 +63,24 @@ export default function Home() {
             throw new Error("No data received");
         }
 
-        // Check for Backend Reports Errors (like 429s)
+        // Check for Backend Reports Errors (like 429s or No Data)
         if (finalData.isError || finalData.error) {
-            throw new Error(finalData.error || "Analysis was halted due to a system error.");
+             // Handle gracefully without throwing (avoids console noise)
+             setErrorMsg(finalData.error || "Analysis was halted due to a system error.");
+             setErrorType('data'); // Application level error
+             setIsErrorOpen(true);
+             setCurrentView('lens-search');
+             return;
         }
 
         // Trigger finish animation only after we have data
         setIsAnalysisFinishing(true);
 
     } catch (error) {
-        console.error("Analysis Failed", error);
-        // Improved Error Handling: Show Modal instead of Alert
+        console.error("Unexpected System Error", error);
+        // Fallback for unexpected crashes (e.g. network fail)
         setErrorMsg((error as Error).message);
+        setErrorType('network'); // Transport level error
         setIsErrorOpen(true);
         setCurrentView('lens-search');
     }
@@ -79,6 +89,32 @@ export default function Home() {
   const handleAnalysisComplete = () => {
         if (!selectedSearch || !analysisResult) return; 
         
+        // STRICT GATEKEEPER: Ensure we have actual data before showing results
+        // This prevents "Ghost Pages" where the backend returns success but empty data
+        
+        let isValidData = false;
+
+        if (analysisResult.type === 'comparison') {
+             // For comparisons, check if we hit the fallback "Data Unavailable" state
+             // The backend sets winReason="Data Unavailable" and pros=["Simulation"] on failure
+             const isFallback = analysisResult.winReason === "Data Unavailable" || 
+                                analysisResult.products?.some((p: any) => p.details?.pros?.includes("Simulation"));
+             isValidData = !isFallback && (analysisResult.products && analysisResult.products.length > 0);
+        } else {
+             // For single products, check if it's explicitly marked as simulated or missing name
+             const isSimulated = analysisResult.isSimulated || false;
+             isValidData = !isSimulated && !!analysisResult.productName;
+        }
+        
+        if (!isValidData) {
+             console.error("Critical Data Missing / Simulation Detected", analysisResult);
+             setErrorMsg("The analysis could not retrieve sufficient verifiable data for these products. To maintain accuracy, we've halted the simulation.");
+             setErrorType('data');
+             setIsErrorOpen(true);
+             setCurrentView('lens-search');
+             return;
+        }
+
         // Check for specific backend signal first
         if (analysisResult.type === 'comparison') {
              setCurrentView('versus');
@@ -98,16 +134,26 @@ export default function Home() {
     setCurrentView(view);
   };
 
+  const handleRetry = () => {
+       setIsErrorOpen(false);
+       // Just go back to search view, pre-filling is handled by passing selectedSearch.title prop
+       setCurrentView('lens-search');
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <Navigation 
         currentView={currentView === 'analyzing' ? 'lens-search' : currentView as any} 
         onViewChange={handleViewChange} 
       />
-      
+
       <div className="relative">
         {currentView === 'lens-search' && (
-          <LensSearch onSearch={handleSearch} />
+          <LensSearch 
+            onSearch={handleSearch} 
+            initialQuery={selectedSearch?.title} 
+            initialMode={selectedSearch?.mode}
+          />
         )}
         
         {/* Loader State */}
@@ -144,38 +190,78 @@ export default function Home() {
       <Modal 
         isOpen={isErrorOpen} 
         onClose={() => setIsErrorOpen(false)}
-        title="Analysis Paused"
+        title={errorMsg ? getFriendlyErrorMessage(errorMsg).title : "Analysis Failed"}
       >
-        <div className="flex flex-col gap-6">
-            <div className="flex items-start gap-4 text-rose-500 bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">
-                <AlertCircle className="w-6 h-6 flex-shrink-0 mt-0.5" />
-                <div>
-                   <p className="text-sm font-bold uppercase tracking-wider mb-1">Insufficient Data</p>
-                   <p className="text-sm text-rose-400 font-medium">{errorMsg || "An unknown error occurred."}</p>
-                </div>
-            </div>
+        {(() => {
+            const friendly = getFriendlyErrorMessage(errorMsg || "");
+            const isNet = friendly.title === 'Connection Issue';
             
-            <p className="text-muted-foreground text-sm leading-relaxed font-mono">
-                We couldn't verify enough reliable data sources regarding this product to generate a confident verdict. 
-                To ensure accuracy, the analysis was paused. Please try a different product or specific model name.
-            </p>
+            return (
+                <div className="flex flex-col gap-6">
+                    {/* Main Error Alert */}
+                    <div className={`flex items-start gap-4 p-4 rounded-xl border ${
+                        isNet 
+                        ? "bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                        : "bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400"
+                    }`}>
+                        <div className={`p-1 rounded-full shrink-0 ${isNet ? 'bg-slate-200 dark:bg-slate-700' : 'bg-rose-100 dark:bg-rose-500/20'}`}>
+                            <AlertCircle className="w-5 h-5" />
+                        </div>
+                        <div>
+                        <p className="text-sm font-bold uppercase tracking-wider mb-1">
+                            {friendly.title}
+                        </p>
+                        <p className="text-sm font-medium opacity-90 leading-relaxed">
+                             {friendly.message}
+                        </p>
+                        </div>
+                    </div>
+                    
+                    {/* Technical Log (Hidden by default) */}
+                    {friendly.originalError && (
+                       <details className="group">
+                           <summary className="cursor-pointer text-xs font-mono text-slate-500 dark:text-slate-400 hover:text-foreground flex items-center gap-2 select-none transition-colors">
+                               <Info className="w-3 h-3" />
+                               <span>Technical Details</span>
+                           </summary>
+                           <div className="mt-2 bg-slate-100 dark:bg-black/30 rounded-md p-3 border border-slate-200 dark:border-white/5 overflow-hidden">
+                                <code className="text-[10px] text-slate-600 dark:text-slate-400 font-mono whitespace-pre-wrap break-words block" style={{ overflowWrap: 'anywhere' }}>
+                                    {friendly.originalError}
+                                </code>
+                           </div>
+                       </details>
+                    )}
+                    
+                    {/* Warning Box (Only for Non-Technical / Data Errors) */}
+                    {!friendly.isTechnical && (
+                        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 rounded-lg flex gap-3">
+                            <div className="text-amber-600 dark:text-amber-500 shrink-0">⚠️</div>
+                            <p className="text-xs text-amber-800 dark:text-amber-200/80 font-mono leading-relaxed">
+                                <strong>Warning:</strong> A complete lack of digital footprint often indicates a 
+                                <span className="text-amber-900 dark:text-amber-100 font-bold"> very new listing</span> or a 
+                                <span className="text-amber-900 dark:text-amber-100 font-bold"> potential scam/dropshipping product</span>. 
+                            </p>
+                        </div>
+                    )}
 
-            <div className="flex justify-end gap-3 mt-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsErrorOpen(false)}
-                  className="rounded-xl border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
-                >
-                    Dismiss
-                </Button>
-                <Button 
-                  onClick={() => setIsErrorOpen(false)}
-                  className="rounded-xl bg-primary hover:bg-blue-500 text-white shadow-lg shadow-primary/20"
-                >
-                    Try New Search
-                </Button>
-            </div>
-        </div>
+                    <div className="flex justify-end gap-3 mt-2">
+                        <Button 
+                        variant="outline" 
+                        onClick={() => setIsErrorOpen(false)}
+                        className="rounded-xl border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"
+                        >
+                            Dismiss
+                        </Button>
+                        <Button 
+                        onClick={handleRetry}
+                        className="rounded-xl bg-primary hover:bg-blue-500 text-white shadow-lg shadow-primary/20"
+                        >
+                            {isNet ? "Retry Connection" : "Search Again"}
+                        </Button>
+                    </div>
+                </div>
+            );
+        })()}
       </Modal>
     </main>
   );
