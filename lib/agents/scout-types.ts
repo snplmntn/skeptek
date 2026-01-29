@@ -21,6 +21,8 @@ export interface MarketData {
   specs: Record<string, string>;
   imageUrl?: string;
   productUrl: string;
+  launchDate?: string; // SOTA 2026: Track product age
+  supersededBy?: string; // SOTA 2026: Track newer alternatives
 }
 
 export interface RedditData {

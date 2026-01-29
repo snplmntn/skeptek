@@ -156,10 +156,12 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         - Reddit Scout Bot Probability: ${redditData?.botProbability || 0}%
         - IF Bot Probability > 70%: DEDUCT 15 points from Trust Score and flag as "Suspicious Community Activity".
 
-        [FORENSIC AUDIO ANALYSIS (Transcripts)]
-        - Carefully read the "Video Reviews" transcripts.
-        - Listen for "micro-complaints" or "dealbreakers" mentioned in the video that aren't in the title.
-        - If multiple transcripts mention the same issue (e.g., "Software is buggy"), it is a CRITICAL CON.
+        [CHRONOLOGICAL CONTEXT (SOTA 2026)]
+        - CURRENT DATE: January 29, 2026.
+        - Evaluate the product's "Launch Date" (${marketData?.launchDate || 'Unknown'}).
+        - IF the product is > 3 years old and a successor exists (${marketData?.supersededBy || 'None'}), it is "Legacy Hardware".
+        - REDUCE Trust Score by 10 if it is legacy but priced like current-gen.
+        - RECOMMEND "AVOID" or "CONSIDER" if a newer alternative offers better bang-for-buck.
 
         TASK:
         You are "The Judge". 

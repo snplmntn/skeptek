@@ -10,13 +10,14 @@ import { AnalysisDashboard } from '@/components/analysis-dashboard';
 import { VersusArena } from '@/components/versus-arena';
 import { DiscoveryPodium } from '@/components/discovery-podium';
 import { ForensicLensLoader } from '@/components/forensic-lens-loader';
+import { ProfileReportsView } from '@/components/profile-reports-view';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Info, Loader2 } from 'lucide-react';
 import { getFriendlyErrorMessage } from '@/lib/error-mapping';
 import { getUserProfile } from '@/app/actions/user';
 
-type ViewType = 'lens-search' | 'analyzing' | 'analysis' | 'versus' | 'discovery';
+type ViewType = 'lens-search' | 'analyzing' | 'analysis' | 'versus' | 'discovery' | 'my-reports';
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -207,6 +208,9 @@ function HomeContent() {
         )}
         {currentView === 'discovery' && (
           <DiscoveryPodium />
+        )}
+        {currentView === 'my-reports' && (
+          <ProfileReportsView onBack={() => setCurrentView('lens-search')} />
         )}
       </div>
 

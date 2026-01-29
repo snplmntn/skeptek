@@ -67,3 +67,72 @@ export async function submitFieldReport(formData: FormData) {
       return { error: "System Error: " + err.message };
   }
 }
+
+export async function updateFieldReport(reportId: string, data: { agreementRating?: number; comment?: string }) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: "Unauthenticated" };
+
+        const { error } = await supabase
+            .from('field_reports')
+            .update({
+                agreement_rating: data.agreementRating,
+                comment: data.comment,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', reportId)
+            .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        revalidatePath('/');
+        return { success: true };
+    } catch (err: any) {
+        console.error("[Field Report] Update Error:", err);
+        return { error: err.message };
+    }
+}
+
+export async function deleteFieldReport(reportId: string) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: "Unauthenticated" };
+
+        const { error } = await supabase
+            .from('field_reports')
+            .delete()
+            .eq('id', reportId)
+            .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        revalidatePath('/');
+        return { success: true };
+    } catch (err: any) {
+        console.error("[Field Report] Delete Error:", err);
+        return { error: err.message };
+    }
+}
+
+export async function getUserReports() {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: "Unauthenticated", reports: [] };
+
+        const { data, error } = await supabase
+            .from('field_reports')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        return { success: true, reports: data };
+    } catch (err: any) {
+        console.error("[Field Report] Fetch Error:", err);
+        return { error: err.message, reports: [] };
+    }
+}

@@ -491,7 +491,10 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                         onClick={() => window.open(fairnessData.url, '_blank')}
                     >
                         <img 
-                            src={`https://www.google.com/s2/favicons?domain=${new URL(fairnessData.url).hostname}&sz=64`}
+                            src={`https://www.google.com/s2/favicons?domain=${(() => {
+                                try { return new URL(fairnessData.url).hostname; }
+                                catch { return 'google.com'; }
+                            })()}&sz=64`}
                             className="w-5 h-5 rounded bg-white p-0.5 object-contain"
                             alt="store"
                             onError={(e) => { e.currentTarget.style.display = 'none'; }}

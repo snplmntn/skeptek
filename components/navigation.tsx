@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Search, Flame, LogIn, LogOut, User } from 'lucide-react';
+import { Search, Flame, LogIn, LogOut, User, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { supabase } from '@/lib/supabase';
@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
 
-type ViewType = 'lens-search' | 'analysis' | 'versus' | 'discovery';
+type ViewType = 'lens-search' | 'analysis' | 'versus' | 'discovery' | 'my-reports';
 
 interface NavigationProps {
   currentView?: ViewType;
@@ -139,6 +139,16 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
                                 <span className="text-xs font-bold uppercase text-muted-foreground">Current Level</span>
                                 <span className="text-sm font-black text-primary uppercase">{user?.rank || 'Window Shopper'}</span>
                             </div>
+
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full bg-primary/5 border-primary/20 hover:bg-primary/20 text-primary font-bold uppercase tracking-widest text-[10px] gap-2 h-10"
+                                onClick={() => onViewChange?.('my-reports')}
+                            >
+                                <FileText className="w-3.5 h-3.5" />
+                                My Field Reports
+                            </Button>
 
                             {/* Progress Section */}
                             <div className="space-y-2">

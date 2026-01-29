@@ -20,13 +20,17 @@ export async function marketScout(query: string): Promise<MarketData | null> {
           2. Current Price (approximate in USD).
           3. Key technical specs (brief summary).
           4. A link to the official page or a major retailer.
+          5. RELEASE INFO: When was this product first released (Year)? 
+          6. ALTERNATIVES: Is there a newer model or direct successor available now (Jan 2026)?
           
           Return JSON:
           {
             "title": string,
             "price": string,
             "specs": { "Source": "Google Search", "Summary": string },
-            "productUrl": string
+            "productUrl": string,
+            "launchDate": string (e.g., "Nov 2020"),
+            "supersededBy": string | null (Name of newer model if any)
           }
         `;
 
