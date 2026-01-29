@@ -1,4 +1,4 @@
-# Skeptek 👁️
+# <img src="./public/icon.png" width="40" height="40" alt="Skeptek Icon" style="vertical-align: bottom; margin-right: 8px;"> Skeptek 👁️
 **Forensic Product Analysis Engine** | *Built for the Gemini 3 Hackathon*
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/snplmntns-projects/v0-skeptek)
