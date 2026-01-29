@@ -57,13 +57,13 @@ export default function HowItWorks() {
 
       <Navigation mode="static" />
 
-      <div className="mx-auto max-w-6xl px-6 pt-6 pb-12 relative z-10">
-        <div className="text-center mb-10 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/20 text-[10px] font-mono uppercase tracking-widest mb-2">
+      <div className="mx-auto max-w-6xl px-6 pt-12 pb-12 relative z-10">
+        <div className="text-center mb-14 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/20 text-[10px] font-mono uppercase tracking-widest mb-3">
                 <ScanSearch className="w-3.5 h-3.5" /> System Architecture
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground mb-3">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground mb-4">
                 Inside the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Lens</span>
             </h1>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed font-light">
@@ -128,7 +128,7 @@ export default function HowItWorks() {
             </div>
         </div>
 
-        <div className="text-center mt-10">
+        <div className="text-center mt-14">
             <Link href="/">
                 <Button size="lg" className="h-14 px-10 rounded-full text-base shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.6)] transition-all hover:-translate-y-1 group bg-primary hover:bg-primary/90">
                     <Fingerprint className="w-5 h-5 mr-3" />
