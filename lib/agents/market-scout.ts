@@ -71,13 +71,8 @@ export async function marketScout(query: string): Promise<MarketData | null> {
       status: error.status
     });
     
-    // Fallback if all retries exhausted
-    return {
-       title: query,
-       price: "Unknown",
-       specs: { Source: "Fallback", Summary: "Could not retrieve live data." },
-       productUrl: ""
-    };
+    // Strict Mode: No fallback data.
+    return null;
   }
 }
 

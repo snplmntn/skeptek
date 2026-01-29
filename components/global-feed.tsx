@@ -59,7 +59,7 @@ export function GlobalFeed() {
       <div className="flex items-center justify-center gap-2 mb-4">
         <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-red-500 animate-ping' : 'bg-slate-500'}`} />
         <p className="text-center text-[9px] font-mono uppercase tracking-[0.3em] text-muted-foreground">
-          Global Watchtower
+          Global Feed
         </p>
       </div>
       

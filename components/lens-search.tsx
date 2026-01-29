@@ -5,18 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FocalAlignmentLoader } from '@/components/focal-alignment-loader'; 
 import { LensInput } from '@/components/lens-input';
 import { GlobalFeed } from '@/components/global-feed';
 import { analyzeImage } from '@/app/actions/analyze';
 import { Modal } from '@/components/ui/modal';
-import { Camera, Search, AlertTriangle, Info } from 'lucide-react';
+import { Camera, Search, AlertTriangle, Info, MessageSquarePlus, Radar } from 'lucide-react';
 import { getFriendlyErrorMessage } from '@/lib/error-mapping';
+import { getUserProfile } from '@/app/actions/user';
 
 interface LensSearchProps {
-  onSearch: (title: string, url: string, metadata?: { mode: 'text' | 'image', isVersus: boolean }) => void;
+  onSearch: (title: string, url: string, metadata?: { mode: 'text' | 'image', isVersus: boolean, isReview?: boolean }) => void;
   initialQuery?: string;
   initialMode?: 'text' | 'image';
+  initialReviewMode?: boolean;
 }
 
 const recentScans = [
@@ -27,7 +30,8 @@ const recentScans = [
   { name: 'Budget Monitor', score: 4.3, status: 'caution' },
 ];
 
-export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: LensSearchProps) {
+export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initialReviewMode = false, user }: LensSearchProps & { user?: { isGuest: boolean; rank: string; xp: number; nextRankXP: number } | null }) {
+  const router = useRouter();
   // Auto-detect versus mode from initial query if present
   const isInitialVersus = initialQuery?.includes(' vs ') || false;
   const initialQueries = isInitialVersus && initialQuery ? initialQuery.split(' vs ') : (initialQuery ? [initialQuery] : ['']);
@@ -35,6 +39,7 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
   const [queries, setQueries] = useState<string[]>(initialQueries);
   const [isVersusMode, setIsVersusMode] = useState(isInitialVersus);
   const [searchMode, setSearchMode] = useState<'text' | 'image'>(initialMode);
+  const [reviewMode, setReviewMode] = useState(initialReviewMode);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [displayedScans, setDisplayedScans] = useState<typeof recentScans>([]);
   const [scanIndex, setScanIndex] = useState(0);
@@ -42,6 +47,9 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
   // Error Modal State
   const [isErrorOpen, setIsErrorOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // User Rank State - now derived from props
+  const userRank = user;
 
   useEffect(() => {
     // Cycle through scans
@@ -138,7 +146,11 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
     }
 
     if (finalQuery) {
-      onSearch(finalQuery, `/product/${finalQuery.toLowerCase().replace(/\s+/g, '-')}`, { mode: 'text', isVersus: isVersusMode });
+      onSearch(finalQuery, `/product/${finalQuery.toLowerCase().replace(/\s+/g, '-')}`, { 
+          mode: 'text', 
+          isVersus: isVersusMode,
+          isReview: reviewMode 
+      });
     }
   };
 
@@ -175,11 +187,34 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
           <p className="text-sm font-mono tracking-[0.2em] uppercase text-primary/80">
             Deep Product Analysis
           </p>
+
           <div className="mt-6 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-100/50 dark:bg-cyan-950/30 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all cursor-crosshair">
-                   <div className="w-1.5 h-1.5 rounded-full bg-cyan-600 dark:bg-cyan-400 animate-pulse" />
-                   <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-700 dark:text-cyan-400">Rank: Smart Shopper</span>
-               </div>
+                   <div className="group relative flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-100/50 dark:bg-cyan-950/30 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all cursor-crosshair">
+                       <div className="w-1.5 h-1.5 rounded-full bg-cyan-600 dark:bg-cyan-400 animate-pulse" />
+                       <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-700 dark:text-cyan-400">
+                           {userRank?.isGuest ? (
+                               <Link href="/login" className="hover:underline">Sign In / Register</Link>
+                           ) : (
+                               `Rank: ${userRank?.rank || 'Loading...'}`
+                           )}
+                       </span>
+                       
+                       {/* XP Progress Tooltip - Only for logged in users */}
+                       {userRank && !userRank.isGuest && (
+                           <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-32 bg-black/90 text-white p-2 rounded-lg text-[10px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                               <div className="flex justify-between mb-1">
+                                   <span>XP</span>
+                                   <span>{userRank.xp} / {userRank.nextRankXP}</span>
+                               </div>
+                               <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                                   <div 
+                                       className="h-full bg-cyan-400" 
+                                       style={{ width: `${Math.min(100, (userRank.xp / userRank.nextRankXP) * 100)}%` }} 
+                                   />
+                               </div>
+                           </div>
+                       )}
+                   </div>
           </div>
         </div>
 
@@ -219,6 +254,28 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
              </button>
         </div>
 
+        {/* Review Mode Toggle (New) */}
+         <div className="mb-4 flex justify-center">
+            <button 
+                onClick={() => {
+                    if (userRank?.isGuest) {
+                        router.push('/login?next=' + encodeURIComponent('/?action=review'));
+                        return;
+                    }
+                    setReviewMode(!reviewMode);
+                }}
+                className={`
+                    text-[10px] font-mono uppercase tracking-widest transition-colors flex items-center gap-2 px-3 py-1.5 rounded-full border
+                    ${reviewMode 
+                        ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
+                        : 'border-transparent text-muted-foreground hover:bg-white/5'}
+                `}
+            >
+                <div className={`w-1.5 h-1.5 rounded-full ${reviewMode ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
+                <span>{reviewMode ? 'Review Mode Active' : 'Write a Review?'}</span>
+            </button>
+         </div>
+
         {/* Massive Floating Search Bar Container */}
         <div className={`mb-12 rounded-2xl bg-white/80 dark:bg-white/5 p-2 forensic-glass shadow-2xl relative z-10 group transition-all duration-500 flex flex-col gap-2`}>
           <div className="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 -z-10" />
@@ -240,7 +297,7 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
                                 )}
                                 <input
                                     type="text"
-                                    placeholder={isVersusMode ? `Product ${idx+1}` : "Search product, paste link, or ask..."}
+                                    placeholder={isVersusMode ? `Product ${idx+1}` : (reviewMode ? "Enter product name to verify..." : "Search product, paste link, or ask...")}
                                     value={q}
                                     onChange={(e) => updateQuery(idx, e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -262,9 +319,11 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
                         <Button
                             onClick={handleSearch}
                             disabled={!canSearch}
-                            className="flex-none h-12 px-8 rounded-xl font-bold text-sm tracking-widest uppercase bg-primary hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all duration-300 relative overflow-hidden group/btn ml-auto w-full md:w-auto"
+                            className={`flex-none h-12 px-8 rounded-xl font-bold text-sm tracking-widest uppercase text-white shadow-lg transition-all duration-300 relative overflow-hidden group/btn ml-auto w-full md:w-auto ${
+                                reviewMode ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20' : 'bg-primary hover:bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.5)]'
+                            }`}
                         >
-                            <span className="relative z-10">{isVersusMode ? 'COMPARE' : 'SCAN'}</span>
+                            <span className="relative z-10">{reviewMode ? 'Find & Review' : (isVersusMode ? 'COMPARE' : 'SEARCH')}</span>
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                         </Button>
                     </div>
@@ -298,27 +357,6 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text' }: Len
         {/* Live Pulse Ticker (Global Watchtower) */}
         <GlobalFeed />
 
-        {/* Quick Examples */}
-        <div className="mb-12 space-y-4 relative z-10">
-          <p className="text-center text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-            Recent Scans:
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {[
-              'Sony WH-1000XM5',
-              'Budget Coffee Maker',
-              'iPhone vs Pixel',
-            ].map((example) => (
-              <button
-                key={example}
-                onClick={() => handleExampleClick(example)}
-                className="rounded-lg bg-secondary/30 dark:bg-white/5 px-4 py-2 text-xs font-mono text-muted-foreground dark:text-slate-400 border border-border/50 dark:border-white/5 hover:border-primary/50 hover:text-primary transition-all duration-300 shadow-sm hover:bg-secondary/50"
-              >
-                {example}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Minimalist Footer */}
         <div className="border-t border-slate-200 pt-8 flex justify-center pb-8">

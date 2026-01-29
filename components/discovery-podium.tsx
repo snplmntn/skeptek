@@ -27,6 +27,37 @@ export function DiscoveryPodium() {
   const silver = top[1];
   const bronze = top[2];
 
+  if (loading) {
+    return (
+        <div className="min-h-screen bg-background px-6 py-12 relative overflow-hidden flex items-center justify-center">
+             {/* Background Grid Decoration */}
+             <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+             
+             <div className="w-full max-w-5xl">
+                <div className="mb-12 text-center animate-pulse">
+                    <div className="h-10 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg mx-auto mb-2" />
+                    <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg mx-auto" />
+                </div>
+
+                 <div className="animate-pulse">
+                     {/* Podium Skeleton */}
+                     <div className="flex items-end justify-center gap-4 md:gap-8 mb-24 h-64">
+                         <div className="w-32 h-40 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-50" />
+                         <div className="w-40 h-56 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-70" />
+                         <div className="w-32 h-32 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-50" />
+                     </div>
+
+                     {/* Grid Skeleton */}
+                     <div className="grid md:grid-cols-2 gap-6">
+                         <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl opacity-50" />
+                         <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl opacity-50" />
+                     </div>
+                 </div>
+             </div>
+        </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background px-6 py-12 relative overflow-hidden">
        {/* Background Grid Decoration */}
@@ -36,43 +67,54 @@ export function DiscoveryPodium() {
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-16 text-center"
+            className="mb-8 text-center"
         >
             <h1 className="mb-2 text-4xl font-black tracking-tighter text-foreground uppercase italic">
                 Discovery<span className="text-primary">Podium</span>
             </h1>
             <p className="text-muted-foreground font-mono text-sm tracking-widest">
-                VERIFIED INTELLIGENCE FEED
+                VERIFIED PRODUCT FEED
             </p>
         </motion.div>
 
-        {/* LOADING STATE - Only affects content */}
-        {loading ? (
-             <div className="animate-pulse">
-                 {/* Podium Skeleton */}
-                 <div className="flex items-end justify-center gap-4 md:gap-8 mb-24 h-64">
-                     <div className="w-32 h-40 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-50" />
-                     <div className="w-40 h-56 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-70" />
-                     <div className="w-32 h-32 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-50" />
-                 </div>
+        {/* Category Filter Bubbles */}
+        <div className="flex flex-wrap justify-center gap-2 mb-12">
+            {['All', 'Tech', 'Audio', 'Home', 'Health', 'Beauty', 'Gaming'].map((cat) => (
+                <button
+                    key={cat}
+                    onClick={async () => {
+                        setLoading(true);
+                        // Artificial delay for slick transition
+                        const [res] = await Promise.all([
+                            getTrendingScans(cat),
+                            new Promise(r => setTimeout(r, 400))
+                        ]);
+                        setData(res);
+                        setLoading(false);
+                    }}
+                    className={cn(
+                        "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border",
+                        "hover:scale-105 active:scale-95",
+                        "bg-card/50 text-muted-foreground border-border hover:border-primary/50 hover:text-primary"
+                        // Active state styling would go here if we tracked 'activeCategory' state
+                    )}
+                >
+                    {cat}
+                </button>
+            ))}
+        </div>
 
-                 {/* Grid Skeleton */}
-                 <div className="grid md:grid-cols-2 gap-6">
-                     <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl opacity-50" />
-                     <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl opacity-50" />
-                 </div>
-             </div>
-        ) : top.length === 0 ? (
+        {top.length === 0 ? (
             // EMPTY STATE
             <div className="min-h-[50vh] flex flex-col items-center justify-center text-center p-12 relative">
                  <CloudLightning className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                  <h2 className="text-xl font-bold uppercase tracking-widest text-muted-foreground mb-2">System Initializing</h2>
                  <p className="text-sm text-slate-500 font-mono">
-                     Global watchtower is calibrating. Be the first to scan a product to claim the podium.
+                     Global feed is calibrating. Be the first to scan a product to claim the podium.
                  </p>
             </div>
         ) : (
-        <>
+            <>
             {/* Podium Layout - 3D Effect */}
             <div className="mb-24 flex items-end justify-center gap-4 md:gap-8 perspective-1000 min-h-[300px]">
               
@@ -206,8 +248,12 @@ export function DiscoveryPodium() {
                                 <div className="font-bold text-foreground text-sm">{product.product_name}</div>
                                 <div className="text-xs text-muted-foreground flex gap-2">
                                     <span>{product.category}</span>
-                                    <span className="text-emerald-500 font-medium flex items-center gap-0.5">
-                                        <TrendingUp className="w-3 h-3" /> {product.trend}
+                                    {/* REAL METRIC: Trend derived from 72h scan volume */}
+                                    <span className={cn(
+                                        "font-medium flex items-center gap-0.5",
+                                        product.trend_label === 'Trending' ? "text-emerald-500" : "text-slate-400"
+                                    )}>
+                                        <TrendingUp className="w-3 h-3" /> {product.trend_label}
                                     </span>
                                 </div>
                             </div>
@@ -224,7 +270,7 @@ export function DiscoveryPodium() {
             {/* Trap/Junk Detection Card */}
             {trap && (
                 <Card className="relative p-6 overflow-hidden border-rose-500/30 bg-rose-500/5">
-                    {/* Animated Hazard Background */}
+                    {/* ... (Background Logic Intact) ... */}
                     <div className="absolute inset-0 opacity-10" 
                         style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 10px, transparent 10px, transparent 20px)'}} 
                     />
@@ -248,10 +294,11 @@ export function DiscoveryPodium() {
                                 Massive discrepancy between <span className="text-amber-500 font-bold">Marketing Claims</span> and our <span className="text-rose-600 font-bold">{trap.trust_score} verified score</span>.
                             </p>
 
+                            {/* REAL METRICS: Driven by DB View Aggregation */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-rose-100 dark:bg-rose-900/30 p-2 rounded-lg text-center">
-                                    <div className="text-[10px] font-bold text-rose-600 mb-0.5">BOT ACTIVITY</div>
-                                    <div className="text-lg font-black text-rose-700 dark:text-rose-400">{trap.bot_activity}</div>
+                                    <div className="text-[10px] font-bold text-rose-600 mb-0.5">ANOMALY LEVEL</div>
+                                    <div className="text-lg font-black text-rose-700 dark:text-rose-400">{trap.anomaly_level}</div>
                                 </div>
                                 <div className="bg-rose-100 dark:bg-rose-900/30 p-2 rounded-lg text-center">
                                     <div className="text-[10px] font-bold text-rose-600 mb-0.5">REAL VALUE</div>

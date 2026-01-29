@@ -2,9 +2,15 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Search, BarChart2, Scale, Flame } from 'lucide-react';
+import { Search, Flame, LogIn, LogOut, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Progress } from '@/components/ui/progress';
 
 type ViewType = 'lens-search' | 'analysis' | 'versus' | 'discovery';
 
@@ -12,13 +18,29 @@ interface NavigationProps {
   currentView?: ViewType;
   onViewChange?: (view: ViewType) => void;
   mode?: 'app' | 'static';
+  user?: { isGuest: boolean; rank: string; xp: number; email?: string | null; nextRankXP?: number } | null;
 }
 
-export function Navigation({ currentView = 'lens-search', onViewChange, mode = 'app' }: NavigationProps) {
+import { signOutAction } from '@/app/actions/auth';
+
+// ... (imports remain same except I will remove unused ones if easier, but replace block is simpler)
+
+export function Navigation({ currentView = 'lens-search', onViewChange, mode = 'app', user }: NavigationProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+      await signOutAction();
+  };
+
   const navItems = [
     { id: 'lens-search', label: 'Search', icon: Search },
     { id: 'discovery', label: 'Trending', icon: Flame },
   ];
+
+  // Calculate XP Progress
+  const currentXP = user?.xp || 0;
+  const nextXP = user?.nextRankXP || 1000;
+  const progressPercent = Math.min(100, (currentXP / nextXP) * 100);
 
   return (
     <nav className="border-b border-white/5 forensic-glass sticky top-0 z-[100]">
@@ -42,7 +64,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
               <span className="text-lg font-black text-foreground tracking-tighter group-hover:text-primary transition-colors leading-none uppercase italic">
                   Skeptek
               </span>
-              <span className="text-[7px] font-mono tracking-[0.4em] text-muted-foreground uppercase mt-0.5">Analysis_Unit</span>
+              <span className="text-[7px] font-mono tracking-[0.4em] text-muted-foreground uppercase mt-0.5">ANALYSIS_ENGINE</span>
             </div>
         </Link>
         
@@ -72,6 +94,74 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
                 </button>
               ))}
             </div>
+          )}
+
+          {/* User Auth Section */}
+          <div className="h-6 w-px bg-white/10 mx-1 hidden sm:block"></div>
+          
+          {user?.isGuest ? (
+              <Link href="/login">
+                  <Button variant="ghost" size="sm" className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[10px] uppercase font-bold tracking-wider rounded-lg h-9 gap-2">
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Sign In</span>
+                  </Button>
+              </Link>
+          ) : (
+             <div className="flex items-center gap-3 pl-3 border-l border-white/10">
+                 
+                 <Popover>
+                    <PopoverTrigger asChild>
+                         <button className="flex items-center gap-3 group outline-none">
+                             <div className="flex flex-col items-end hidden sm:flex">
+                                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary group-hover:text-primary/80 transition-colors">
+                                     {user?.rank || 'Window Shopper'}
+                                 </span>
+                                 <span className="text-[9px] font-mono text-muted-foreground">
+                                     XP: {user?.xp || 0}
+                                 </span>
+                             </div>
+                             <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:ring-2 ring-primary/20 transition-all">
+                                <User className="w-4 h-4" />
+                             </div>
+                         </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0 overflow-hidden bg-card/95 backdrop-blur-xl border-border" align="end">
+                        <div className="p-4 border-b border-border/50 bg-muted/20">
+                            <h4 className="font-bold text-foreground text-sm uppercase tracking-wider mb-1">Account Details</h4>
+                            <p className="text-xs text-muted-foreground font-mono truncate">
+                                {user?.email || "User"}
+                            </p>
+                        </div>
+                        
+                        <div className="p-4 space-y-4">
+                            {/* Rank Info */}
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold uppercase text-muted-foreground">Current Level</span>
+                                <span className="text-sm font-black text-primary uppercase">{user?.rank || 'Window Shopper'}</span>
+                            </div>
+
+                            {/* Progress Section */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-[10px] font-mono text-muted-foreground">
+                                    <span>XP PROGRESS</span>
+                                    <span>{currentXP} / {nextXP}</span>
+                                </div>
+                                <Progress value={progressPercent} className="h-2" />
+                            </div>
+
+                            <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                className="w-full mt-2 text-xs font-bold uppercase tracking-widest gap-2"
+                                onClick={handleLogout}
+                            >
+                                <LogOut className="w-3 h-3" />
+                                Log Out
+                            </Button>
+                        </div>
+                    </PopoverContent>
+                 </Popover>
+             </div>
           )}
 
           {mode === 'static' && (

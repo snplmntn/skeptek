@@ -31,6 +31,8 @@ export interface RedditData {
     neutral: number;
   },
   sources?: { title: string; url: string }[];
+  botProbability?: number;
+  authenticityFlags?: string[];
 }
 
 /**

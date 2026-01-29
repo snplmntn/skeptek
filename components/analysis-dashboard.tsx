@@ -5,15 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shield, Plus, Search, ExternalLink } from 'lucide-react';
 
+import { VerificationModule } from '@/components/verification-module';
+
 interface AnalysisDashboardProps {
   search: { title: string; url: string };
   data?: any; // Accepting the AI result
   onBack: () => void;
+  userRank?: string; // New Prop
+  isReviewMode?: boolean; // New Prop
 }
 
-export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardProps) {
+export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', isReviewMode = false }: AnalysisDashboardProps) {
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
+  
+  // Auto-scroll to review section if in Review Mode
+  React.useEffect(() => {
+    if (isReviewMode) {
+        const element = document.getElementById('verification-module');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+  }, [isReviewMode]);
 
   // Use real data if available, otherwise fallback to mock (or empty)
   const product = data ? {
@@ -170,12 +184,23 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
 
       {/* Main Content */}
       <div className="mx-auto max-w-4xl px-6 py-8">
+        
+        {/* NEW: Verification Module */}
+        <div className="mb-8" id="verification-module">
+            <VerificationModule 
+                productName={product.name} 
+                currentTrustScore={product.rating} 
+                userRank={userRank} 
+                initialOpen={isReviewMode}
+            />
+        </div>
+
         {/* Verdict Hero Card */}
         <div className={`mb-8 p-8 border-l-4 forensic-glass ${getVerdictStyle()}`}>
           <div className="grid md:grid-cols-2 gap-8 relative z-10">
             <div>
               <div className="flex items-center gap-4 mb-4">
-                  <h2 className="text-xs font-mono uppercase tracking-[0.3em] text-slate-400">Our Verdict</h2>
+                  <h2 className="text-xs font-mono uppercase tracking-[0.3em] text-slate-400">Verdict</h2>
                   {getRecommendationBadge()}
               </div>
               <p className="text-lg font-medium leading-relaxed font-sans text-foreground dark:text-slate-100">
@@ -186,7 +211,7 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
               <div>
                 <h3 className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-500/80 mb-3 flex items-center gap-2">
                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 glow-sm" />
-                   The Good
+                   Merits
                 </h3>
                 <ul className="space-y-2 text-sm text-foreground/80 dark:text-slate-300">
                   {product.pros.map((pro: string) => (
@@ -307,7 +332,7 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
         {/* Price Fairness Meter */}
         <div className="mb-12">
           <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
-             Price Fairness
+             Price Analysis
             <div className="group relative">
                 <HelpCircle className="w-3.5 h-3.5 text-slate-400 cursor-help" />
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 w-64 p-4 forensic-glass text-slate-300 text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 shadow-2xl border border-white/10 font-mono leading-relaxed">

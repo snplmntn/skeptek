@@ -27,13 +27,20 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
           1. ONLY use data from actual 'reddit.com' search results.
           2. YOU MUST CITE YOUR SOURCES. For every sentiment/comment extracted, include the URL of the thread in the "sources" array.
           3. IF NO REDDIT THREADS ARE FOUND, return empty sources and null comments.
+          4. DETECT BOT/ASTROTURFING: Analyze comments for suspicious patterns:
+             - Repetitive phrasing across multiple comments
+             - Overly promotional language
+             - Generic/vague praise without specifics
+             Assign a botProbability (0-100) for the overall dataset.
           
           Return JSON:
           {
             "threadTitle": "Summary of Reddit Consensus",
             "comments": string[], 
             "sentimentCount": { "positive": 0, "neutral": 0, "negative": 0 },
-            "sources": { "title": string, "url": string }[] 
+            "sources": { "title": string, "url": string }[],
+            "botProbability": number,
+            "authenticityFlags": string[]
           }
         `;
 

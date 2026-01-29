@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { readStreamableValue } from 'ai/rsc';
+import { useSearchParams } from 'next/navigation';
 import { analyzeProduct } from '@/app/actions/analyze';
 import { Navigation } from '@/components/navigation';
 import { LensSearch } from '@/components/lens-search';
@@ -13,15 +14,20 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Info } from 'lucide-react';
 import { getFriendlyErrorMessage } from '@/lib/error-mapping';
+import { getUserProfile } from '@/app/actions/user';
 
 type ViewType = 'lens-search' | 'analyzing' | 'analysis' | 'versus' | 'discovery';
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const initialReviewMode = searchParams.get('action') === 'review';
+
   const [currentView, setCurrentView] = useState<ViewType>('lens-search');
   const [selectedSearch, setSelectedSearch] = useState<{
     title: string;
     url: string;
     mode?: 'text' | 'image';
+    isReview?: boolean;
   } | null>(null);
   
   const [isAnalysisFinishing, setIsAnalysisFinishing] = useState(false);
@@ -33,19 +39,26 @@ export default function Home() {
   const [errorType, setErrorType] = useState<'data' | 'network'>('data');
   const [isErrorOpen, setIsErrorOpen] = useState(false);
 
-  const handleSearch = async (title: string, url: string, metadata?: { mode: 'text' | 'image', isVersus: boolean }) => {
+  // User Rank State
+  const [userRank, setUserRank] = useState<{ isGuest: boolean; rank: string; xp: number; nextRankXP: number; email?: string | null } | null>(null);
+
+  useEffect(() => {
+    getUserProfile().then(setUserRank);
+  }, []);
+
+  const handleSearch = async (title: string, url: string, metadata?: { mode: 'text' | 'image', isVersus: boolean, isReview?: boolean }) => {
     // 1. Enter Analysis Mode (Loader)
-    setSelectedSearch({ title, url, mode: metadata?.mode });
+    setSelectedSearch({ title, url, mode: metadata?.mode, isReview: metadata?.isReview });
     setCurrentView('analyzing');
     setIsAnalysisFinishing(false);
-    setAnalysisStatus("INITIALIZING_AGENTS...");
+    setAnalysisStatus("INITIALIZING_ANALYSIS...");
     setAnalysisResult(null);
     setErrorMsg(null);
 
 
     // 2. Call the Server Action (Orchestrator)
     try {
-        const { status, result } = await analyzeProduct(title);
+        const { status, result } = await analyzeProduct(title, { isReviewMode: metadata?.isReview });
 
         // Stream the status updates (Fan-Out progress)
         for await (const message of readStreamableValue(status)) {
@@ -103,12 +116,18 @@ export default function Home() {
         } else {
              // For single products, check if it's explicitly marked as simulated or missing name
              const isSimulated = analysisResult.isSimulated || false;
-             isValidData = !isSimulated && !!analysisResult.productName;
+             // SOTA: In Review Mode, we allow simulated/basic data because the USER is the verifier.
+             const allowSimulation = selectedSearch?.isReview;
+             
+             // Guard: If analysisResult is empty/null, it's invalid.
+             const hasName = !!analysisResult.productName;
+             
+             isValidData = (allowSimulation || !isSimulated) && hasName;
         }
         
         if (!isValidData) {
-             console.error("Critical Data Missing / Simulation Detected", analysisResult);
-             setErrorMsg("The analysis could not retrieve sufficient verifiable data for these products. To maintain accuracy, we've halted the simulation.");
+             console.error("Analysis Validation Failed", { isSimulated: analysisResult?.isSimulated, hasName: !!analysisResult?.productName, result: analysisResult });
+             setErrorMsg("We could not verify this product's identity. Please try a more specific name.");
              setErrorType('data');
              setIsErrorOpen(true);
              setCurrentView('lens-search');
@@ -145,6 +164,7 @@ export default function Home() {
       <Navigation 
         currentView={currentView === 'analyzing' ? 'lens-search' : currentView as any} 
         onViewChange={handleViewChange} 
+        user={userRank}
       />
 
       <div className="relative">
@@ -153,6 +173,8 @@ export default function Home() {
             onSearch={handleSearch} 
             initialQuery={selectedSearch?.title} 
             initialMode={selectedSearch?.mode}
+            initialReviewMode={initialReviewMode}
+            user={userRank}
           />
         )}
         
@@ -173,6 +195,8 @@ export default function Home() {
             search={selectedSearch || { title: "Demo Product Analysis", url: "#" }} 
             data={analysisResult}
             onBack={() => setCurrentView('lens-search')} 
+            userRank={userRank?.rank}
+            isReviewMode={selectedSearch?.isReview}
           />
         )}
         {currentView === 'versus' && (
