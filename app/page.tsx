@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { readStreamableValue } from 'ai/rsc';
 import { useSearchParams } from 'next/navigation';
 import { analyzeProduct } from '@/app/actions/analyze';
@@ -12,13 +12,13 @@ import { DiscoveryPodium } from '@/components/discovery-podium';
 import { ForensicLensLoader } from '@/components/forensic-lens-loader';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Info } from 'lucide-react';
+import { AlertCircle, Info, Loader2 } from 'lucide-react';
 import { getFriendlyErrorMessage } from '@/lib/error-mapping';
 import { getUserProfile } from '@/app/actions/user';
 
 type ViewType = 'lens-search' | 'analyzing' | 'analysis' | 'versus' | 'discovery';
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const initialReviewMode = searchParams.get('action') === 'review';
 
@@ -289,4 +289,16 @@ export default function Home() {
       </Modal>
     </main>
   );
+}
+
+export default function Home() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <HomeContent />
+        </Suspense>
+    );
 }
