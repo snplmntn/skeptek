@@ -156,6 +156,11 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         - Reddit Scout Bot Probability: ${redditData?.botProbability || 0}%
         - IF Bot Probability > 70%: DEDUCT 15 points from Trust Score and flag as "Suspicious Community Activity".
 
+        [FORENSIC AUDIO ANALYSIS (Transcripts)]
+        - Carefully read the "Video Reviews" transcripts.
+        - Listen for "micro-complaints" or "dealbreakers" mentioned in the video that aren't in the title.
+        - If multiple transcripts mention the same issue (e.g., "Software is buggy"), it is a CRITICAL CON.
+
         TASK:
         You are "The Judge". 
         1. Identify the product.
@@ -170,6 +175,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         6. **Make a Recommendation**: ONE WORD (BUY, CONSIDER, or AVOID).
         7. **Calculate Fairness**:
            - Use the logic above. If the product is "garantisabog" (explosive) or terrible quality, its "Fair Value" is near zero, making the current price "Unfair" (Overpriced).
+        8. **Forensic Audio Insights**: Extract 2-3 specific insights/quotes derived from video transcripts.
 
         Schema:
         {
@@ -181,12 +187,15 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
           "verdict": string,
           "pros": string[],
           "cons": string[],
+          "audioInsights": [
+             { "quote": string, "timestamp": string, "sentiment": "positive" | "negative", "topic": string }
+          ],
           "priceAnalysis": {
             "currentPrice": number, 
             "fairValueMin": number, 
             "fairValueMax": number, 
             "isFair": boolean,
-            "sourceUrl": string // URL where this price was found
+            "sourceUrl": string 
           }
         }
       `;
@@ -194,14 +203,14 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       console.log("--- [DEBUG] Gemini Brain Prompt ---");
       // console.log(prompt); // Reduced log noise
 
-      status.update("Deliberating Verdict...");
+      status.update("Deliberating Verdict (Audio Insights Included)...");
       
       let finalJson;
       try {
         const model = geminiFlash; 
         
         // SOTA 2026: Use Native JSON Mode (Structured Output)
-        // This guarantees valid JSON without regex hacks.
+        // Now with enhanced Forensic Audio Analysis
         const aiResult = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {

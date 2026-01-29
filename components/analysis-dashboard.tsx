@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shield, Plus, Search, ExternalLink } from 'lucide-react';
+import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shield, Plus, Search, ExternalLink, Mic2, Volume2, Zap } from 'lucide-react';
 
 import { VerificationModule } from '@/components/verification-module';
 
@@ -324,6 +324,47 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                     </div>
                   )}
                 </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* NEW: Forensic Audio Insights */}
+        {data?.audioInsights && data.audioInsights.length > 0 && (
+          <div className="mb-12">
+            <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+               Forensic Audio Log
+               <div className="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-[8px] text-primary">TRANSCRIPT_DUMP</div>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data.audioInsights.map((insight: any, i: number) => (
+                <div key={i} className="p-5 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Mic2 className="w-8 h-8" />
+                  </div>
+                  <div className="flex items-start gap-4 h-full">
+                    <div className={`p-2 rounded-lg shrink-0 ${insight.sentiment === 'negative' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {insight.sentiment === 'negative' ? <Volume2 className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{insight.topic || 'General Info'}</span>
+                           <span className="text-[10px] font-mono text-primary font-bold">{insight.timestamp || '0:00'}</span>
+                        </div>
+                        <p className="text-sm font-medium italic text-foreground leading-relaxed">
+                          "{insight.quote}"
+                        </p>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2">
+                          <div className={`w-1.5 h-1.5 rounded-full ${insight.sentiment === 'negative' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                          <span className="text-[9px] font-mono uppercase tracking-widest opacity-50">
+                             Audio Sentiment: {insight.sentiment}
+                          </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

@@ -1,11 +1,13 @@
 import { geminiFlash } from '../gemini';
 import { AgentState, VideoData } from './scout-types';
 import { withRetry } from '../retry';
+import { fetchTranscript } from '../youtube-transcript';
 
 /**
  * The Video Scout (Grounded):
  * Uses Gemini Grounding (Google Search) to find YouTube Video Reviews.
  * SOTA 2026: Hive Mind Aware - uses canonical name if available.
+ * NOW: Fetches transcripts for deeper audio-level forensics.
  */
 export async function videoScout(input: AgentState | string): Promise<VideoData[]> {
   // Hive Mind Logic: Determine the best query
@@ -78,7 +80,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
     // Track seen IDs to prevent duplicates within the same result set
     const seenIds = new Set<string>();
 
-    const videos = rawVideos.filter((v: any) => {
+    const validatedVideos = rawVideos.filter((v: any) => {
         const id = v.id;
         
         // 1. Structural Validation (Relaxed for SOTA 2026 Redirect handling)
@@ -86,8 +88,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
              return false; // Only completely invalid types
         }
         
-        // If it's a redirect URL or weird ID, we might need different logic, 
-        // but for now let's just ensure it's not a glaring placeholder.
+        // 2. Placeholder Check
         const isPlaceholder = placeholderPatterns.some(pattern => id.toLowerCase().includes(pattern.toLowerCase()));
         if (isPlaceholder) {
           console.warn(`[Video Scout] Placeholder ID detected: ${id}`);
@@ -114,17 +115,31 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         return true;
     });
 
-    const enrichedVideos = videos.map((v: any) => ({
-      id: v.id,
-      title: v.title,
-      url: v.url || `https://www.youtube.com/watch?v=${v.id}`,
-      thumbnail: `https://img.youtube.com/vi/${v.id}/mqdefault.jpg`,
-      moment: "0:00",
-      tag: "Review",
-      tagType: "warning" as const
+    // Node 2.5: Transcript Enrichment (Parallel)
+    // SOTA: Only fetch for top 3 to preserve performance
+    console.log(`[Video Scout] Fetching transcripts for top ${Math.min(3, validatedVideos.length)} videos...`);
+    
+    const enrichedVideos = await Promise.all(validatedVideos.map(async (v: any, index: number) => {
+      let transcript = undefined;
+      
+      // Limit transcript fetching to top 3 videos to avoid excessive latency/memory
+      if (index < 3) {
+          transcript = await fetchTranscript(v.id);
+      }
+
+      return {
+        id: v.id,
+        title: v.title,
+        url: v.url || `https://www.youtube.com/watch?v=${v.id}`,
+        thumbnail: `https://img.youtube.com/vi/${v.id}/mqdefault.jpg`,
+        moment: "0:00",
+        tag: transcript ? "Forensic Audio" : "Video Review",
+        tagType: (transcript ? "success" : "warning") as 'success' | 'warning',
+        transcript: transcript
+      };
     }));
 
-    console.log(`[Video Scout] Validated ${enrichedVideos.length}/${rawVideos.length} videos`);
+    console.log(`[Video Scout] Validated & Enriched ${enrichedVideos.length}/${rawVideos.length} videos`);
     return enrichedVideos;
 
   } catch (error: any) {

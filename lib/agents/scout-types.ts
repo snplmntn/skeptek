@@ -6,6 +6,7 @@ export interface VideoData {
   moment: string; // e.g., "02:45"
   tag: string; // e.g., "✅ Confirmed"
   tagType: 'success' | 'warning' | 'alert';
+  transcript?: string; // SOTA 2026: Transcription-derived text
 }
 
 export interface ScoutResult {
