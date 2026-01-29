@@ -57,16 +57,16 @@ export default function HowItWorks() {
 
       <Navigation mode="static" />
 
-      <div className="mx-auto max-w-5xl px-6 py-20 relative z-10">
-        <div className="text-center mb-24 space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary border border-primary/20 text-xs font-mono uppercase tracking-widest mb-4">
+      <div className="mx-auto max-w-5xl px-6 py-12 relative z-10">
+        <div className="text-center mb-12 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 text-primary border border-primary/20 text-xs font-mono uppercase tracking-widest mb-2">
                 <ScanSearch className="w-4 h-4" /> System Architecture
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground mb-6">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground mb-4">
                 Inside the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Lens</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-light">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed font-light">
                 Skeptek cuts through the noise of affiliate marketing and sponsored bias to deliver the raw, data-backed truth.
             </p>
         </div>
@@ -77,14 +77,14 @@ export default function HowItWorks() {
             <div className="absolute left-[28px] top-0 bottom-0 w-0.5 bg-border md:left-1/2 md:-ml-px md:hidden" />
             <div className="hidden md:block absolute top-[50px] left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-border to-transparent" />
 
-            <div className="grid md:grid-cols-4 gap-8 md:gap-4 relative">
+            <div className="grid md:grid-cols-4 gap-4 relative">
                 {steps.map((step, idx) => (
                     <motion.div
                         key={step.id}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
-                        transition={{ delay: idx * 0.2 }}
+                        transition={{ delay: idx * 0.1 }}
                         className="relative group"
                     >
                         {/* Step Connector Node */}
@@ -93,7 +93,7 @@ export default function HowItWorks() {
                         </div>
 
                         <div className={cn(
-                            "relative h-full bg-card/50 backdrop-blur-sm border rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-card",
+                            "relative h-full bg-card/50 backdrop-blur-sm border rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-card",
                             step.border
                         )}>
                             {/* Number Watermark */}
@@ -103,17 +103,17 @@ export default function HowItWorks() {
 
                             {/* Icon Scanner */}
                             <div className={cn(
-                                "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-2xl transition-transform group-hover:scale-110 duration-300 shadow-lg",
+                                "w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-xl transition-transform group-hover:scale-110 duration-300 shadow-lg",
                                 step.bg,
                                 step.color
                             )}>
-                                <step.icon className="w-7 h-7" />
+                                <step.icon className="w-6 h-6" />
                             </div>
 
-                            <h3 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
                                 {step.title}
                             </h3>
-                            <p className="text-muted-foreground leading-relaxed text-sm">
+                            <p className="text-muted-foreground leading-relaxed text-xs">
                                 {step.desc}
                             </p>
 
@@ -128,15 +128,15 @@ export default function HowItWorks() {
             </div>
         </div>
 
-        <div className="text-center mt-24">
+        <div className="text-center mt-12">
             <Link href="/">
-                <Button size="lg" className="h-16 px-12 rounded-full text-lg shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.6)] transition-all hover:-translate-y-1 group bg-primary hover:bg-primary/90">
-                    <Fingerprint className="w-6 h-6 mr-3" />
+                <Button size="lg" className="h-14 px-10 rounded-full text-base shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.6)] transition-all hover:-translate-y-1 group bg-primary hover:bg-primary/90">
+                    <Fingerprint className="w-5 h-5 mr-3" />
                     Start Your Investigation
-                    <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
             </Link>
-            <p className="mt-6 text-sm text-muted-foreground font-mono">
+            <p className="mt-4 text-xs text-muted-foreground font-mono">
                 Analysis takes seconds • No account required
             </p>
         </div>
