@@ -1,38 +1,24 @@
-# Documentation Plan: README.md Upgrade
+# PLAN: Global Feed Suppression (Option A)
 
-This plan outlines the updates required to bring the `README.md` in sync with the current SOTA 2026 capabilities of Skeptek.
+## Context
+The Global Feed ("Global Watchtower") currently shows an "Awaiting First Scan Sequence" placeholder when no data is present. Per the brainstorm, we will implement **Total Suppression (Stealth Mode)** to hide the component entirely when empty, ensuring a premium, focused search experience.
 
-## Missing Features to Document
+## Agents Involved
+1. `project-planner` (Planning & Coordination)
+2. `frontend-specialist` (Logic Implementation)
+3. `performance-optimizer` (Lifecycle & Render Audit)
+4. `test-engineer` (Verification)
 
-### 1. Forensic Audio Analysis (New)
-- **What:** The system now scrapes YouTube transcripts.
-- **Why:** To find "micro-complaints" that reviewers say but don't write in descriptions.
-- **Where:** Add to "The Agent Swarm" -> "Video Sniper".
+## Proposed Changes
 
-### 2. Gamified Trust System (New)
-- **What:** XP-based ranking (Cadet -> Watchtower -> Oracle) and Field Reports.
-- **Why:** incentivizes high-quality community data contributions.
-- **Where:** Add a new "Gamification & Community" section.
+### [Component] Global Feed
+- **File**: `components/global-feed.tsx`
+- **Change**: Update the conditional return for empty states.
+- **Logic**:
+  - Keep the initial `loading` skeleton/indicator if appropriate (or hide that too).
+  - If `!loading` and `scans.length === 0`, return `null` instead of the placeholder JSX.
 
-### 3. Chronological Value Logic (SOTA 2026) (New)
-- **What:** Awareness of product release dates and successors (e.g., M1 vs M4).
-- **Why:** "The Judge" now penalizes legacy hardware if priced unfairly.
-- **Where:** Update "The Judge" agent description.
-
-### 4. Technical Stack Update
-- **What:** Add **Supabase** (Auth, Postgres, Realtime).
-- **Why:** Essential part of the architecture.
-
-## Proposed Structure Changes
-
-1.  **Refine "The Pitch"**: Keep it punchy.
-2.  **Update "The Agent Swarm"**:
-    - **Market Scout**: Mention "Launch Date Tracking".
-    - **Video Sniper**: Rename/Enhance to "Forensic Audio Scout" capability.
-    - **The Judge**: Add "Chronological Context".
-3.  **New Section: "Gamification"**: Explain the rank system.
-4.  **Update "Tech Stack"**: Add Supabase.
-
-## Verification
-- Preview `README.md` to ensure badges display correctly.
-- Check formatting of new sections.
+## Verification Plan
+1. **Code Audit**: Verify `scans` state is correctly handled during both initial fetch and realtime updates.
+2. **Visual Check**: Ensure no weird spacing/gaps remain where the feed used to be.
+3. **Script Verification**: Run security and lint scans per orchestration requirements.

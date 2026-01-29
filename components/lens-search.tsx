@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -20,6 +21,8 @@ interface LensSearchProps {
   initialQuery?: string;
   initialMode?: 'text' | 'image';
   initialReviewMode?: boolean;
+  error?: string | null;
+  onClearError?: () => void;
 }
 
 const recentScans = [
@@ -30,7 +33,7 @@ const recentScans = [
   { name: 'Budget Monitor', score: 4.3, status: 'caution' },
 ];
 
-export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initialReviewMode = false, user }: LensSearchProps & { user?: { isGuest: boolean; rank: string; xp: number; nextRankXP: number } | null }) {
+export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initialReviewMode = false, user, error, onClearError }: LensSearchProps & { user?: { isGuest: boolean; rank: string; xp: number; nextRankXP: number } | null }) {
   const router = useRouter();
   // Auto-detect versus mode from initial query if present
   const isInitialVersus = initialQuery?.includes(' vs ') || false;
@@ -44,9 +47,106 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
   const [displayedScans, setDisplayedScans] = useState<typeof recentScans>([]);
   const [scanIndex, setScanIndex] = useState(0);
   
-  // Error Modal State
-  const [isErrorOpen, setIsErrorOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Background Nodes State - Fixes Hydration Mismatch
+  const [bgNodes, setBgNodes] = useState<Array<{left: string, top: string, delay: string, opacity: number}>>([]);
+
+  // Toast Error Handler
+  // Toast Error Handler
+  useEffect(() => {
+    if (error) {
+      const friendly = getFriendlyErrorMessage(error);
+      const isNet = friendly.title === 'Connection Issue';
+      
+      toast.custom((t) => (
+          <div className={`
+              w-full max-w-md rounded-xl border backdrop-blur-md p-4 flex flex-col gap-3 shadow-2xl relative overflow-hidden
+              ${isNet 
+                  ? 'bg-slate-100/90 dark:bg-slate-900/90 border-slate-200 dark:border-slate-800' 
+                  : 'bg-rose-50/95 dark:bg-rose-950/90 border-rose-200 dark:border-rose-900/50'}
+          `}>
+             <div className="flex items-start gap-4 z-10 relative">
+                <div className={`p-2 rounded-full shrink-0 ${isNet ? 'bg-slate-200 dark:bg-slate-800 text-slate-500' : 'bg-rose-100 dark:bg-rose-900/50 text-rose-500'}`}>
+                    <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className={`text-sm font-bold uppercase tracking-wider mb-1 ${isNet ? 'text-slate-700 dark:text-slate-300' : 'text-rose-700 dark:text-rose-400'}`}>
+                        {friendly.title}
+                    </h3>
+                    <p className={`text-sm font-medium leading-relaxed ${isNet ? 'text-slate-600 dark:text-slate-400' : 'text-rose-600/90 dark:text-rose-300/80'}`}>
+                        {friendly.message}
+                    </p>
+
+                    {/* Dropshipping/Scam Insight Card */}
+                    {!friendly.isTechnical && (
+                        <div className="bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg flex gap-2 mt-3 items-start">
+                            <span className="text-amber-500 text-xs mt-0.5">⚠️</span>
+                            <span className="text-[11px] text-amber-800 dark:text-amber-200/80 font-mono leading-tight">
+                               Potential white-label/dropshipped item.
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Actions Row */}
+                    <div className="flex gap-2 mt-4">
+                        <button 
+                            onClick={() => {
+                                toast.dismiss(t);
+                                onClearError?.();
+                            }}
+                            className={`
+                                text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded-lg border transition-colors
+                                ${isNet 
+                                    ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' 
+                                    : 'bg-white/50 border-rose-200 text-rose-700 hover:bg-white'}
+                            `}
+                        >
+                            Dismiss
+                        </button>
+
+                         {friendly.originalError && (
+                             <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(friendly.originalError || "");
+                                    toast.success("Error log copied", { duration: 2000 });
+                                }}
+                                className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded-lg bg-black/5 hover:bg-black/10 text-muted-foreground transition-colors"
+                             >
+                                 <Info className="w-3 h-3" />
+                                 Technical Log
+                             </button>
+                         )}
+                    </div>
+                </div>
+                
+                {/* Close X (Top Right) */}
+                <button 
+                    onClick={() => {
+                        toast.dismiss(t);
+                        onClearError?.();
+                    }}
+                    className="absolute -top-1 -right-1 p-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                    <span className="sr-only">Dismiss</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+             </div>
+          </div>
+      ), { duration: 10000, id: 'lens-error-toast' });
+    }
+  }, [error, onClearError]);
+
+  const [bgNodesInitialized, setBgNodesInitialized] = useState(false); // To prevent re-running random gen
+  useEffect(() => {
+    if (!bgNodesInitialized) {
+        setBgNodes([...Array(20)].map(() => ({
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            delay: `${Math.random() * 5}s`,
+            opacity: Math.random() * 0.5 + 0.2
+        })));
+        setBgNodesInitialized(true);
+    }
+  }, [bgNodesInitialized]);
 
   // User Rank State - now derived from props
   const userRank = user;
@@ -90,13 +190,15 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
            onSearch(productName, `/product/${productName.toLowerCase().replace(/\s+/g, '-')}`, { mode: 'image', isVersus: false });
         } else {
            console.error("Image Analysis Failed", result.error);
-           setErrorMsg(result.error || "Could not identify product from image.");
-           setIsErrorOpen(true);
+           toast.error("Analysis Failed", {
+               description: result.error || "Could not identify product from image."
+           });
         }
       } catch (e) {
          console.error(e);
-         setErrorMsg((e as Error).message);
-         setIsErrorOpen(true);
+         toast.error("Analysis Error", {
+            description: (e as Error).message
+         });
       } finally {
          setIsAnalyzingImage(false);
       }
@@ -173,7 +275,85 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
   const canSearch = queries.some(q => q.trim().length > 0);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-16">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-16 relative overflow-hidden">
+      {/* --- SOTA FORENSIC BACKGROUND LAYER --- */}
+      <div className="absolute inset-0 pointer-events-none">
+          {/* 1. Deep Base Gradient */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)]" />
+          
+          {/* 2. Animated Grid with scanning effect */}
+          <div 
+            className="absolute inset-0 opacity-[0.15] dark:opacity-[0.08]" 
+            style={{ 
+              backgroundImage: `linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)`,
+              backgroundSize: '40px 40px',
+              maskImage: 'radial-gradient(circle at 50% 50%, black, transparent 80%)'
+            }} 
+          />
+          
+          {/* 3. Floating Blue Nebulae (Optimized Blur) - Increased Density */}
+          <motion.div 
+            animate={{ 
+                x: [0, 80, -80, 0], 
+                y: [0, -50, 50, 0],
+                rotate: [0, 180, 360],
+                scale: [1, 1.2, 0.8, 1]
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-0 -left-40 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[140px] mix-blend-screen opacity-40 dark:opacity-15" 
+          />
+          <motion.div 
+            animate={{ 
+                x: [0, -60, 60, 0], 
+                y: [0, 80, -80, 0],
+                rotate: [360, 180, 0],
+                scale: [1.1, 0.9, 1.2, 1.1]
+            }}
+            transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute bottom-0 -right-40 w-[700px] h-[700px] bg-blue-600/20 rounded-full blur-[160px] mix-blend-screen opacity-40 dark:opacity-15" 
+          />
+          <motion.div 
+            animate={{ 
+                x: [-100, 100, -100], 
+                y: [100, -100, 100],
+                scale: [0.8, 1.1, 0.8]
+            }}
+            transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[180px] mix-blend-screen opacity-30 dark:opacity-10" 
+          />
+          <motion.div 
+            animate={{ 
+                x: [200, -200, 200], 
+                y: [0, 150, 0],
+            }}
+            transition={{ duration: 40, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-20 right-1/4 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] mix-blend-screen opacity-20 dark:opacity-5" 
+          />
+
+          {/* 4. Scanning Line */}
+          <motion.div 
+            animate={{ y: ['-100%', '200%'] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.5)] z-0"
+          />
+
+          {/* 5. Random Technical "Nodes" (Dust) */}
+          <div className="absolute inset-0 opacity-20">
+             {bgNodes.map((node, i) => (
+                 <div 
+                    key={i}
+                    className="absolute w-1 h-1 bg-primary rounded-full animate-pulse"
+                    style={{ 
+                        left: node.left, 
+                        top: node.top,
+                        animationDelay: node.delay,
+                        opacity: node.opacity
+                    }}
+                 />
+             ))}
+          </div>
+      </div>
+
       <div className="mx-auto w-full max-w-2xl relative">
         {/* Decorative Background Elements */}
         <div className="absolute -top-32 -left-32 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
@@ -277,8 +457,8 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
          </div>
 
         {/* Massive Floating Search Bar Container */}
-        <div className={`mb-12 rounded-2xl bg-white/80 dark:bg-white/5 p-2 forensic-glass shadow-2xl relative z-10 group transition-all duration-500 flex flex-col gap-2`}>
-          <div className="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 -z-10" />
+        <div className={`mb-12 rounded-2xl bg-white/95 dark:bg-white/5 p-2 forensic-glass shadow-[0_32px_64px_-16px_rgba(37,99,235,0.15)] dark:shadow-2xl relative z-10 group transition-all duration-500 flex flex-col gap-2 backdrop-blur-2xl border border-white/20 dark:border-white/10`}>
+          <div className="absolute inset-0 bg-primary/10 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 -z-10" />
 
           {/* Input Area */}
           <div className="relative">
@@ -314,7 +494,7 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
                     {/* Actions Footer */}
                     <div className="flex gap-2 mt-2">
                          {isVersusMode && queries.length < 4 && (
-                             <button onClick={addProduct} className="flex-1 h-12 rounded-xl border-dashed border border-white/10 hover:border-primary/50 text-slate-500 hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">+ Add Product</button>
+                             <button onClick={addProduct} className="flex-1 h-12 rounded-xl border-dashed border border-slate-300 dark:border-white/10 hover:border-primary/50 text-slate-500 hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">+ Add Product</button>
                          )}
                         <Button
                             onClick={handleSearch}
@@ -344,7 +524,10 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
 
                        {isAnalyzingImage ? (
                            <div className="min-h-[160px] flex flex-col items-center justify-center border-2 border-dashed border-cyan-500/50 rounded-xl bg-cyan-950/10">
-                               <FocalAlignmentLoader status="Analyzing Visual Evidence..." />
+                               <FocalAlignmentLoader 
+                                  status="Analyzing Visual Evidence..." 
+                                  mode={reviewMode ? 'review' : 'single'}
+                               />
                            </div>
                        ) : (
                            <LensInput onFileSelect={handleImageAnalysis} />
@@ -353,6 +536,8 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
               )}
           </div>
         </div>
+
+
 
         {/* Live Pulse Ticker (Global Watchtower) */}
         <GlobalFeed />
@@ -368,65 +553,7 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
           </Link>
         </div>
         {/* Error Modal */}
-        <Modal 
-          isOpen={isErrorOpen} 
-          onClose={() => setIsErrorOpen(false)}
-          title={errorMsg ? getFriendlyErrorMessage(errorMsg).title : "Analysis Failed"}
-        >
-          {(() => {
-             const friendly = getFriendlyErrorMessage(errorMsg || "");
-             return (
-               <div className="flex flex-col gap-6">
-                   <div className="flex items-start gap-4 text-rose-500 bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">
-                      <div className="p-1 rounded-full bg-rose-500/20 shrink-0">
-                          <AlertTriangle className="w-5 h-5" />
-                      </div>
-                      <div>
-                         <p className="text-sm font-bold uppercase tracking-wider mb-1">{friendly.title}</p>
-                         <p className="text-sm text-rose-400 font-medium leading-relaxed">
-                            {friendly.message}
-                         </p>
-                      </div>
-                   </div>
-                   
-                   {/* Technical Details Accordion */}
-                   {friendly.isTechnical && friendly.originalError && (
-                       <details className="group">
-                           <summary className="cursor-pointer text-xs font-mono text-muted-foreground hover:text-foreground flex items-center gap-2 select-none">
-                               <Info className="w-3 h-3" />
-                               <span>Technical Details</span>
-                           </summary>
-                           <div className="mt-2 bg-black/40 rounded-md p-3 border border-white/10 overflow-hidden">
-                                <code className="text-[10px] text-rose-300/80 font-mono whitespace-pre-wrap break-words block" style={{ overflowWrap: 'anywhere' }}>
-                                    {friendly.originalError}
-                                </code>
-                           </div>
-                       </details>
-                   )}
 
-                   {/* Only show "Dropshipping Insight" if it's NOT a technical API error */}
-                   {!friendly.isTechnical && (
-                       <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg flex gap-3">
-                            <div className="text-amber-500 shrink-0">⚠️</div>
-                            <p className="text-xs text-amber-200/80 font-mono leading-relaxed">
-                               <strong>Insight:</strong> If this looks like a generic product, the lack of visual match might indicate a 
-                               <span className="text-amber-100 font-bold"> white-label/dropshipped item</span> with no established brand presence.
-                            </p>
-                       </div>
-                   )}
-    
-                   <div className="flex justify-end gap-3 mt-2">
-                       <Button 
-                         onClick={() => setIsErrorOpen(false)}
-                         className="rounded-xl bg-primary hover:bg-blue-500 text-white shadow-lg shadow-primary/20"
-                       >
-                           Try Again
-                       </Button>
-                   </div>
-               </div>
-             );
-          })()}
-        </Modal>
       </div>
     </div>
   );

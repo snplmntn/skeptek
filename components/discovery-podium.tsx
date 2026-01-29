@@ -230,8 +230,9 @@ export function DiscoveryPodium() {
             </>
         )}
 
-        {/* Bento Grid Layout for Lists */}
-        <div className="grid md:grid-cols-2 gap-6 items-start">
+        {/* Bento Grid Layout for Lists - Only show if we have data */}
+        {top.length > 0 && (
+            <div className="grid md:grid-cols-2 gap-6 items-start">
             
             {/* Top Verified List */}
             <Card className="p-6 border-border/60 bg-card/50 backdrop-blur-sm">
@@ -310,6 +311,7 @@ export function DiscoveryPodium() {
                 </Card>
             )}
         </div>
+        )}
       </div>
     </div>
   );

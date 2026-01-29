@@ -16,18 +16,32 @@ interface ForensicLensLoaderProps {
   isFinishing: boolean;
   onComplete: () => void;
   status?: string;
+  mode?: 'single' | 'versus' | 'review';
 }
 
-export function ForensicLensLoader({ isFinishing, onComplete, status }: ForensicLensLoaderProps) {
+export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'single' }: ForensicLensLoaderProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [internalStatusIndex, setInternalStatusIndex] = useState(0);
   
   // Refs for smooth lerp movement
   const lensPosRef = useRef({ x: 300, y: 200, targetX: 300, targetY: 200 });
+  const versusLensRefs = useRef([ 
+    { x: 200, y: 100, targetX: 200, targetY: 100, nextUpdate: 0 },
+    { x: 400, y: 300, targetX: 400, targetY: 300, nextUpdate: 0 }
+  ]);
   const finishStartTimeRef = useRef<number | null>(null);
 
   const { resolvedTheme } = useTheme();
   const theme = resolvedTheme === 'dark' ? 'dark' : 'light';
+
+  // Use refs for props to avoid restarting the effect
+  const isFinishingRef = useRef(isFinishing);
+  const onCompleteRef = useRef(onComplete);
+  const modeRef = useRef(mode);
+
+  useEffect(() => { isFinishingRef.current = isFinishing; }, [isFinishing]);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -93,16 +107,20 @@ export function ForensicLensLoader({ isFinishing, onComplete, status }: Forensic
 
     const animate = () => {
       const now = Date.now();
+      let elapsed = now - startTime;
+      
+      // Determine effective phase
+      const canFinish = isFinishingRef.current;
+
       let currentPhase: 'noise' | 'investigation' | 'clarity' = 'noise';
       let phaseProgress = 0;
-      let elapsed = now - startTime;
 
-      if (isFinishing) {
+      if (canFinish) {
         if (!finishStartTimeRef.current) finishStartTimeRef.current = now;
         currentPhase = 'clarity';
         phaseProgress = (now - finishStartTimeRef.current) / clarityDuration;
         if (phaseProgress >= 1) {
-          onComplete();
+          onCompleteRef.current();
           phaseProgress = 1;
         }
       } else {
@@ -139,83 +157,144 @@ export function ForensicLensLoader({ isFinishing, onComplete, status }: Forensic
 
     if (currentPhase === 'investigation') {
       const loopTime = (elapsed - noiseDuration) / investigationLoopDuration;
+      const currentMode = modeRef.current;
       
-      const scanProgress = (1 + Math.sin(loopTime * Math.PI * 2 - Math.PI / 2)) / 2;
-      lensPosRef.current.targetX = width * 0.15 + scanProgress * (width * 0.7);
-      lensPosRef.current.targetY = height / 2 + Math.sin(loopTime * Math.PI * 4) * 50;
-
-      lensPosRef.current.x += (lensPosRef.current.targetX - lensPosRef.current.x) * 0.08;
-      lensPosRef.current.y += (lensPosRef.current.targetY - lensPosRef.current.y) * 0.08;
-
-      const { x, y } = lensPosRef.current;
-      const radius = 90;
-
-      // Lens Glow (Neon)
-      const glow = ctx.createRadialGradient(x, y, radius - 10, x, y, radius + 30);
-      const glowColor = theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.1)';
-      glow.addColorStop(0, glowColor);
-      glow.addColorStop(1, 'rgba(59, 130, 246, 0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(x, y, radius + 30, 0, Math.PI * 2); ctx.fill();
-
-      // Sharp Chrome Ring
-      ctx.strokeStyle = `rgba(59, 130, 246, ${0.8 + Math.sin(loopTime * Math.PI * 2) * 0.1})`;
-      ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.stroke();
-      
-      ctx.strokeStyle = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(x, y, radius - 6, 0, Math.PI * 2); ctx.stroke();
-
-      // Handle (Technical)
-      const handleAngle = Math.PI * 0.75;
-      const handleStart = { x: x + Math.cos(handleAngle) * radius, y: y + Math.sin(handleAngle) * radius };
-      const handleEnd = { x: handleStart.x + Math.cos(handleAngle) * 60, y: handleStart.y + Math.sin(handleAngle) * 60 };
-
-      ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
-      ctx.lineWidth = 12;
-      ctx.lineCap = 'butt'; // Sharp ends
-      ctx.beginPath();
-      ctx.moveTo(handleStart.x, handleStart.y);
-      ctx.lineTo(handleEnd.x, handleEnd.y);
-      ctx.stroke();
-
-      // Transition Overlay for Lens Reveal
-      particles.forEach((p) => {
-        if (Math.hypot(p.x - x, p.y - y) < radius) {
-          p.revealed = true;
-        }
-      });
-
-      // Connection Web (Neon)
-      ctx.save();
-      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip();
-      for (let i = 0; i < particles.length; i++) {
-        if (particles[i].revealed && Math.hypot(particles[i].x - x, particles[i].y - y) < radius) {
-          for (let j = i + 1; j < Math.min(i + 15, particles.length); j++) {
-            if (particles[j].revealed) {
-              const d = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
-              if (d < 60) {
-                ctx.strokeStyle = `rgba(59, 130, 246, ${0.6 * (1 - d/60)})`;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(particles[i].x, particles[i].y);
-                ctx.lineTo(particles[j].x, particles[j].y);
-                ctx.stroke();
+      // --- Specialized Mode Drawing ---
+      if (currentMode === 'versus') {
+          // Dynamic Random Wandering for Versus Mode
+          versusLensRefs.current.forEach((lens, i) => {
+              if (now > lens.nextUpdate) {
+                  // Pick new random target within safe bounds
+                  lens.targetX = width * 0.15 + Math.random() * (width * 0.7);
+                  lens.targetY = height * 0.15 + Math.random() * (height * 0.7);
+                  // Randomize speed of decision
+                  lens.nextUpdate = now + 1500 + Math.random() * 2000;
               }
-            }
-          }
-        }
-      }
-      ctx.restore();
+              // Smooth lerp
+              lens.x += (lens.targetX - lens.x) * 0.03;
+              lens.y += (lens.targetY - lens.y) * 0.03;
+          });
 
-      // Technical Label
-      ctx.fillStyle = colors.text;
-      ctx.font = 'bold 10px "Geist Mono", monospace';
-      ctx.textAlign = 'center';
-      const lensLabels = ['SCANNING', 'VERIFYING', 'FILTERING SPAM', 'EXTRACTING TRUTH'];
-      const labelIdx = Math.floor(loopTime * 1.5) % lensLabels.length;
-      ctx.fillText(`STATUS: ${lensLabels[labelIdx]}`, x, y + radius + 25);
+          // Draw Connection Beam first (so it's behind lenses)
+          const p1 = versusLensRefs.current[0];
+          const p2 = versusLensRefs.current[1];
+          ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Draw Lenses
+          versusLensRefs.current.forEach((lens, i) => {
+              const lx = lens.x;
+              const ly = lens.y;
+              const r = 70;
+              
+              // Glow
+              const g = ctx.createRadialGradient(lx, ly, r-10, lx, ly, r+20);
+              g.addColorStop(0, theme === 'dark' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.1)');
+              g.addColorStop(1, 'transparent');
+              ctx.fillStyle = g;
+              ctx.beginPath(); ctx.arc(lx, ly, r+20, 0, Math.PI * 2); ctx.fill();
+
+              // Ring
+              ctx.strokeStyle = `rgba(59, 130, 246, ${0.7 + Math.sin(loopTime * 5 + i) * 0.2})`;
+              ctx.lineWidth = 3;
+              ctx.beginPath(); ctx.arc(lx, ly, r, 0, Math.PI * 2); ctx.stroke();
+              
+              // Technical ID
+              ctx.fillStyle = colors.text;
+              ctx.font = 'bold 8px "Geist Mono"';
+              ctx.textAlign = 'center'; 
+              ctx.fillText(`PROBE_${i+1}`, lx, ly - r - 10);
+
+              particles.forEach(p => {
+                  if (Math.hypot(p.x - lx, p.y - ly) < r) p.revealed = true;
+              });
+          });
+      } else if (currentMode === 'review') {
+          // Verification Stamp / Document Flow
+          const centerX = width / 2;
+          const centerY = height / 2;
+          const stampRadius = 100 + Math.sin(loopTime * 10) * 10;
+          
+          // Outer Ring
+          ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([10, 5]);
+          ctx.beginPath(); ctx.arc(centerX, centerY, stampRadius, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Scanning Square (Document View)
+          ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+          ctx.lineWidth = 2;
+          const squareSize = 140;
+          ctx.strokeRect(centerX - squareSize/2, centerY - squareSize/2, squareSize, squareSize);
+          
+          // "Read" progress line
+          const scanY = centerY - squareSize/2 + ((loopTime * 2) % 1) * squareSize;
+          ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+          ctx.beginPath(); ctx.moveTo(centerX - squareSize/2, scanY); ctx.lineTo(centerX + squareSize/2, scanY); ctx.stroke();
+
+          particles.forEach(p => {
+              if (Math.abs(p.x - centerX) < squareSize/2 && Math.abs(p.y - centerY) < squareSize/2) p.revealed = true;
+          });
+
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.8)';
+          ctx.font = '900 12px "Geist Mono"';
+          ctx.fillText("V_CHECK_IN_PROGRESS", centerX, centerY + squareSize/2 + 25);
+      } else {
+          // Standard Single Lens
+          const scanProgress = (1 + Math.sin(loopTime * Math.PI * 2 - Math.PI / 2)) / 2;
+          lensPosRef.current.targetX = width * 0.15 + scanProgress * (width * 0.7);
+          lensPosRef.current.targetY = height / 2 + Math.sin(loopTime * Math.PI * 4) * 50;
+
+          lensPosRef.current.x += (lensPosRef.current.targetX - lensPosRef.current.x) * 0.08;
+          lensPosRef.current.y += (lensPosRef.current.targetY - lensPosRef.current.y) * 0.08;
+
+          const { x, y } = lensPosRef.current;
+          const radius = 90;
+
+          // Lens Glow (Neon)
+          const glow = ctx.createRadialGradient(x, y, radius - 10, x, y, radius + 30);
+          const glowColor = theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.1)';
+          glow.addColorStop(0, glowColor);
+          glow.addColorStop(1, 'rgba(59, 130, 246, 0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(x, y, radius + 30, 0, Math.PI * 2); ctx.fill();
+
+          // Sharp Chrome Ring
+          ctx.strokeStyle = `rgba(59, 130, 246, ${0.8 + Math.sin(loopTime * Math.PI * 2) * 0.1})`;
+          ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.stroke();
+          
+          ctx.strokeStyle = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(x, y, radius - 6, 0, Math.PI * 2); ctx.stroke();
+
+          // Handle (Technical)
+          const handleAngle = Math.PI * 0.75;
+          const handleStart = { x: x + Math.cos(handleAngle) * radius, y: y + Math.sin(handleAngle) * radius };
+          const handleEnd = { x: handleStart.x + Math.cos(handleAngle) * 60, y: handleStart.y + Math.sin(handleAngle) * 60 };
+
+          ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
+          ctx.lineWidth = 12;
+          ctx.lineCap = 'butt'; // Sharp ends
+          ctx.beginPath();
+          ctx.moveTo(handleStart.x, handleStart.y);
+          ctx.lineTo(handleEnd.x, handleEnd.y);
+          ctx.stroke();
+
+          particles.forEach((p) => {
+            if (Math.hypot(p.x - x, p.y - y) < radius) p.revealed = true;
+          });
+
+          ctx.fillStyle = colors.text;
+          ctx.font = 'bold 10px "Geist Mono", monospace';
+          ctx.textAlign = 'center';
+          const lensLabels = ['SCANNING', 'VERIFYING', 'FILTERING SPAM', 'EXTRACTING TRUTH'];
+          const labelIdx = Math.floor(loopTime * 1.5) % lensLabels.length;
+          ctx.fillText(`STATUS: ${lensLabels[labelIdx]}`, x, y + radius + 25);
+      }
 
     } else if (currentPhase === 'clarity') {
       const ease = 1 - Math.pow(1 - phaseProgress, 4);
@@ -237,24 +316,36 @@ export function ForensicLensLoader({ isFinishing, onComplete, status }: Forensic
         ctx.translate(width/2, height/2);
         ctx.globalAlpha = iconAlpha;
         
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+        const isError = status?.toLowerCase().includes('error') || status?.toLowerCase().includes('failed');
+        const mainColor = isError ? '#f43f5e' : '#3b82f6'; // Rose-500 vs Blue-500
+
+        ctx.fillStyle = isError ? 'rgba(244, 63, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)';
         ctx.beginPath(); ctx.arc(0, 0, 70, 0, Math.PI * 2); ctx.fill();
 
-        ctx.strokeStyle = '#3b82f6';
+        ctx.strokeStyle = mainColor;
         ctx.lineWidth = 4;
         ctx.beginPath(); ctx.arc(0, 0, 70, 0, Math.PI * 2); ctx.stroke();
 
-        ctx.strokeStyle = '#3b82f6';
+        ctx.strokeStyle = mainColor;
         ctx.lineWidth = 6;
         ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(-25, 0); ctx.lineTo(-5, 20); ctx.lineTo(35, -20);
+        
+        if (isError) {
+             // Red X
+             const s = 25;
+             ctx.moveTo(-s, -s); ctx.lineTo(s, s);
+             ctx.moveTo(s, -s); ctx.lineTo(-s, s);
+        } else {
+             // Blue Check
+             ctx.moveTo(-25, 0); ctx.lineTo(-5, 20); ctx.lineTo(35, -20);
+        }
         ctx.stroke();
 
         ctx.fillStyle = theme === 'dark' ? '#fff' : '#0f172a';
         ctx.font = 'bold 24px "Geist Mono"';
         ctx.textAlign = 'center';
-        ctx.fillText("DECISION_REACHED", 0, 115);
+        ctx.fillText(isError ? "ANALYSIS_FAILED" : "DECISION_REACHED", 0, 115);
       }
       ctx.restore();
     }
@@ -271,7 +362,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status }: Forensic
     cancelAnimationFrame(animationFrame);
     clearInterval(intv);
   };
-}, [isFinishing, onComplete, theme]);
+}, [theme]);
 
 // Determine the effective index for the progress dots
 const getEffectiveIndex = () => {
@@ -295,8 +386,14 @@ const getStatusIcon = () => {
   if (s.includes('launching')) return <Rocket className="w-5 h-5 text-primary" />;
   if (s.includes('analyzing')) return <Search className="w-5 h-5 text-primary" />;
   if (s.includes('deliberating')) return <Scale className="w-5 h-5 text-blue-400" />;
-  if (s.includes('unstable') || s.includes('error')) return <AlertTriangle className="w-5 h-5 text-rose-500" />;
-  if (isFinishing) return <ShieldCheck className="w-5 h-5 text-emerald-500" />;
+  if (mode === 'review') return <ShieldCheck className="w-5 h-5 text-emerald-500" />;
+  if (mode === 'versus') return <Scale className="w-5 h-5 text-primary" />;
+  if (s.includes('unstable') || s.includes('error') || s.includes('failed')) return <AlertTriangle className="w-5 h-5 text-rose-500" />;
+  if (isFinishing) {
+     return (s.includes('error') || s.includes('failed')) 
+        ? <AlertTriangle className="w-5 h-5 text-rose-500" />
+        : <ShieldCheck className="w-5 h-5 text-emerald-500" />;
+  }
   
   return <Search className="w-5 h-5 text-primary" />;
 };
@@ -340,8 +437,10 @@ return (
           className="flex flex-col items-center gap-4"
         >
           <span className="px-5 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[10px] font-black tracking-[0.2em] uppercase shadow-lg shadow-primary/5 flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            {isFinishing ? 'Verdict Ready' : 'Active Scan'}
+            <div className={`w-1.5 h-1.5 rounded-full ${status?.toLowerCase().includes('error') || status?.toLowerCase().includes('failed') ? 'bg-rose-500' : 'bg-primary'} animate-pulse`} />
+            {isFinishing 
+              ? (status?.toLowerCase().includes('error') || status?.toLowerCase().includes('failed') ? 'Analysis Halted' : 'Verdict Ready') 
+              : 'Active Scan'}
           </span>
           <div className="flex items-center gap-4">
              {getStatusIcon()}

@@ -4,6 +4,7 @@ import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from "@/components/theme-provider"
 import './globals.css'
+import { Toaster } from 'sonner'
 
 const _inter = Inter({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -37,6 +38,7 @@ export default function RootLayout({
           >
             {children}
             <Analytics />
+            <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>
     </html>

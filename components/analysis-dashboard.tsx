@@ -131,7 +131,15 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
             >
               <span className="opacity-50 group-hover:-translate-x-1 transition-transform">←</span> Back to Search
             </Button>
-            <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-white">{product.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-white">{product.name}</h1>
+              {data?.isLowConfidence && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-500 animate-pulse">
+                  <AlertCircle className="w-3 h-3" />
+                  PROVISIONAL ANALYSIS
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Section: Price, Deal & Score */}
@@ -192,6 +200,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                 currentTrustScore={product.rating} 
                 userRank={userRank} 
                 initialOpen={isReviewMode}
+                aiConfidence={data?.confidence}
             />
         </div>
 
@@ -329,11 +338,11 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
           </div>
         )}
 
-        {/* NEW: Forensic Audio Insights */}
+        {/* NEW: Deep Audio Insights */}
         {data?.audioInsights && data.audioInsights.length > 0 && (
           <div className="mb-12">
             <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
-               Forensic Audio Log
+               Deep Audio Log
                <div className="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-[8px] text-primary">TRANSCRIPT_DUMP</div>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -414,7 +423,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
             </div>
 
             {/* The Main Connective Bar - Added mx-12 to prevent label clipping */}
-            <div className="relative h-6 bg-slate-800/50 rounded-full mb-32 mt-8 mx-12">
+            <div className="relative h-6 bg-slate-200 dark:bg-slate-800/50 rounded-full mb-32 mt-8 mx-12">
                 
                 {/* Fair Value Zone (Green Pill) */}
                 <div 
@@ -477,7 +486,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                         <p className="text-xs text-muted-foreground font-mono leading-relaxed">
                             {fairnessData.current > fairnessData.fairValue.max 
                             ? `Current pricing is $${fairnessData.current - fairnessData.fairValue.max} above the identified fair market valuation. Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
-                            : `The current list price of $${fairnessData.current} aligns with our forensic data model. This represents a transparent transaction with no identified "skeptic" red flags.`
+                            : `The current list price of $${fairnessData.current} aligns with our analysis model. This represents a transparent transaction with no identified "skeptic" red flags.`
                             }
                         </p>
                     </div>

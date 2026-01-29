@@ -1,6 +1,16 @@
 export function getFriendlyErrorMessage(error: string): { title: string; message: string; isTechnical: boolean, originalError: string } {
   const err = (error || "").toLowerCase();
   
+  // Google Generative AI Errors
+  if (err.includes('googlegenerativeai')) {
+      return {
+          title: "AI Service Busy",
+          message: "The AI analysis service is currently experiencing high traffic or is unavailable. Please try again in a moment.",
+          isTechnical: true,
+          originalError: error
+      };
+  }
+
   // 403: Usually Quota or Billing, or Missing Key. To a user, this is a "System" issue.
   if (err.includes('403') || err.includes('forbidden') || err.includes('api key')) {
     return {

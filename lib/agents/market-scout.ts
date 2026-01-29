@@ -76,7 +76,13 @@ export async function marketScout(query: string): Promise<MarketData | null> {
     });
     
     // Strict Mode: No fallback data.
-    return null;
+    return {
+      title: query,
+      price: 'Unknown',
+      specs: {},
+      productUrl: '',
+      isRateLimited: error.status === 429 || error.message?.includes('429')
+    } as MarketData;
   }
 }
 

@@ -30,6 +30,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
 
   const handleLogout = async () => {
       await signOutAction();
+      toast.success("Successfully logged out");
   };
 
   const navItems = [
@@ -43,7 +44,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
   const progressPercent = Math.min(100, (currentXP / nextXP) * 100);
 
   return (
-    <nav className="border-b border-white/5 forensic-glass sticky top-0 z-[100]">
+    <nav className="border-b border-slate-200 dark:border-white/5 forensic-glass sticky top-0 z-[100]">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
         {/* Logo Section */}
         <Link 
@@ -97,7 +98,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
           )}
 
           {/* User Auth Section */}
-          <div className="h-6 w-px bg-white/10 mx-1 hidden sm:block"></div>
+          <div className="h-6 w-px bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block"></div>
           
           {user?.isGuest ? (
               <Link href="/login">
@@ -107,7 +108,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
                   </Button>
               </Link>
           ) : (
-             <div className="flex items-center gap-3 pl-3 border-l border-white/10">
+             <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-white/10">
                  
                  <Popover>
                     <PopoverTrigger asChild>
@@ -147,7 +148,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
                                 onClick={() => onViewChange?.('my-reports')}
                             >
                                 <FileText className="w-3.5 h-3.5" />
-                                My Field Reports
+                                My Reviews
                             </Button>
 
                             {/* Progress Section */}

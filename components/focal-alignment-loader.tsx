@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Rocket, Search, Scale, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 const statuses = [
   'RESOLVING_VIDEO_PHYSICS...',
@@ -9,10 +10,29 @@ const statuses = [
   'COMPILING_FINAL_ANALYSIS...',
 ];
 
-export function FocalAlignmentLoader({ status }: { status?: string }) {
+interface FocalAlignmentLoaderProps {
+  status?: string;
+  isFinishing?: boolean;
+  onComplete?: () => void;
+  mode?: 'single' | 'versus' | 'review';
+}
+
+export function FocalAlignmentLoader({ status, isFinishing, onComplete, mode = 'single' }: FocalAlignmentLoaderProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [statusIndex, setStatusIndex] = useState(0);
   const [phase, setPhase] = useState<'scatter' | 'scan' | 'resolve'>('scatter');
+  
+  const getStatusIcon = () => {
+    const s = (status || "").toLowerCase();
+    if (mode === 'versus') return <Scale className="w-5 h-5 text-primary" />;
+    if (mode === 'review') return <ShieldCheck className="w-5 h-5 text-emerald-500" />;
+    if (s.includes('launching')) return <Rocket className="w-5 h-5 text-primary" />;
+    if (s.includes('analyzing')) return <Search className="w-5 h-5 text-primary" />;
+    if (s.includes('deliberating')) return <Scale className="w-5 h-5 text-blue-400" />;
+    if (s.includes('unstable') || s.includes('error')) return <AlertTriangle className="w-5 h-5 text-rose-500" />;
+    if (isFinishing) return <ShieldCheck className="w-5 h-5 text-emerald-500" />;
+    return <Search className="w-5 h-5 text-primary" />;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -228,24 +248,25 @@ export function FocalAlignmentLoader({ status }: { status?: string }) {
       cancelAnimationFrame(animationFrame);
       clearInterval(statusInterval);
     };
-  }, []);
+  }, [isFinishing, onComplete]);
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full p-4">
       {/* Canvas - Responsive Container */}
       <div className="relative w-full max-w-[320px] aspect-square mb-4">
           <canvas
-            ref={canvasRef}
-            width={320}
-            height={320}
-            className="w-full h-full rounded-full border border-border/50 bg-background/50 dark:bg-black/20 shadow-inner"
-          />
+        ref={canvasRef}
+        width={320}
+        height={320}
+        className="w-full h-full rounded-full border border-border/50 bg-background/50 dark:bg-black/20 shadow-inner"
+      />
       </div>
 
-      {/* Status Text - Monospaced */}
-      <div className="font-mono text-xs font-medium text-muted-foreground animate-pulse text-center">
-        <span className="text-cyan-500 mr-2">&gt;</span>
-        {status || statuses[statusIndex]}
+      <div className="flex items-center gap-3 mb-2">
+          {getStatusIcon()}
+          <div className="font-mono text-xs font-medium text-muted-foreground animate-pulse text-center">
+            {status || statuses[statusIndex]}
+          </div>
       </div>
 
       {/* Phase Indicator */}

@@ -18,7 +18,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
   const supabase = await createClient(); // Authenticated Client
   const query = sanitizeInput(rawQuery);
   // Create a stream to send updates to the client
-  const status = createStreamableValue("Initializing Analysis...");
+  const status = createStreamableValue("Starting Research...");
   const result = createStreamableValue<any>(null); // Final JSON payload
 
   // We don't await this immediately so we can return the stream to the client
@@ -36,8 +36,8 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
             const items = Array.from(new Set(candidates)).slice(0, 4); // Limit to 4
 
             if (items.length > 1) {
-                status.update(`Comparison Protocol Initiated (${items.length} items)...`);
-                // @ts-ignore - Changing signature in next step
+                status.update(`Comparing ${items.length} products...`);
+                // @ts-ignore
                 await handleComparison(items, status, result); 
                 return;
             }
@@ -51,7 +51,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         const cachedData = !shouldSkipCache ? await getCachedProduct(query) : null;
         
         if (cachedData) {
-             status.update("Cache Hit. Retrieving Analysis...");
+             status.update("Retrieving saved analysis...");
              await new Promise(r => setTimeout(r, 400)); // Slight delay for UX (don't flash too fast)
              result.done(cachedData);
              status.done("Complete (Cached)");
@@ -63,7 +63,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         let mainProductQuery = query;
 
         if (query.startsWith('http://') || query.startsWith('https://')) {
-            status.update("Identifying URL Content...");
+            status.update("Reading page content...");
             const scraped = await reviewScout(query);
             if (scraped && scraped.summary) {
                  reviewScoutData = scraped;
@@ -72,15 +72,32 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
 
         // --- STANDARD SINGLE PRODUCT FLOW ---
         // Node 1: Market Scout (The Leader) - Establishes canonical identity
-        status.update("Identifying Product...");
+        status.update("Identifying product details...");
         const marketData = await marketScout(mainProductQuery);
       
+      // ERROR HANDLING (Groundedness)
+      if (!marketData || (marketData.isRateLimited && marketData.price === 'Unknown')) {
+          const errorMsg = marketData?.isRateLimited 
+            ? "Market Scout Rate Limited (429). Forensics stalled." 
+            : "Product not identified. Insufficient market ground-truth.";
+          
+          console.error(`[Brain] Critical Failure: ${errorMsg}`);
+          status.update(`Analysis Failed: ${marketData?.isRateLimited ? 'System Busy' : 'Product Not Found'}`);
+          result.done({ 
+              isError: true, 
+              error: errorMsg,
+              isRateLimited: marketData?.isRateLimited
+          });
+          status.done("Insufficient Data");
+          return;
+      }
+
       // Update State with Canonical Name
       const canonicalName = marketData?.title || mainProductQuery;
       console.log(`[Hive Mind] Canonical Name established: "${canonicalName}" (Original: "${query}")`);
 
       // Node 2 & 3: Social & Internal Scouts (The Followers) - Context-aware search
-      status.update("Forensic Investigation...");
+      status.update("Analyzing reviews and videos...");
       
       // Trigger Scouts in Parallel
       const isReviewMode = options?.isReviewMode;
@@ -90,8 +107,8 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       if (!isReviewMode) {
           // Full Forensic Mode
           [redditData, videoData, professionalReview] = await Promise.all([
-            redditScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [] }),
-            videoScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [] }),
+            redditScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [], confidence: 100 }),
+            videoScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [], confidence: 100 }),
             !reviewScoutData ? reviewScout(canonicalName) : Promise.resolve(reviewScoutData)
           ]);
       } else {
@@ -141,9 +158,9 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         
         [Professional Review Data]
         ${JSON.stringify(professionalReview || "No professional review found")}
-        ` : '[Review Mode Active: External Forensics Skipped]'}
+        ` : '[Review Mode Active: External Research Skipped]'}
         
-        [Community Field Reports (INTERNAL - HIGH TRUST)]
+        [Community Reviews (INTERNAL - HIGH TRUST)]
         ${JSON.stringify(fieldReports)}
 
         [MARKET CONTEXT for FAIRNESS]
@@ -163,21 +180,34 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         - REDUCE Trust Score by 10 if it is legacy but priced like current-gen.
         - RECOMMEND "AVOID" or "CONSIDER" if a newer alternative offers better bang-for-buck.
 
+        [CONFIDENCE & HALLUCINATION PREVENTION]
+        - Has Reddit Data? ${hasReddit ? 'YES' : 'NO'}
+        - Has Video Data? ${hasVideo ? 'YES' : 'NO'}
+        - Has Review Data? ${hasReview ? 'YES' : 'NO'}
+        - INTERNAL DATA: ${fieldReports.length} reports.
+        - IMPORTANT: If forensics (Reddit/Video/Review) are NO, you MUST set "isLowConfidence": true and a lower "confidence" score (e.g. 40-60).
+        - If all data is present, "confidence" should be 90-100.
+        - DO NOT GUESS SPECIFICATIONS. If [Market Data] has empty specs, say "Specifications Unavailable".
+        - DO NOT GUESS PRICING. If [Market Data] price is "Unknown", set "currentPrice": 0 and "isFair": false.
+
         TASK:
         You are "The Judge". 
         1. Identify the product.
         2. Give a **Trust Score (0-100)**:
            ${isReviewMode ? '- START at 85 (Baseline for verification).' : '- START at 75.'} 
            ${isReviewMode ? '- Since we are in Review Mode, rely on specifications and market reputation.' : 
-           '- DEDUCT -20 for major failure reports (explosions, DOAs) in Reddit/Video data.\n           - DEDUCT -10 for "generic/rebrand" accusations.\n           - ADD +10 for consistent praise from reputable reviewers.'}
+           `- DEDUCT -20 for major failure reports (explosions, DOAs) in Reddit/Video data.
+           - DEDUCT -10 for "generic/rebrand" accusations.
+           - ADD +10 for consistent praise from reputable reviewers.`}
            - ADJUST based on Internal Field Reports (if many users Agree/Disagree).
+           - IF FORENSIC DATA IS MISSING AND PRODUCT IS OLD: DEDUCT -15 for "Lack of Current Verification".
         3. List 3 key Pros and 3 key Cons.
         4. Determine the **Product Category** (e.g., "Smartphone", "Audio", "Kitchen", "Beauty", "Gaming", "Other").
         5. Write a "Verdict" (2 sentences max).
         6. **Make a Recommendation**: ONE WORD (BUY, CONSIDER, or AVOID).
         7. **Calculate Fairness**:
            - Use the logic above. If the product is "garantisabog" (explosive) or terrible quality, its "Fair Value" is near zero, making the current price "Unfair" (Overpriced).
-        8. **Forensic Audio Insights**: Extract 2-3 specific insights/quotes derived from video transcripts.
+        8. **Audio Insights**: Extract 2-3 specific insights/quotes derived from video transcripts.
 
         Schema:
         {
@@ -185,6 +215,8 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
           "productName": string,
           "category": string,
           "score": number,
+          "confidence": number,
+          "isLowConfidence": boolean,
           "recommendation": "BUY" | "CONSIDER" | "AVOID", 
           "verdict": string,
           "pros": string[],
@@ -205,14 +237,14 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       console.log("--- [DEBUG] Gemini Brain Prompt ---");
       // console.log(prompt); // Reduced log noise
 
-      status.update("Deliberating Verdict (Audio Insights Included)...");
+      status.update("Finalizing verdict...");
       
       let finalJson;
       try {
         const model = geminiFlash; 
         
         // SOTA 2026: Use Native JSON Mode (Structured Output)
-        // Now with enhanced Forensic Audio Analysis
+        // Now with enhanced Audio Analysis
         const aiResult = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
@@ -312,7 +344,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
 // --- COMPARISON HANDLER ---
 // --- COMPARISON HANDLER (Multi-Item) ---
 async function handleComparison(items: string[], status: any, result: any) {
-    status.update(`Comparison Protocol Initiated (${items.length} items)...`);
+    status.update(`Comparing ${items.length} products...`);
     
     interface ComparisonScoutResult {
         originalQuery: string;
@@ -333,7 +365,7 @@ async function handleComparison(items: string[], status: any, result: any) {
             const cached = await getCachedProduct(items[i]);
             if (cached) {
                 cachedResults[i] = cached;
-                status.update(`[Cache] Loaded data for ${items[i]}`);
+                status.update(`Found details for ${items[i]}`);
             } else {
                 itemsToFetch.push({ item: items[i], index: i });
             }
@@ -341,27 +373,28 @@ async function handleComparison(items: string[], status: any, result: any) {
 
         // 2. Fetch missing items
         for (const { item } of itemsToFetch) {
-             status.update(`[Market Scout] Grounding: ${item}...`);
+             status.update(`Finding details for ${item}...`);
              const market = await marketScout(item);
              
-             status.update(`[Reddit Scout] Grounding: ${item}...`);
+             if (!market) {
+                 throw new Error(`Unable to identify "${item}". Full analysis requires a verified product identity.`);
+             }
+             
+             // Proceed with social and video scouts for verified products
              const reddit = await redditScout({ 
                  initialQuery: item, 
-                 canonicalName: market?.title, 
-                 errors: [] 
+                 canonicalName: market.title, 
+                 errors: [],
+                 confidence: 100
              });
              
-             status.update(`[Video Scout] Grounding: ${item}...`);
              const video = await videoScout({ 
                  initialQuery: item, 
-                 canonicalName: market?.title, 
+                 canonicalName: market.title, 
                  marketData: market, 
-                 errors: [] 
+                 errors: [],
+                 confidence: 100
              });
-             
-             // We can construct a partial scout result here
-             // But ideally we'd want the full Judge analysis for each.
-             // For speed in comparison, we might skip the full judge and just use raw scout data.
              
              // Push to a temporary holding structure
              scoutResults.push({
@@ -372,7 +405,7 @@ async function handleComparison(items: string[], status: any, result: any) {
              });
         }
         
-        status.update("Synthesizing Forensic Matrix...");
+        status.update("Building comparison matrix...");
 
         // Construct Dynamic Prompt Context
         let promptProductContext = "";
@@ -511,7 +544,7 @@ function sanitizeInput(input: string): string {
   return input.replace(/[\x00-\x1F\x7F]/g, "").slice(0, 500);
 }
 
-// --- VISUAL FORENSICS (HACKATHON) ---
+// --- VISUAL ANALYSIS (HACKATHON) ---
 export async function analyzeImage(formData: FormData) {
   try {
     const file = formData.get("image") as File;

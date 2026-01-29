@@ -13,16 +13,16 @@ const ReportSchema = z.object({
 
 export async function submitFieldReport(formData: FormData) {
   try {
-    console.log("[Field Report] Submission started...");
+    console.log("[Review System] Submission started...");
     const supabase = await createClient();
 
     // 1. Auth Check
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-        console.error("[Field Report] Auth Failed:", authError);
+        console.error("[Review System] Auth Failed:", authError);
         return { error: "Unauthenticated. Agents must sign in to submit reports." };
     }
-    console.log(`[Field Report] User Authenticated: ${user.id}`);
+    console.log(`[Review System] User Authenticated: ${user.id}`);
 
     // 2. Validation
     const rawData = {
@@ -30,7 +30,7 @@ export async function submitFieldReport(formData: FormData) {
         agreementRating: parseInt(formData.get('agreementRating') as string),
         comment: formData.get('comment'),
     };
-    console.log("[Field Report] Data:", rawData);
+    console.log("[Review System] Data:", rawData);
 
     const parsed = ReportSchema.safeParse(rawData);
     if (!parsed.success) {
@@ -45,14 +45,14 @@ export async function submitFieldReport(formData: FormData) {
         agreement_rating: parsed.data.agreementRating,
         comment: parsed.data.comment,
         user_id: user.id,
-        status: 'pending' // Default status
+        status: 'approved' // Auto-approve
         });
 
     if (error) {
-        console.error("[Field Report] DB Insert Error:", error);
+        console.error("[Review System] DB Insert Error:", error);
         return { error: "Failed to submit report. Database error." };
     }
-    console.log("[Field Report] Saved to DB");
+    console.log("[Review System] Saved to DB");
 
     // 4. Gamification Reward
     // Award 100 XP for a detailed field report (Significant Contribution)
@@ -118,9 +118,16 @@ export async function deleteFieldReport(reportId: string) {
 
 export async function getUserReports() {
     try {
+        console.log("[Review System] Fetching user reviews...");
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: "Unauthenticated", reports: [] };
+        console.log("[Review System] Supabase client created");
+        
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            console.error("[Review System] Fetch Auth Failed:", authError);
+            return { error: "Unauthenticated", reports: [] };
+        }
+        console.log(`[Review System] Fetching for user: ${user.id}`);
 
         const { data, error } = await supabase
             .from('field_reports')
@@ -128,11 +135,15 @@ export async function getUserReports() {
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error("[Review System] DB Select Error:", error);
+            throw error;
+        }
 
+        console.log(`[Review System] Found ${data?.length || 0} reviews`);
         return { success: true, reports: data };
     } catch (err: any) {
-        console.error("[Field Report] Fetch Error:", err);
+        console.error("[Review System] Fetch Error:", err);
         return { error: err.message, reports: [] };
     }
 }

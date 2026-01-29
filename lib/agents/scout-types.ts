@@ -23,6 +23,7 @@ export interface MarketData {
   productUrl: string;
   launchDate?: string; // SOTA 2026: Track product age
   supersededBy?: string; // SOTA 2026: Track newer alternatives
+  isRateLimited?: boolean; // SOTA 2026: Flag if data fetch was throttled
 }
 
 export interface RedditData {
@@ -49,4 +50,5 @@ export interface AgentState {
     socialData?: RedditData | null;
     videoData?: VideoData[];
     errors: string[];
+    confidence: number; // 0-100 score of data integrity
 }

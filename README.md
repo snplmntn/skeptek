@@ -1,4 +1,8 @@
-# <img src="./public/icon.png" width="40" height="40" alt="Skeptek Icon" style="vertical-align: bottom; margin-right: 8px;"> Skeptek 👁️
+<p align="center">
+  <img src="./public/icon.png" width="120" height="120" alt="Skeptek Icon">
+</p>
+
+# Skeptek 👁️
 **Product Analysis Engine** | *Built for the Gemini 3 Hackathon*
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/snplmntns-projects/v0-skeptek)
@@ -36,7 +40,7 @@ Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model
 *   **🔍 Lens Search**: A unified, "command-line" style input for rapid product investigation.
 *   **🆚 Versus Mode**: Compare two products side-by-side with component-level analysis.
 *   **📉 Fairness Meter**: An algorithmic visualization that compares the *asking price* vs. the *fair market value* based on verified defects and competitor pricing.
-*   **🎮 Gamified Field Reports**: Earn **XP** and rank up from *Cadet* to *Oracle* by submitting your own verified user reviews. Your community rank influences the weight of your "Field Reports" in the global analysis engine.
+*   **🎮 Gamified Field Reports**: Earn **XP** and rank up from **Window Shopper** to **Skeptek God** by submitting your own verified user reviews. Your community rank influences the weight of your reviews in the global analysis engine.
 *   **🛡️ Analysis UI**: A "Glassmorphism" design system featuring scanlines, focal loaders, and high-contrast data displays.
 
 ## 🛠️ Tech Stack

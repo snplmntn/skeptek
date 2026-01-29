@@ -9,6 +9,7 @@ import { LensSearch } from '@/components/lens-search';
 import { AnalysisDashboard } from '@/components/analysis-dashboard';
 import { VersusArena } from '@/components/versus-arena';
 import { DiscoveryPodium } from '@/components/discovery-podium';
+import { FocalAlignmentLoader } from '@/components/focal-alignment-loader'; 
 import { ForensicLensLoader } from '@/components/forensic-lens-loader';
 import { ProfileReportsView } from '@/components/profile-reports-view';
 import { Modal } from '@/components/ui/modal';
@@ -79,11 +80,12 @@ function HomeContent() {
 
         // Check for Backend Reports Errors (like 429s or No Data)
         if (finalData.isError || finalData.error) {
-             // Handle gracefully without throwing (avoids console noise)
+             // Handle gracefully without throwing
              setErrorMsg(finalData.error || "Analysis was halted due to a system error.");
-             setErrorType('data'); // Application level error
-             setIsErrorOpen(true);
-             setCurrentView('lens-search');
+             setErrorType('data');
+             setAnalysisStatus("Analysis Failed"); // Update status text
+             // Do NOT switch view yet. Let animation finish.
+             setIsAnalysisFinishing(true);
              return;
         }
 
@@ -94,13 +96,21 @@ function HomeContent() {
         console.error("Unexpected System Error", error);
         // Fallback for unexpected crashes (e.g. network fail)
         setErrorMsg((error as Error).message);
-        setErrorType('network'); // Transport level error
-        setIsErrorOpen(true);
-        setCurrentView('lens-search');
+        setErrorType('network');
+        setAnalysisStatus("System Error"); // Update status text
+        // Do NOT switch view yet. Let animation finish.
+        setIsAnalysisFinishing(true);
     }
   };
 
   const handleAnalysisComplete = () => {
+        // ERROR HANDLING GATE: If an error was caught during fetch, show it now
+        if (errorMsg) {
+             setIsErrorOpen(true);
+             setCurrentView('lens-search');
+             return;
+        }
+
         if (!selectedSearch || !analysisResult) return; 
         
         // STRICT GATEKEEPER: Ensure we have actual data before showing results
@@ -176,6 +186,11 @@ function HomeContent() {
             initialMode={selectedSearch?.mode}
             initialReviewMode={initialReviewMode}
             user={userRank}
+            error={errorMsg}
+            onClearError={() => {
+              setIsErrorOpen(false);
+              setErrorMsg(null);
+            }}
           />
         )}
         
@@ -183,9 +198,10 @@ function HomeContent() {
         {currentView === 'analyzing' && (
              <div className="fixed inset-0 z-50 bg-background">
                 <ForensicLensLoader 
+                    status={analysisStatus || "Initializing Analysis..."}
                     isFinishing={isAnalysisFinishing}
                     onComplete={handleAnalysisComplete}
-                    status={analysisStatus}
+                    mode={selectedSearch?.isReview ? 'review' : (selectedSearch?.title.includes(' vs ') ? 'versus' : 'single')}
                 />
              </div>
         )}
@@ -214,83 +230,7 @@ function HomeContent() {
         )}
       </div>
 
-      {/* Error Modal */}
-      <Modal 
-        isOpen={isErrorOpen} 
-        onClose={() => setIsErrorOpen(false)}
-        title={errorMsg ? getFriendlyErrorMessage(errorMsg).title : "Analysis Failed"}
-      >
-        {(() => {
-            const friendly = getFriendlyErrorMessage(errorMsg || "");
-            const isNet = friendly.title === 'Connection Issue';
-            
-            return (
-                <div className="flex flex-col gap-6">
-                    {/* Main Error Alert */}
-                    <div className={`flex items-start gap-4 p-4 rounded-xl border ${
-                        isNet 
-                        ? "bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                        : "bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400"
-                    }`}>
-                        <div className={`p-1 rounded-full shrink-0 ${isNet ? 'bg-slate-200 dark:bg-slate-700' : 'bg-rose-100 dark:bg-rose-500/20'}`}>
-                            <AlertCircle className="w-5 h-5" />
-                        </div>
-                        <div>
-                        <p className="text-sm font-bold uppercase tracking-wider mb-1">
-                            {friendly.title}
-                        </p>
-                        <p className="text-sm font-medium opacity-90 leading-relaxed">
-                             {friendly.message}
-                        </p>
-                        </div>
-                    </div>
-                    
-                    {/* Technical Log (Hidden by default) */}
-                    {friendly.originalError && (
-                       <details className="group">
-                           <summary className="cursor-pointer text-xs font-mono text-slate-500 dark:text-slate-400 hover:text-foreground flex items-center gap-2 select-none transition-colors">
-                               <Info className="w-3 h-3" />
-                               <span>Technical Details</span>
-                           </summary>
-                           <div className="mt-2 bg-slate-100 dark:bg-black/30 rounded-md p-3 border border-slate-200 dark:border-white/5 overflow-hidden">
-                                <code className="text-[10px] text-slate-600 dark:text-slate-400 font-mono whitespace-pre-wrap break-words block" style={{ overflowWrap: 'anywhere' }}>
-                                    {friendly.originalError}
-                                </code>
-                           </div>
-                       </details>
-                    )}
-                    
-                    {/* Warning Box (Only for Non-Technical / Data Errors) */}
-                    {!friendly.isTechnical && (
-                        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 rounded-lg flex gap-3">
-                            <div className="text-amber-600 dark:text-amber-500 shrink-0">⚠️</div>
-                            <p className="text-xs text-amber-800 dark:text-amber-200/80 font-mono leading-relaxed">
-                                <strong>Warning:</strong> A complete lack of digital footprint often indicates a 
-                                <span className="text-amber-900 dark:text-amber-100 font-bold"> very new listing</span> or a 
-                                <span className="text-amber-900 dark:text-amber-100 font-bold"> potential scam/dropshipping product</span>. 
-                            </p>
-                        </div>
-                    )}
 
-                    <div className="flex justify-end gap-3 mt-2">
-                        <Button 
-                        variant="outline" 
-                        onClick={() => setIsErrorOpen(false)}
-                        className="rounded-xl border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"
-                        >
-                            Dismiss
-                        </Button>
-                        <Button 
-                        onClick={handleRetry}
-                        className="rounded-xl bg-primary hover:bg-blue-500 text-white shadow-lg shadow-primary/20"
-                        >
-                            {isNet ? "Retry Connection" : "Search Again"}
-                        </Button>
-                    </div>
-                </div>
-            );
-        })()}
-      </Modal>
     </main>
   );
 }

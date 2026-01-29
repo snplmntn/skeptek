@@ -20,6 +20,7 @@ interface Scan {
 export function GlobalFeed() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [isLive, setIsLive] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Initial Fetch (Get last 5)
@@ -30,6 +31,7 @@ export function GlobalFeed() {
       .limit(5)
       .then(({ data }) => {
         if (data) setScans(data as Scan[]);
+        setLoading(false);
       });
 
     // Realtime Subscription
@@ -54,6 +56,10 @@ export function GlobalFeed() {
     };
   }, []);
 
+  if (!loading && scans.length === 0) {
+      return null;
+  }
+
   return (
     <div className="mb-12 relative z-10 w-full max-w-6xl mx-auto px-6 pause-on-hover">
       <div className="flex items-center justify-center gap-2 mb-4">
@@ -67,10 +73,10 @@ export function GlobalFeed() {
       <div className="relative w-full overflow-hidden mask-gradient-x">
         {/* Animated Track - Duplicated content for seamless loop */}
         <div className="animate-horizontal-marquee flex items-center w-max gap-4">
-            {[...scans, ...scans, ...scans, ...scans].map((scan, idx) => ( // Quadrupled for seamless loop & width safety
+            {scans.length > 0 ? [...scans, ...scans, ...scans, ...scans].map((scan, idx) => ( // Quadrupled for seamless loop & width safety
             <div
                 key={`${scan.id}-${idx}`}
-                className="group flex items-center justify-between p-3 gap-6 rounded-xl border border-white/5 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-colors cursor-default min-w-[300px]"
+                className="group flex items-center justify-between p-3 gap-6 rounded-xl border border-slate-200 dark:border-white/5 bg-white/80 dark:bg-white/5 backdrop-blur-md hover:bg-white dark:hover:bg-white/10 transition-colors cursor-default min-w-[300px]"
             >
                 {/* Product Info */}
                 <div className="flex items-center gap-3 overflow-hidden">
@@ -113,15 +119,19 @@ export function GlobalFeed() {
                     </div>
                 </div>
             </div>
-            ))}
+            )) : (
+                 <div className="min-w-[300px] p-4 text-center text-xs font-mono text-muted-foreground">
+                    Listening for incoming signals...
+                 </div>
+            )}
         </div>
         
         {/* Mask Gradients for fade effect */}
         <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent z-10" />
 
-         {scans.length === 0 && (
-              <div className="flex justify-center py-4">
+         {(loading) && (
+              <div className="flex justify-center py-4 absolute inset-0 items-center bg-background/50 backdrop-blur-sm z-20">
                   <span className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Initializing Feed...</span>
               </div>
         )}

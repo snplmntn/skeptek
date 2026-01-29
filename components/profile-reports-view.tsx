@@ -38,14 +38,20 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
     }, []);
 
     const fetchReports = async () => {
-        setLoading(true);
-        const res = await getUserReports();
-        if (res.success) {
-            setReports(res.reports);
-        } else {
-            toast.error(res.error || "Failed to load reports");
+        try {
+            setLoading(true);
+            const res = await getUserReports();
+            if (res.success) {
+                setReports(res.reports);
+            } else {
+                toast.error(res.error || "Failed to load reports");
+            }
+        } catch (err: any) {
+            console.error("Client Fetch Error:", err);
+            toast.error("Connection error. Failed to reach the server.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleEdit = (report: Report) => {
@@ -108,13 +114,13 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                             className="flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-primary transition-colors group mb-4"
                         >
                             <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
-                            BACK_TO_SEARCH
+                            BACK_TO_HOME
                         </button>
                         <h1 className="text-4xl font-black italic uppercase tracking-tighter text-foreground">
-                            My <span className="text-primary">Field Reports</span>
+                            My <span className="text-primary">Reviews</span>
                         </h1>
                         <p className="text-sm font-mono text-muted-foreground max-w-md">
-                            Manage your intelligence submissions. Authenticated data points contributing to the global analysis engine.
+                            Manage your product reviews and community feedback. Your contributions help the global analysis engine stay accurate.
                         </p>
                     </div>
                 </div>
@@ -126,10 +132,42 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                             <div key={i} className="h-32 rounded-2xl bg-muted/20 animate-pulse border border-border" />
                         ))
                     ) : reports.length === 0 ? (
-                        <div className="text-center py-20 rounded-3xl border border-dashed border-white/10 bg-muted/5">
-                            <FileText className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-                            <p className="text-sm font-mono text-muted-foreground uppercase tracking-widest">No reports found in your database.</p>
-                            <Button variant="link" onClick={onBack} className="mt-2 text-primary font-bold">Start Scanning →</Button>
+                        <div className="relative flex flex-col items-center justify-center py-24 rounded-3xl border border-dashed border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-gradient-to-b dark:from-white/5 dark:to-transparent overflow-hidden">
+                            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,transparent_25%,rgba(60,60,60,0.5)_50%,transparent_75%,transparent_100%)] bg-[length:24px_24px] pointer-events-none" />
+                            
+                            <motion.div 
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.5 }}
+                                className="relative z-10 flex flex-col items-center text-center space-y-6 max-w-sm px-4"
+                            >
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
+                                    <div className="relative w-24 h-24 rounded-2xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-center backdrop-blur-sm shadow-2xl">
+                                        <FileText className="w-10 h-10 text-slate-400 dark:text-primary/80" />
+                                    </div>
+                                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-white dark:text-black border-2 border-background">
+                                        0
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <h3 className="text-xl font-bold text-foreground">
+                                        No Reviews Yet
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        You haven't written any reviews yet. Share your experiences to help the community.
+                                    </p>
+                                </div>
+
+                                <Button 
+                                    onClick={onBack} 
+                                    className="h-12 px-8 rounded-xl bg-primary hover:bg-blue-500 text-white font-bold shadow-lg shadow-primary/20 group transition-all"
+                                >
+                                    Write a Review
+                                    <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                            </motion.div>
                         </div>
                     ) : (
                         <AnimatePresence mode="popLayout">
@@ -156,7 +194,7 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                                                     </div>
                                                 </div>
                                                 <div className="text-[10px] font-mono text-muted-foreground opacity-50">
-                                                    ID: {report.id.split('-')[0]} // {new Date(report.created_at).toLocaleDateString()}
+                                                    #{report.id.split('-')[0]} • {new Date(report.created_at).toLocaleDateString()}
                                                 </div>
                                             </div>
 
@@ -184,14 +222,14 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                                                         className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-sm text-foreground focus:ring-1 ring-primary/50 outline-none min-h-[100px] font-mono"
                                                         placeholder="Update your intelligence findings..."
                                                     />
-                                                    <div className="flex gap-2">
-                                                        <Button size="sm" onClick={() => handleUpdate(report.id)} className="gap-2 font-bold uppercase tracking-wider text-[10px]">
-                                                            <Save className="w-3 h-3" /> Commit Changes
-                                                        </Button>
-                                                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="gap-2 font-bold uppercase tracking-wider text-[10px]">
-                                                            <X className="w-3 h-3" /> Cancel
-                                                        </Button>
-                                                    </div>
+                                                      <div className="flex gap-2">
+                                                          <Button size="sm" onClick={() => handleUpdate(report.id)} className="gap-2 font-bold text-xs">
+                                                              <Save className="w-3 h-3" /> Save Changes
+                                                          </Button>
+                                                          <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="gap-2 font-bold text-xs">
+                                                              <X className="w-3 h-3" /> Cancel
+                                                          </Button>
+                                                      </div>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-2">
@@ -213,14 +251,14 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                                                 <button 
                                                     onClick={() => handleEdit(report)}
                                                     className="p-2.5 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all group/icon"
-                                                    title="Edit Intelligence"
+                                                    title="Edit Review"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDelete(report.id)}
                                                     className="p-2.5 rounded-xl hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-all"
-                                                    title="Purge Evidence"
+                                                    title="Delete Review"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>

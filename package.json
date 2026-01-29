@@ -8,6 +8,9 @@
     "lint": "eslint .",
     "start": "next start"
   },
+  "overrides": {
+    "swr": "2.3.8"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",

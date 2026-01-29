@@ -3,38 +3,37 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ThumbsUp, ThumbsDown, Minus, MessageSquarePlus, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Minus, MessageSquarePlus, CheckCircle2, ShieldAlert, FileText } from 'lucide-react';
 import { submitFieldReport } from '@/app/actions/field-report';
 import { toast } from 'sonner';
 
 interface VerificationModuleProps {
   productName: string;
   currentTrustScore: number;
-  userRank?: string; // Made optional to fix strict type check if passed undefined
+  userRank?: string; 
   initialOpen?: boolean;
+  aiConfidence?: number;
 }
 
-export function VerificationModule({ productName, currentTrustScore, userRank = 'Guest', initialOpen = false }: VerificationModuleProps) {
+export function VerificationModule({ productName, currentTrustScore, userRank = 'Guest', initialOpen = false, aiConfidence = 85 }: VerificationModuleProps) {
   const [isOpen, setIsOpen] = useState(initialOpen);
   const [agreement, setAgreement] = useState<number | null>(null); // -1, 0, 1
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // If user is Guest, show "Sign In" CTA instead of form
-  if (userRank === 'Guest') {
-    return (
-      <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-6 text-center">
-        <h3 className="text-sm font-bold uppercase tracking-widest mb-2 text-muted-foreground">Community Verification</h3>
+      <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-6 text-center group">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3 text-primary flex items-center justify-center gap-2">
+           <MessageSquarePlus className="w-4 h-4" />
+           Own this product?
+        </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Do you own <strong>{productName}</strong>? Sign in to verify our analysis and earn XP.
+          Share your experience with <strong>{productName}</strong> to help others make better buying decisions.
         </p>
-        <Button variant="outline" size="sm" asChild>
-          <a href="/login?mode=signup">Sign In / Register</a>
+        <Button variant="default" size="sm" asChild className="bg-primary hover:bg-blue-600 shadow-lg shadow-blue-500/20 px-6 font-mono text-[10px] tracking-widest uppercase">
+          <a href="/login?mode=signup">Sign in to Review</a>
         </Button>
       </div>
-    );
-  }
 
   const handleSubmit = async () => {
     if (agreement === null) return;
@@ -64,8 +63,8 @@ export function VerificationModule({ productName, currentTrustScore, userRank = 
                 <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-                <h4 className="text-sm font-bold text-emerald-500 uppercase tracking-widest">Verification Recorded</h4>
-                <p className="text-xs text-emerald-400/80 font-mono mt-1">Thank you, Agent. Your field report has been logged.</p>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Upload Complete</h3>
+                <p className="text-xs text-emerald-400/80 font-mono mt-1">Thank you. Your review has been logged.</p>
             </div>
         </div>
      );
@@ -74,20 +73,27 @@ export function VerificationModule({ productName, currentTrustScore, userRank = 
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
         <div className="flex items-start justify-between mb-4">
-            <div>
-                 <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 text-primary" />
-                    Verify Intelligence
+            <div className="flex-1">
+                 <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-slate-400">
+                    <FileText className="w-3.5 h-3.5" />
+                    Community Review
                  </h3>
                  <p className="text-xs text-muted-foreground font-mono mt-1 max-w-md">
-                    Our AI gives this a Trust Score of <span className="text-primary font-bold">{currentTrustScore.toFixed(0)}</span>. 
-                    Based on your real-world usage, is this accurate?
+                    Analysis Data Coverage: <span className={aiConfidence < 70 ? 'text-rose-500' : 'text-emerald-500'}>{aiConfidence}%</span>. 
+                    Your feedback helps improve our accuracy.
                  </p>
+                 {/* Confidence Bar */}
+                 <div className="mt-3 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div 
+                        className={`h-full transition-all duration-1000 ${aiConfidence < 70 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${aiConfidence}%` }}
+                    />
+                 </div>
             </div>
             {!isOpen && (
                 <Button variant="ghost" size="sm" onClick={() => setIsOpen(true)} className="gap-2 text-xs font-mono uppercase tracking-widest">
                     <MessageSquarePlus className="w-4 h-4" />
-                    Add Report
+                    Write a Review
                 </Button>
             )}
         </div>
