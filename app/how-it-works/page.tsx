@@ -11,27 +11,27 @@ export default function HowItWorks() {
   const steps = [
     {
       id: 1,
-      title: 'Wide-Net Search',
+      title: 'Grounded Recon',
       icon: Telescope,
-      desc: 'Our Smart Scouts fan out across the web to gather official specs, price history, and real user discussions, filtering out bot spam.',
+      desc: 'Our Market Scout tracks live street prices and release dates, ensuring you don\'t buy "new" tech that\'s actually 4 years old.',
       color: 'text-blue-500',
       bg: 'bg-blue-500/10',
       border: 'border-blue-500/20'
     },
     {
       id: 2,
-      title: 'Visual Forensics',
+      title: 'Forensic Audio',
       icon: Microscope,
-      desc: 'AI Vision spots physical defects in video reviews that text misses. We reverse-search images to detect overpriced rebrands.',
+      desc: 'The Video Scout doesn\'t just watch; it listens. We analyze high-fidelity transcripts to catch "micro-complaints" reviewers try to hide.',
       color: 'text-emerald-500',
       bg: 'bg-emerald-500/10',
       border: 'border-emerald-500/20'
     },
     {
       id: 3,
-      title: 'Global Sentry',
+      title: 'Community Intel',
       icon: ShieldCheck,
-      desc: 'We verify region locks, voltage compatibility, and import taxes so you avoid expensive "paperweights".',
+      desc: 'Verified Field Reports from ranked users (Cadet to Oracle). We filter out astroturfing to show you raw, honest ownership experiences.',
       color: 'text-indigo-500',
       bg: 'bg-indigo-500/10',
       border: 'border-indigo-500/20'
@@ -40,7 +40,7 @@ export default function HowItWorks() {
       id: 4,
       title: 'The Verdict',
       icon: Gavel,
-      desc: 'Data synthesized into a single Trust Score. A clear, unbiased recommendation: hidden gem or marketing fluff?',
+      desc: 'The Judge synthesizes all data into a 2026-calibrated Truth Score. It penalizes legacy hardware and rewards genuine value.',
       color: 'text-purple-500',
       bg: 'bg-purple-500/10',
       border: 'border-purple-500/20'
@@ -71,7 +71,7 @@ export default function HowItWorks() {
             </p>
         </div>
 
-        {/* The Forensic Pipeline */}
+        {/* The Analysis Pipeline */}
         <div className="relative">
             {/* Animated Connector Line (Desktop) */}
             <div className="absolute left-[28px] top-0 bottom-0 w-0.5 bg-border md:left-1/2 md:-ml-px md:hidden" />
