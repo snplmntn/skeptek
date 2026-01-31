@@ -45,8 +45,15 @@ export async function withRetry<T>(
       }
 
       // Check if error is retryable
-      const status = error.status || error.response?.status;
-      const isRetryable = status && retryableStatuses.includes(status);
+      const status = error.status || error.response?.status || error.code;
+      const message = error.message || JSON.stringify(error);
+      
+      const isRateLimit = status === 429 || 
+                          message.includes('429') || 
+                          message.includes('Resource exhausted') ||
+                          message.includes('Quota exceeded');
+
+      const isRetryable = isRateLimit || (status && retryableStatuses.includes(status));
       
       if (!isRetryable) {
         throw error;

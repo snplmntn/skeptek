@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Scan } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ interface LensInputProps {
   onClear?: () => void;
 }
 
-export function LensInput({ onFileSelect, onClear }: LensInputProps) {
+export const LensInput = memo(function LensInput({ onFileSelect, onClear }: LensInputProps) {
   const [preview, setPreview] = useState<string | null>(null);
 
   const onDrop = useCallback(
@@ -102,4 +102,4 @@ export function LensInput({ onFileSelect, onClear }: LensInputProps) {
       `}</style>
     </div>
   );
-}
+});

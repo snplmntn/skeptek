@@ -1,0 +1,10 @@
+flask
+gevent
+selenium
+webdriver-manager
+beautifulsoup4
+requests
+youtube-transcript-api
+yt-dlp
+opencv-python-headless
+google-generativeai

@@ -1,7 +1,7 @@
 'use client';
 
 import { createClient } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 
 // Initialize Client (Anon Key is safe for public subscription)
 const supabase = createClient(
@@ -17,7 +17,7 @@ interface Scan {
   created_at: string;
 }
 
-export function GlobalFeed() {
+export const GlobalFeed = memo(function GlobalFeed() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -138,4 +138,4 @@ export function GlobalFeed() {
       </div>
     </div>
   );
-}
+});

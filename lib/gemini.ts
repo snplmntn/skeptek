@@ -1,42 +1,48 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.GOOGLE_API_KEY || "";
-console.log("Gemini API Key Status:", apiKey ? "Loaded (" + apiKey.substring(0, 4) + "...)" : "MISSING");
-const genAI = new GoogleGenerativeAI(apiKey);
+const projectId = process.env.GOOGLE_CLOUD_PROJECT || "skeptek-hackathon";
+const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
 
-const safetySettings = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-];
+console.log(`[Gemini] Initializing Vertex AI Client for project: ${projectId} (${location})`);
 
-
-export const geminiFlash = genAI.getGenerativeModel({ 
-  model: "gemini-3-flash", 
-  safetySettings,
-  generationConfig: {
-    temperature: 0.7, 
-    maxOutputTokens: 8192,
-  }
+export const genAI = new GoogleGenAI({
+  // vertexai: true, // Disabled: User lacks ADC. Falling back to Google AI gateway with API Key.
+  apiKey: process.env.GOOGLE_API_KEY,
+  // project: projectId,
+  // location: location,
 });
 
-export const geminiPro = genAI.getGenerativeModel({
-  model: "gemini-3-flash", 
-  safetySettings,
-  generationConfig: {
-    temperature: 0.4, 
-  }
-});
+// SOTA 2026: Export Model Names for consistency
+export const MODEL_FLASH = "gemini-3-flash-preview"; 
+export const MODEL_PRO = "gemini-3-pro-preview";
+
+// Helper to keep similar API surface for easier refactoring, 
+// though we will update agents to use the new signature.
+export const geminiFlash = {
+    generateContent: async (params: any) => {
+        return await genAI.models.generateContent({
+            model: MODEL_FLASH,
+            ...params
+        });
+    }
+};
+
+export const geminiPro = {
+    generateContent: async (params: any) => {
+        return await genAI.models.generateContent({
+            model: MODEL_PRO,
+            ...params
+        });
+    }
+};
+
+// SOTA 2026: Grounding Model (Gemini 3 Flash)
+// User Note: Gemini 3 supports grounding!
+export const geminiGroundingModel = {
+    generateContent: async (params: any) => {
+        return await genAI.models.generateContent({
+            model: "gemini-3-flash-preview", 
+            ...params
+        });
+    }
+};

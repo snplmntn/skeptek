@@ -12,6 +12,8 @@
     "swr": "2.3.8"
   },
   "dependencies": {
+    "@google-cloud/discoveryengine": "^2.5.2",
+    "@google/genai": "^1.38.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
@@ -68,6 +70,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
+    "youtube-captions-scraper": "^2.0.3",
     "zod": "3.25.76"
   },
   "devDependencies": {

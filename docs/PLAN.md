@@ -1,24 +1,49 @@
-# PLAN: Global Feed Suppression (Option A)
+# Plan: Generalizing Deep Audio Logs to Community Intel
 
-## Context
-The Global Feed ("Global Watchtower") currently shows an "Awaiting First Scan Sequence" placeholder when no data is present. Per the brainstorm, we will implement **Total Suppression (Stealth Mode)** to hide the component entirely when empty, ensuring a premium, focused search experience.
+## 1. Objective
+Transform the specific "Deep Audio Log" feature into a generalized "Community Intel" section. This will aggregate and display insights from both **Video Transcripts** (Audio) and **Reddit Threads** (Text) with appropriate distinction.
 
-## Agents Involved
-1. `project-planner` (Planning & Coordination)
-2. `frontend-specialist` (Logic Implementation)
-3. `performance-optimizer` (Lifecycle & Render Audit)
-4. `test-engineer` (Verification)
+## 2. Requirements
+- **Unified UI**: A single section displaying cards for both source types.
+- **Iconography**:
+    - Videos: Speaker/Mic Icon 🔊
+    - Reddit: Chat/Message Icon 💬
+- **Backend Logic**:
+    - Update `judge-system` to extract quotes from Reddit sources (previously strictly forbidden).
+    - Ensure source discrimination (URL-based or metadata-based).
 
-## Proposed Changes
+## 3. Architecture & Task Breakdown
 
-### [Component] Global Feed
-- **File**: `components/global-feed.tsx`
-- **Change**: Update the conditional return for empty states.
-- **Logic**:
-  - Keep the initial `loading` skeleton/indicator if appropriate (or hide that too).
-  - If `!loading` and `scans.length === 0`, return `null` instead of the placeholder JSX.
+### Phase 2: Implementation
 
-## Verification Plan
-1. **Code Audit**: Verify `scans` state is correctly handled during both initial fetch and realtime updates.
-2. **Visual Check**: Ensure no weird spacing/gaps remain where the feed used to be.
-3. **Script Verification**: Run security and lint scans per orchestration requirements.
+#### 🤖 Backend Specialist
+- **File**: `lib/prompts/judge-system.ts`
+- **Task**: Update `JUDGE_SYSTEM_INSTRUCTION` and `JUDGE_SCHEMA`.
+    - Change prompt to allow "Reddit Threads" in `audioInsights` (renaming concept to `communityInsights` internally or just expanding definition).
+    - enforce `sourceUrl` is present.
+
+#### 🎨 Frontend Specialist
+- **File**: `components/analysis-dashboard.tsx`
+- **Task**: 
+    - Rename UI Header: "DEEP AUDIO LOG" -> "COMMUNITY INTEL".
+    - Update Badge: "TRANSCRIPT_DUMP" -> "SOURCE_DUMP".
+    - Update Card Rendering:
+        - Check `sourceUrl` or `topic`.
+        - If `reddit.com`: Show Message Icon, specific styling.
+        - If `youtube.com`: Show Speaker Icon (existing styling).
+    - Update Sentiment Label: "Audio Sentiment" -> "Source Sentiment".
+
+#### 🧪 Test Engineer / Verification
+- **Task**: Manual verification script or walkthrough.
+    - search for a popular product (e.g. "RTX 4060").
+    - Verify both Reddit and YouTube quotes appear in the grid.
+    - Validate click-through links.
+
+## 4. Verification Strategy
+- **Security**: Ensure no XSS from quoted text (React handles this, but watch for `dangerouslySetInnerHTML`).
+- **Quality**: Ensure Reddit quotes aren't full garbage (prompt tuning).
+
+## 5. Agent Assignment
+1. `backend-specialist` -> Update Prompts.
+2. `frontend-specialist` -> Update Dashboard UI.
+3. `test-engineer` -> Verify output and links.

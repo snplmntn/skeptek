@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shield, Plus, Search, ExternalLink, Mic2, Volume2, Zap } from 'lucide-react';
 
 import { VerificationModule } from '@/components/verification-module';
+import { BentoGrid, BentoGridItem } from '@/components/BentoGrid';
 
 interface AnalysisDashboardProps {
   search: { title: string; url: string };
@@ -204,84 +205,108 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
             />
         </div>
 
-        {/* Verdict Hero Card */}
-        <div className={`mb-8 p-8 border-l-4 forensic-glass ${getVerdictStyle()}`}>
-          <div className="grid md:grid-cols-2 gap-8 relative z-10">
-            <div>
-              <div className="flex items-center gap-4 mb-4">
-                  <h2 className="text-xs font-mono uppercase tracking-[0.3em] text-slate-400">Verdict</h2>
-                  {getRecommendationBadge()}
-              </div>
-              <p className="text-lg font-medium leading-relaxed font-sans text-foreground dark:text-slate-100">
-                {product.verdict}
-              </p>
-            </div>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-500/80 mb-3 flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 glow-sm" />
-                   Merits
-                </h3>
-                <ul className="space-y-2 text-sm text-foreground/80 dark:text-slate-300">
-                  {product.pros.map((pro: string) => (
-                    <li key={pro} className="flex gap-3 items-center">
-                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="font-mono text-xs text-foreground dark:text-slate-200">{pro}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-[10px] font-mono uppercase tracking-widest text-amber-600 dark:text-amber-500/80 mb-3 flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500 glow-sm" />
-                   The Bad
-                </h3>
-                <ul className="space-y-2 text-sm text-foreground/80 dark:text-slate-300">
-                  {product.cons.map((con: string) => (
-                    <li key={con} className="flex gap-3 items-center">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span className="font-mono text-xs text-foreground dark:text-slate-200">{con}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* NEW: SOTA Bento Grid Verdict */}
+        <BentoGrid className="mb-12">
+           <BentoGridItem
+             title="The Verdict"
+             description={<span className="text-sm font-medium leading-relaxed block mt-2 text-foreground/90">{product.verdict}</span>}
+             header={<div className={`h-24 w-full rounded-xl p-4 flex items-center justify-center text-4xl font-black uppercase tracking-[0.2em] ${getVerdictStyle()}`}>{product.recommendation}</div>}
+             className="md:col-span-2"
+             icon={<Shield className="h-4 w-4 text-neutral-500" />}
+           />
+           <BentoGridItem
+             title="Score Analysis"
+             description={<div className={`text-[10px] font-bold font-mono mt-2 px-2 py-0.5 rounded-full border w-fit ${
+                product.verdictType === 'positive' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                product.verdictType === 'caution' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                'bg-rose-500/10 text-rose-500 border-rose-500/20'
+             }`}>{product.verdictType.toUpperCase()}</div>}
+             header={
+                <div className="h-24 w-full rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 flex items-center justify-center border border-black/5 dark:border-white/5 shadow-inner">
+                    <span className="text-5xl font-black tracking-tighter text-foreground drop-shadow-sm">{product.rating}</span>
+                </div>
+             }
+             className="md:col-span-1"
+             icon={<Zap className="h-4 w-4 text-neutral-500" />}
+           />
+           <BentoGridItem
+             title="Merits"
+             description={<ul className="space-y-2 mt-2">{product.pros.slice(0,4).map((p: string) => <li key={p} className="flex gap-2 text-xs items-start"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5"/><span>{p}</span></li>)}</ul>}
+             className="md:col-span-1"
+             icon={<Check className="h-4 w-4 text-emerald-500" />}
+           />
+           <BentoGridItem
+             title="Drawbacks"
+             description={<ul className="space-y-2 mt-2">{product.cons.slice(0,4).map((c: string) => <li key={c} className="flex gap-2 text-xs items-start"><AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5"/><span>{c}</span></li>)}</ul>}
+             className="md:col-span-1"
+             icon={<AlertTriangle className="h-4 w-4 text-rose-500" />}
+           />
+           <BentoGridItem
+             title="Market Status"
+             description={fairnessData.current > fairnessData.fairValue.max ? "Price Warning: Overpriced" : "Fair Market Value Verified"}
+             header={<div className={`h-24 w-full rounded-xl ${fairnessData.current > fairnessData.fairValue.max ? "bg-rose-500/10 border-rose-500/20" : "bg-emerald-500/10 border-emerald-500/20"} border flex items-center justify-center font-mono text-2xl font-bold opacity-50`}>${fairnessData.current}</div>}
+             className="md:col-span-1"
+             icon={<ExternalLink className="h-4 w-4 text-neutral-500" />}
+           />
+        </BentoGrid>
 
-        {/* Real User Discussions (Reddit Sources) */}
-        {data?.sources?.reddit?.sources && data.sources.reddit.sources.length > 0 && (
-          <div className="mb-8 p-6 forensic-glass rounded-2xl border border-white/5">
-            <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400 mb-4">Real User Discussions</h3>
-            <div className="flex flex-wrap gap-3">
-              {data.sources.reddit.sources.map((source: { title: string; url: string }) => {
-                 let hostname = '';
-                 try { hostname = new URL(source.url).hostname; } catch (e) { hostname = 'reddit.com'; }
+        {/* NEW: Community Intel (Generalized) */}
+        {data?.audioInsights && data.audioInsights.length > 0 && (
+          <div className="mb-12">
+            <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+               Community Intel
+               <div className="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-[8px] text-primary">SOURCE_DUMP</div>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data.audioInsights.map((insight: any, i: number) => {
+                 const isReddit = insight.sourceUrl?.includes('reddit') || false;
+                 
                  return (
-                <a
-                  key={source.url}
-                  href={source.url}
-                  target="_blank"
-                  className="inline-flex items-center gap-3 px-4 py-2 bg-foreground/5 dark:bg-white/5 hover:bg-foreground/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground dark:hover:text-white text-[11px] font-mono rounded-lg border border-foreground/5 dark:border-white/5 hover:border-primary/50 transition-all group"
+                <div 
+                    key={i} 
+                    onClick={() => insight.sourceUrl && window.open(insight.sourceUrl, '_blank')}
+                    className={`p-5 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden group ${insight.sourceUrl ? 'cursor-pointer hover:bg-white/5 transition-colors' : ''}`}
                 >
-                  <div className="relative w-3.5 h-3.5 flex-shrink-0">
-                      <MessageSquare className="absolute inset-0 w-full h-full text-slate-600" />
-                      <img 
-                        src={`https://www.google.com/s2/favicons?domain=reddit.com&sz=32`} 
-                        alt="icon"
-                        className="absolute inset-0 w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-opacity"
-                        onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
-                      />
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      {isReddit ? <MessageSquare className="w-8 h-8" /> : <Mic2 className="w-8 h-8" />}
                   </div>
-                  <span className="max-w-[180px] truncate">{source.title}</span>
-                  <span className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-primary">↗</span>
-                </a>
-              )})}
+                  <div className="flex items-start gap-4 h-full">
+                    <div className={`p-2 rounded-lg shrink-0 ${insight.sentiment === 'negative' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {insight.sentiment === 'negative' ? <Volume2 className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                               {insight.topic || 'General Info'}
+                               {insight.sourceUrl && <ExternalLink className="w-3 h-3 opacity-50" />}
+                           </span>
+                           {insight.timestamp && insight.timestamp !== '0:00' && insight.timestamp.toUpperCase() !== 'N/A' && !isReddit && (
+                               <span className="text-[10px] font-mono text-primary font-bold">{insight.timestamp}</span>
+                           )}
+                           {isReddit && (
+                               <span className="text-[9px] font-mono text-slate-500 uppercase">Reddit Thread</span>
+                           )}
+                        </div>
+                        <p className="text-sm font-medium italic text-foreground leading-relaxed">
+                          "{insight.quote}"
+                        </p>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2">
+                          <div className={`w-1.5 h-1.5 rounded-full ${insight.sentiment === 'negative' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                          <span className="text-[9px] font-mono uppercase tracking-widest opacity-50">
+                             Source Sentiment: {insight.sentiment}
+                          </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )})} 
             </div>
           </div>
         )}
 
-        {/* Video Reviews - Only show if videos exist */}
+        {/* Video Reviews (Second) */}
         {videos.length > 0 && (
           <div className="mb-8">
              <h2 className="mb-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-400">Video Reviews</h2>
@@ -338,43 +363,34 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
           </div>
         )}
 
-        {/* NEW: Deep Audio Insights */}
-        {data?.audioInsights && data.audioInsights.length > 0 && (
-          <div className="mb-12">
-            <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
-               Deep Audio Log
-               <div className="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-[8px] text-primary">TRANSCRIPT_DUMP</div>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.audioInsights.map((insight: any, i: number) => (
-                <div key={i} className="p-5 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <Mic2 className="w-8 h-8" />
+        {/* Real User Discussions (Reddit Sources) - (Third) */}
+        {data?.sources?.reddit?.sources && data.sources.reddit.sources.length > 0 && (
+          <div className="mb-8 p-6 forensic-glass rounded-2xl border border-white/5">
+            <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400 mb-4">Real User Discussions</h3>
+            <div className="flex flex-wrap gap-3">
+              {data.sources.reddit.sources.map((source: { title: string; url: string }) => {
+                 let hostname = '';
+                 try { hostname = new URL(source.url).hostname; } catch (e) { hostname = 'reddit.com'; }
+                 return (
+                <a
+                  key={source.url}
+                  href={source.url}
+                  target="_blank"
+                  className="inline-flex items-center gap-3 px-4 py-2 bg-foreground/5 dark:bg-white/5 hover:bg-foreground/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground dark:hover:text-white text-[11px] font-mono rounded-lg border border-foreground/5 dark:border-white/5 hover:border-primary/50 transition-all group"
+                >
+                  <div className="relative w-3.5 h-3.5 flex-shrink-0">
+                      <MessageSquare className="absolute inset-0 w-full h-full text-slate-600" />
+                      <img 
+                        src={`https://www.google.com/s2/favicons?domain=reddit.com&sz=32`} 
+                        alt="icon"
+                        className="absolute inset-0 w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-opacity"
+                        onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
+                      />
                   </div>
-                  <div className="flex items-start gap-4 h-full">
-                    <div className={`p-2 rounded-lg shrink-0 ${insight.sentiment === 'negative' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                        {insight.sentiment === 'negative' ? <Volume2 className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{insight.topic || 'General Info'}</span>
-                           <span className="text-[10px] font-mono text-primary font-bold">{insight.timestamp || '0:00'}</span>
-                        </div>
-                        <p className="text-sm font-medium italic text-foreground leading-relaxed">
-                          "{insight.quote}"
-                        </p>
-                      </div>
-                      <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2">
-                          <div className={`w-1.5 h-1.5 rounded-full ${insight.sentiment === 'negative' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-                          <span className="text-[9px] font-mono uppercase tracking-widest opacity-50">
-                             Audio Sentiment: {insight.sentiment}
-                          </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  <span className="max-w-[180px] truncate">{source.title}</span>
+                  <span className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-primary">↗</span>
+                </a>
+              )})}
             </div>
           </div>
         )}
@@ -485,8 +501,8 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                         </h4>
                         <p className="text-xs text-muted-foreground font-mono leading-relaxed">
                             {fairnessData.current > fairnessData.fairValue.max 
-                            ? `Current pricing is $${fairnessData.current - fairnessData.fairValue.max} above the identified fair market valuation. Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
-                            : `The current list price of $${fairnessData.current} aligns with our analysis model. This represents a transparent transaction with no identified "skeptic" red flags.`
+                            ? `Current pricing is $${(fairnessData.current - fairnessData.fairValue.max).toFixed(2)} above the identified fair market valuation.${data?.sources?.market?.msrp ? ` (MSRP: ${data.sources.market.msrp})` : ''} Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
+                            : `The current list price of $${fairnessData.current.toFixed(2)} aligns with our analysis model.${data?.sources?.market?.msrp ? ` (MSRP: ${data.sources.market.msrp})` : ''} This represents a transparent transaction with no identified "skeptic" red flags.`
                             }
                         </p>
                     </div>

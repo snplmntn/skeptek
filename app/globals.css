@@ -29,6 +29,7 @@
   --chart-3: #e9c46a;
   --chart-4: #f4a261;
   --chart-5: #e76e50;
+  --grid-color: rgba(0,0,0,0.05);
 }
 
 .dark {
@@ -56,6 +57,7 @@
   --chart-3: #93c5fd;
   --chart-4: #bfdbfe;
   --chart-5: #dbeafe;
+  --grid-color: rgba(255,255,255,0.05);
 }
 
 @theme inline {
@@ -106,14 +108,14 @@
   body {
     @apply bg-background text-foreground;
     background-image: 
-      radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+      radial-gradient(circle at 2px 2px, var(--grid-color) 1px, transparent 0);
     background-size: 32px 32px;
     background-attachment: fixed;
   }
 
   /* Premium Glassmorphism */
   .forensic-glass {
-    @apply bg-card/60 backdrop-blur-xl border border-white/10 ring-1 ring-black/20;
+    @apply bg-card/60 backdrop-blur-xl border border-border ring-1 ring-black/5 dark:ring-white/5;
   }
 
   /* Forensic Scanline Effect */

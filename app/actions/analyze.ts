@@ -9,6 +9,7 @@ import { geminiPro, geminiFlash } from '@/lib/gemini';
 import { createClient } from '@/utils/supabase/server';
 import { getCachedProduct, setCachedProduct, getFieldReports, normalizeQuery } from '@/lib/cache';
 import { awardXP } from '@/app/actions/gamification';
+import { JUDGE_SYSTEM_INSTRUCTION, JUDGE_SCHEMA } from '@/lib/prompts/judge-system';
 
 /**
  * The Orchestrator (Server Action)
@@ -51,10 +52,10 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         const cachedData = !shouldSkipCache ? await getCachedProduct(query) : null;
         
         if (cachedData) {
-             status.update("Retrieving saved analysis...");
-             await new Promise(r => setTimeout(r, 400)); // Slight delay for UX (don't flash too fast)
+             status.update("Restoring previous analysis...");
+             await new Promise(r => setTimeout(r, 400)); // Slight delay for UX
              result.done(cachedData);
-             status.done("Complete (Cached)");
+             status.done("Complete");
              return;
         }
 
@@ -70,25 +71,33 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
             }
         }
 
-        // --- STANDARD SINGLE PRODUCT FLOW ---
+        // --- AGENTIC BRAIN EXECUTION (Phase 2) ---
         // Node 1: Market Scout (The Leader) - Establishes canonical identity
         status.update("Identifying product details...");
         const marketData = await marketScout(mainProductQuery);
       
       // ERROR HANDLING (Groundedness)
-      if (!marketData || (marketData.isRateLimited && marketData.price === 'Unknown')) {
-          const errorMsg = marketData?.isRateLimited 
-            ? "Market Scout Rate Limited (429). Forensics stalled." 
-            : "Product not identified. Insufficient market ground-truth.";
+      const isBotBlocked = marketData?.title?.includes("Robot Check") || 
+                           marketData?.title?.includes("Data Retrieval Error") ||
+                           marketData?.title?.includes("Access Denied") ||
+                           marketData?.title?.toLowerCase().includes("not found");
+
+      if (!marketData || (marketData.isRateLimited && marketData.price === 'Unknown') || isBotBlocked || !marketData.title || marketData.title.length < 3) {
+          const errorMsg = isBotBlocked
+            ? "Access Denied (Bot Protection) or Product Not Found. Unable to verify identity."
+            : marketData?.isRateLimited 
+                ? "Market Scout Rate Limited (429). Forensics stalled." 
+                : "Product not identified. Insufficient market ground-truth.";
           
           console.error(`[Brain] Critical Failure: ${errorMsg}`);
-          status.update(`Analysis Failed: ${marketData?.isRateLimited ? 'System Busy' : 'Product Not Found'}`);
+          status.update("Analysis Halted");
           result.done({ 
               isError: true, 
               error: errorMsg,
-              isRateLimited: marketData?.isRateLimited
+              isRateLimited: marketData?.isRateLimited,
+              isBotBlocked: isBotBlocked 
           });
-          status.done("Insufficient Data");
+          status.done(isBotBlocked ? "Access Denied" : "Insufficient Data");
           return;
       }
 
@@ -96,27 +105,51 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       const canonicalName = marketData?.title || mainProductQuery;
       console.log(`[Hive Mind] Canonical Name established: "${canonicalName}" (Original: "${query}")`);
 
-      // Node 2 & 3: Social & Internal Scouts (The Followers) - Context-aware search
-      status.update("Analyzing reviews and videos...");
+      // Node 2 & 3: Agentic Scout Dispatch (The Followers)
+      status.update("Agentically gathering evidence...");
       
-      // Trigger Scouts in Parallel
       const isReviewMode = options?.isReviewMode;
       
-      let redditData, videoData, professionalReview;
-      
+      // Initialize Data Buckets
+      let redditData: any = null;
+      let videoData: any = null;
+      let professionalReview: any = null;
+
       if (!isReviewMode) {
-          // Full Forensic Mode
-          [redditData, videoData, professionalReview] = await Promise.all([
-            redditScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [], confidence: 100 }),
-            videoScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [], confidence: 100 }),
-            !reviewScoutData ? reviewScout(canonicalName) : Promise.resolve(reviewScoutData)
+          // PHASE 2: "Brain + Muscle" Logic
+          // 1. Trigger Social & Video Scouts (Parallel for speed, but theoretically can be sequential if we used Tools)
+          const [reddit, video, review] = await Promise.all([
+             redditScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [], confidence: 100 }),
+             videoScout({ initialQuery: mainProductQuery, canonicalName, marketData: marketData, errors: [], confidence: 100 }),
+             !reviewScoutData ? reviewScout(canonicalName) : Promise.resolve(reviewScoutData)
           ]);
+          redditData = reddit;
+          videoData = video;
+          professionalReview = review;
+
+          // 2. Decide if "Deep Dive" is needed (If price unconfirmed)
+          if (marketData.price === "Unknown" && marketData.productUrl) {
+               status.update("Price unconfirmed. Engaging Python Deep Scout...");
+               try {
+                  // Call Python Microservice
+                  const deepRes = await fetch('http://localhost:8000/tools/market_deep_dive', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({ url: marketData.productUrl })
+                  });
+                  const deepData = await deepRes.json();
+                  
+                  if (deepData.status === 'success' && deepData.data.price !== 'Unknown') {
+                      console.log(`[Brain] Deep Dive Fixed Price: ${deepData.data.price}`);
+                      marketData.price = deepData.data.price; // Patch the market data
+                  }
+               } catch (err) {
+                   console.warn("[Brain] Python Deep Scout failed/unavailable:", err);
+               }
+          }
       } else {
-          // Review Mode: Skip external forensics, we only need internal context
+          // Review Mode: Skip external forensics
           status.update("Skipping external search (Review Mode active)...");
-          redditData = null;
-          videoData = null;
-          professionalReview = null;
       }
 
       // Always check internal reports
@@ -127,27 +160,84 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       if (!isReviewMode) {
           console.log("--- [DEBUG] Reddit Scout Data ---");
           console.dir(redditData, { depth: null, colors: true });
+          console.log("--- [DEBUG] Review Scout Data (Scraped URL) ---");
+          console.dir(reviewScoutData, { depth: null, colors: true });
       }
       console.log("--- [DEBUG] Field Reports ---");
       console.log(`Found ${fieldReports.length} internal community reports`);
 
-      // ERROR HANDLING
+      // SOTA 2026: RETRY LOGIC (Before failing)
+      // If we found NO Reddit or Video data, it might be a canonical name mismatch.
+      // Retry ONCE with the raw initial query or a simplified version.
+      if (!isReviewMode) {
+          const hasRedditInitial = redditData && redditData.comments && redditData.comments.length > 0;
+          const hasVideoInitial = videoData && videoData.length > 0;
+          
+          if (!hasRedditInitial && !hasVideoInitial) {
+               console.warn("[Brain] ⚠️ No forensic data found on first pass. Attempting RETRY with simplified query...");
+               status.update("Refining search strategy (Retry)...");
+               
+               // Fallback: Use the clean Market Title if available, otherwise the initial query.
+               // This fixes issues where the initial query is a URL which fails in Reddit/Video search.
+               const retryQuery = marketData?.title || mainProductQuery; 
+               
+               console.log(`[Brain] 🔄 Retrying with optimized query: "${retryQuery}"`);
+
+               const [redditRetry, videoRetry] = await Promise.all([
+                    redditScout({ initialQuery: retryQuery, canonicalName: retryQuery, marketData: marketData, errors: [], confidence: 100 }),
+                    videoScout({ initialQuery: retryQuery, canonicalName: retryQuery, marketData: marketData, errors: [], confidence: 100 })
+               ]);
+               
+               // Update if retry found something
+               if (redditRetry && redditRetry.comments && redditRetry.comments.length > 0) {
+                   console.log(`[Brain] ✅ Reddit Retry Successful: Found ${redditRetry.comments.length} threads.`);
+                   redditData = redditRetry;
+               }
+               if (videoRetry && videoRetry.length > 0) {
+                   console.log(`[Brain] ✅ Video Retry Successful: Found ${videoRetry.length} videos.`);
+                   videoData = videoRetry;
+               }
+          }
+      }
+
+      // ERROR HANDLING (Zero-Tolerance SOTA Policy)
       const hasReddit = redditData && redditData.comments && redditData.comments.length > 0;
       const hasVideo = videoData && videoData.length > 0;
       const hasReview = professionalReview && professionalReview.summary;
   
-      if (!isReviewMode && !hasReddit && !hasVideo && !hasReview) {
-          console.warn("--- [WARNING] No forensic data found. Proceeding with Market Data only. ---");
+      // SOTA Safeguard: Abort if no INDEPENDENT data found.
+      // We assume 'reviewScoutData' (URL scrape) is NOT an independent review.
+      if (!isReviewMode && !hasReddit && !hasVideo && (!hasReview || !!reviewScoutData)) {
+          console.error("[Brain] 🚨 SOTA Safeguard Triggered: No valid forensic data found.");
+          status.update("Analyses Aborted: Insufficient Evidence.");
+          result.done({ 
+              isError: true, 
+              error: "SOTA 2026 Safeguard: No verified community discussions or video evidence found for this specific query. Verdict generation halted to maintain zero-hallucination standards.",
+              insufficientData: true 
+          });
+          status.done("No Evidence Found");
+          return;
       }
       
-      status.update("Analyzing Data...");
+      status.update("Analyzing forensic data...");
       
-      // 2. The Synthesis (Fan-In)
-      const prompt = `
-        Analyze this product: "${canonicalName}"
+      // 2. The Synthesis (Fan-In) - System Instruction Mode
+      
+      // SOTA 2026: Parse Price for Fairness Check
+      let numericPrice = 0;
+      if (marketData && marketData.price) {
+          const match = marketData.price.match(/[\d,.]+/);
+          if (match) {
+             numericPrice = parseFloat(match[0].replace(/,/g, ''));
+          }
+      }
+
+      const userContext = `
+        PRODUCT QUERY: "${canonicalName}"
         
         [Market Data]
         ${JSON.stringify(marketData || "No market data found")}
+        DETECTED_NUMERIC_PRICE (Use this for 'currentPrice'): ${numericPrice > 0 ? numericPrice : "Unknown"}
         
         ${!isReviewMode ? `
         [Reddit/Community Feed]
@@ -163,76 +253,14 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         [Community Reviews (INTERNAL - HIGH TRUST)]
         ${JSON.stringify(fieldReports)}
 
-        [MARKET CONTEXT for FAIRNESS]
-        - A "Good Deal" isn't just cheap; it's GOOD QUALITY for the price.
-        - IF Trust Score < 40 (Dangerous/Trash): Fair Value is $0 - $10 (It is e-waste).
-        - IF Trust Score < 60 (Mediocre): Fair Value should be 50% of typical market price.
-        - IF Trust Score > 85 (Top Tier): Fair Value can command a premium.
-        
-        [BOT/SPAM DETECTION]
-        - Reddit Scout Bot Probability: ${redditData?.botProbability || 0}%
-        - IF Bot Probability > 70%: DEDUCT 15 points from Trust Score and flag as "Suspicious Community Activity".
-
-        [CHRONOLOGICAL CONTEXT (SOTA 2026)]
-        - CURRENT DATE: January 29, 2026.
-        - Evaluate the product's "Launch Date" (${marketData?.launchDate || 'Unknown'}).
-        - IF the product is > 3 years old and a successor exists (${marketData?.supersededBy || 'None'}), it is "Legacy Hardware".
-        - REDUCE Trust Score by 10 if it is legacy but priced like current-gen.
-        - RECOMMEND "AVOID" or "CONSIDER" if a newer alternative offers better bang-for-buck.
-
-        [CONFIDENCE & HALLUCINATION PREVENTION]
-        - Has Reddit Data? ${hasReddit ? 'YES' : 'NO'}
-        - Has Video Data? ${hasVideo ? 'YES' : 'NO'}
-        - Has Review Data? ${hasReview ? 'YES' : 'NO'}
-        - INTERNAL DATA: ${fieldReports.length} reports.
-        - IMPORTANT: If forensics (Reddit/Video/Review) are NO, you MUST set "isLowConfidence": true and a lower "confidence" score (e.g. 40-60).
-        - If all data is present, "confidence" should be 90-100.
-        - DO NOT GUESS SPECIFICATIONS. If [Market Data] has empty specs, say "Specifications Unavailable".
-        - DO NOT GUESS PRICING. If [Market Data] price is "Unknown", set "currentPrice": 0 and "isFair": false.
-
-        TASK:
-        You are "The Judge". 
-        1. Identify the product.
-        2. Give a **Trust Score (0-100)**:
-           ${isReviewMode ? '- START at 85 (Baseline for verification).' : '- START at 75.'} 
-           ${isReviewMode ? '- Since we are in Review Mode, rely on specifications and market reputation.' : 
-           `- DEDUCT -20 for major failure reports (explosions, DOAs) in Reddit/Video data.
-           - DEDUCT -10 for "generic/rebrand" accusations.
-           - ADD +10 for consistent praise from reputable reviewers.`}
-           - ADJUST based on Internal Field Reports (if many users Agree/Disagree).
-           - IF FORENSIC DATA IS MISSING AND PRODUCT IS OLD: DEDUCT -15 for "Lack of Current Verification".
-        3. List 3 key Pros and 3 key Cons.
-        4. Determine the **Product Category** (e.g., "Smartphone", "Audio", "Kitchen", "Beauty", "Gaming", "Other").
-        5. Write a "Verdict" (2 sentences max).
-        6. **Make a Recommendation**: ONE WORD (BUY, CONSIDER, or AVOID).
-        7. **Calculate Fairness**:
-           - Use the logic above. If the product is "garantisabog" (explosive) or terrible quality, its "Fair Value" is near zero, making the current price "Unfair" (Overpriced).
-        8. **Audio Insights**: Extract 2-3 specific insights/quotes derived from video transcripts.
-
-        Schema:
-        {
-          "type": "single",
-          "productName": string,
-          "category": string,
-          "score": number,
-          "confidence": number,
-          "isLowConfidence": boolean,
-          "recommendation": "BUY" | "CONSIDER" | "AVOID", 
-          "verdict": string,
-          "pros": string[],
-          "cons": string[],
-          "audioInsights": [
-             { "quote": string, "timestamp": string, "sentiment": "positive" | "negative", "topic": string }
-          ],
-          "priceAnalysis": {
-            "currentPrice": number, 
-            "fairValueMin": number, 
-            "fairValueMax": number, 
-            "isFair": boolean,
-            "sourceUrl": string 
-          }
-        }
+        [CONTEXTUAL METADATA]
+        - Current Date: January 29, 2026
+        - Reddit Bot Prob: ${redditData?.botProbability || 0}%
+        - Internal Reports: ${fieldReports.length}
+        - Review Mode: ${isReviewMode}
       `;
+
+      console.log("--- [DEBUG] Gemini Brain Prompt (System Instruction Mode) ---");
 
       console.log("--- [DEBUG] Gemini Brain Prompt ---");
       // console.log(prompt); // Reduced log noise
@@ -245,13 +273,16 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         
         // SOTA 2026: Use Native JSON Mode (Structured Output)
         // Now with enhanced Audio Analysis
+        // SOTA 2026: Use Native JSON Mode (Structured Output) + System Instruction
         const aiResult = await model.generateContent({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
+          contents: [{ role: "user", parts: [{ text: userContext }] }],
+          config: {
+            systemInstruction: JUDGE_SYSTEM_INSTRUCTION,
+            responseMimeType: "application/json",
+            responseSchema: JUDGE_SCHEMA
           }
         });
-        const text = aiResult.response.text();
+        const text = aiResult.text || "";
         
         // Robust JSON extraction
         const start = text.indexOf('{');
@@ -296,18 +327,22 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       // Push final result and close streams
       result.done(fullReport);
       
-      // SOTA: Save to Cache (Async, non-blocking)
-      setCachedProduct(query, fullReport.productName, fullReport.category, fullReport).catch(err => console.error("Cache Write Failed", err));
+      // Data Sufficiency Check (Shared for Cache & DB)
+      // Only save if we have REAL forensic data (Reddit comments or Videos)
+      const hasForensicData = ((redditData?.comments?.length ?? 0) > 0) || ((videoData?.length ?? 0) > 0);
+
+      // SOTA: Save to Cache (Async, non-blocking) - IF SUFFICIENT DATA
+      if (!fullReport.isSimulated && hasForensicData && !fullReport.isError) {
+           setCachedProduct(query, fullReport.productName, fullReport.category, fullReport).catch(err => console.error("Cache Write Failed", err));
+      } else {
+           console.log(`[Cache] Skipped saving: Insufficient Data/Simulated`);
+      }
 
       // GAMIFICATION: Award XP for Analysis
       awardXP(25).catch(err => console.error("XP Award Failed", err));
 
     // HACKATHON: Push to Supabase Realtime Feed
       try {
-          // Data Sufficiency Check: Only save if we have REAL forensic data (Reddit comments or Videos)
-          // preventing "hallucinated" or "low confidence" scores from polluting the Watchtower.
-          const hasForensicData = ((redditData?.comments?.length ?? 0) > 0) || ((videoData?.length ?? 0) > 0);
-
           if (!fullReport.isSimulated && hasForensicData) {
              await supabase.from('scans').insert({
                 product_name: finalJson.productName,
@@ -371,38 +406,54 @@ async function handleComparison(items: string[], status: any, result: any) {
             }
         }
 
-        // 2. Fetch missing items
-        for (const { item } of itemsToFetch) {
-             status.update(`Finding details for ${item}...`);
-             const market = await marketScout(item);
-             
-             if (!market) {
-                 throw new Error(`Unable to identify "${item}". Full analysis requires a verified product identity.`);
-             }
-             
-             // Proceed with social and video scouts for verified products
-             const reddit = await redditScout({ 
-                 initialQuery: item, 
-                 canonicalName: market.title, 
-                 errors: [],
-                 confidence: 100
-             });
-             
-             const video = await videoScout({ 
-                 initialQuery: item, 
-                 canonicalName: market.title, 
-                 marketData: market, 
-                 errors: [],
-                 confidence: 100
-             });
-             
-             // Push to a temporary holding structure
-             scoutResults.push({
-                 originalQuery: item,
-                 market,
-                 reddit,
-                 video
-             });
+        // 2. Fetch missing items (Parallel Execution)
+        if (itemsToFetch.length > 0) {
+            status.update(`Accessing Market Data...`);
+            
+            const parallelResults = await Promise.allSettled(itemsToFetch.map(async ({ item }) => {
+                 try {
+                     const market = await marketScout(item);
+                     
+                     if (!market) {
+                         console.warn(`[Comparison] Market Scout failed for ${item}`);
+                         return null;
+                     }
+                     
+                     // Parallel Sub-Agents
+                     const [reddit, video] = await Promise.all([
+                         redditScout({ 
+                             initialQuery: item, 
+                             canonicalName: market.title, 
+                             errors: [],
+                             confidence: 100
+                         }),
+                         videoScout({ 
+                             initialQuery: item, 
+                             canonicalName: market.title, 
+                             marketData: market, 
+                             errors: [],
+                             confidence: 100
+                         })
+                     ]);
+                     
+                     return {
+                         originalQuery: item,
+                         market,
+                         reddit,
+                         video
+                     } as ComparisonScoutResult;
+                 } catch (err) {
+                     console.error(`[Comparison] Failed to auto-scout ${item}`, err);
+                     return null;
+                 }
+            }));
+
+            // Collect successful results
+            parallelResults.forEach(res => {
+                if (res.status === 'fulfilled' && res.value) {
+                    scoutResults.push(res.value);
+                }
+            });
         }
         
         status.update("Building comparison matrix...");
@@ -440,6 +491,7 @@ async function handleComparison(items: string[], status: any, result: any) {
                   { 
                     "id": "p${i+1}", 
                     "name": "Product ${i+1} Name", 
+                    "price": "string", 
                     "score": 0, 
                     "isWinner": boolean,
                     "recommendation": "BUY" | "CONSIDER" | "AVOID",
@@ -469,6 +521,21 @@ async function handleComparison(items: string[], status: any, result: any) {
             6. Write a "Verdict" summary (2 sentences) explaining the recommendation.
             7. Compare them across 3-4 distinct categories (e.g. Build Quality, Performance, Value). Scores 0-10.
             
+            CRITICAL CONSISTENCY RULES:
+            - IF Trust Score >= 9.0 THEN Recommdendation MUST be 'BUY'.
+            - IF Trust Score < 6.0 THEN Recommdendation MUST be 'AVOID'.
+            - IF isWinner is TRUE THEN Recommendation MUST be 'BUY' (unless there is a fatal flaw).
+            - Do NOT give a "CONSIDER" rating to a product with a score > 8.5.
+            
+            IMPORTANT: PRICE FORMATTING (Few-Shot Examples)
+            You MUST keep the 'price' field extremely short (under 15 chars) to fit the UI card.
+            - Bad: "$450 - $649 USD (Refurbished only)"
+            - Good: "$450 - $649"
+            - Bad: "approx. $1200 depending on storage"
+            - Good: "~$1200"
+            - Bad: "Discontinued (Used: $300)"
+            - Good: "Used: ~$300"
+            
             Response JSON Schema:
             {
                "type": "comparison",
@@ -488,7 +555,16 @@ async function handleComparison(items: string[], status: any, result: any) {
              generationConfig: { responseMimeType: "application/json" }
         });
 
-        let json = JSON.parse(aiResult.response.text());
+        const text = aiResult.text || "";
+        const start = text.indexOf('{');
+        const end = text.lastIndexOf('}');
+        
+        if (start === -1 || end === -1) {
+            throw new Error("No JSON found in comparison response: " + text.substring(0, 100));
+        }
+
+        const jsonStr = text.substring(start, end + 1);
+        let json = JSON.parse(jsonStr);
         
         // Ensure ID consistency and Inject Sources
         if (json.products && Array.isArray(json.products)) {
@@ -580,8 +656,7 @@ export async function analyzeImage(formData: FormData) {
       prompt,
     ]);
 
-    const response = await result.response;
-    const text = response.text();
+    const text = result.text || "";
     
     // Extract JSON
     const start = text.indexOf('{');

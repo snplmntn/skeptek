@@ -17,9 +17,10 @@ interface ForensicLensLoaderProps {
   onComplete: () => void;
   status?: string;
   mode?: 'single' | 'versus' | 'review';
+  productNames?: string[];
 }
 
-export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'single' }: ForensicLensLoaderProps) {
+export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'single', productNames = [] }: ForensicLensLoaderProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [internalStatusIndex, setInternalStatusIndex] = useState(0);
   
@@ -38,10 +39,12 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
   const isFinishingRef = useRef(isFinishing);
   const onCompleteRef = useRef(onComplete);
   const modeRef = useRef(mode);
+  const productNamesRef = useRef(productNames);
 
   useEffect(() => { isFinishingRef.current = isFinishing; }, [isFinishing]);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { productNamesRef.current = productNames; }, [productNames]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -203,9 +206,12 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
               
               // Technical ID
               ctx.fillStyle = colors.text;
-              ctx.font = 'bold 8px "Geist Mono"';
+              ctx.font = 'bold 10px "Geist Mono"';
               ctx.textAlign = 'center'; 
-              ctx.fillText(`PROBE_${i+1}`, lx, ly - r - 10);
+              const label = productNamesRef.current?.[i] || `PROBE_${i+1}`;
+              // Truncate if too long for the bubble
+              const displayLabel = label.length > 15 ? label.substring(0, 12) + '...' : label;
+              ctx.fillText(displayLabel, lx, ly - r - 10);
 
               particles.forEach(p => {
                   if (Math.hypot(p.x - lx, p.y - ly) < r) p.revealed = true;

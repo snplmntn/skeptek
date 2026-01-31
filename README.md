@@ -24,11 +24,13 @@ Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model
     *   **Model**: `gemini-3.0-flash`
     *   **Role**: The first line of defense. It uses **Google Search Grounding** to traverse the live web, verifying product existence, current street pricing, and official technical specifications. 
     *   **Chronological Awareness**: It now tracks **Release Dates** and **Successor Models** (e.g., M1 vs M4), ensuring you don't buy "new" tech that is actually 4 years old.
+    *   **Python Muscle**: Connects to a dedicated **Python Microservice** for deep market verification when standard APIs fail.
 
-2.  **🎥 Video Scout (Audio Analysis)**
-    *   **Model**: `gemini-3.0-flash`
-    *   **Role**: A multimodal hunter that doesn't just watch videos—it **listens**. 
-    *   **Audio Analysis Log**: It scrapes and analyzes high-fidelity **YouTube Transcripts** to catch "micro-complaints" (e.g., "The battery creates a buzzing noise") that reviewers mention verbally but hide from their written descriptions.
+2.  **🎥 Video Scout (Vision & Audio)**
+    *   **Model**: `gemini-3.0-flash-preview`
+    *   **Role**: A multimodal hunter that **watches and listens** to reviews.
+    *   **Native Vision**: It downloads and "watches" product reviews using **Gemini Vision**, detecting physical defects (wobbly hinges, broken seals) and emotional cues (reviewer making a disgusted face).
+    *   **Audio Forensics**: It deep-scans transcripts for "micro-complaints" buried in the audio track.
 
 3.  **⚖️ The Judge (Reasoning Core)**
     *   **Model**: `gemini-3.0-flash`
@@ -44,11 +46,10 @@ Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model
 *   **🛡️ Analysis UI**: A "Glassmorphism" design system featuring scanlines, focal loaders, and high-contrast data displays.
 
 ## 🛠️ Tech Stack
-*   **Framework**: Next.js 14 (App Router)
-*   **AI SDK**: Google Generative AI SDK (`@google/generative-ai`)
-*   **Database & Auth**: Supabase (PostgreSQL, Realtime, Auth)
-*   **Styling**: Tailwind CSS, Framer Motion, Lucide React
-*   **Deployment**: Vercel
+*   **Brain (Frontend)**: Next.js 14, Tailwind CSS, Framer Motion
+*   **Muscle (Backend)**: Python, Flask, Selenium, OpenCV
+*   **Intelligence**: Google Gemini 3.0 (Flash & Pro Preview)
+*   **Database**: Supabase (PostgreSQL, Realtime)
 
 ## 📦 Installation
 Clone the repository and install the dependencies:
@@ -67,8 +68,16 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
 ```
 
-Run the analysis engine:
+Run the Python Backend (The Muscle):
 ```bash
+# In a new terminal
+pip install -r backend/requirements.txt
+python backend/main.py
+```
+
+Run the Next.js Frontend (The Brain):
+```bash
+# In a separate terminal
 npm run dev
 ```
 

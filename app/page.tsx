@@ -202,6 +202,7 @@ function HomeContent() {
                     isFinishing={isAnalysisFinishing}
                     onComplete={handleAnalysisComplete}
                     mode={selectedSearch?.isReview ? 'review' : (selectedSearch?.title.includes(' vs ') ? 'versus' : 'single')}
+                    productNames={selectedSearch?.title.includes(' vs ') ? selectedSearch.title.split(' vs ').map(s => s.trim()) : [selectedSearch?.title || 'Unknown']}
                 />
              </div>
         )}
@@ -211,7 +212,10 @@ function HomeContent() {
           <AnalysisDashboard 
             search={selectedSearch || { title: "Demo Product Analysis", url: "#" }} 
             data={analysisResult}
-            onBack={() => setCurrentView('lens-search')} 
+            onBack={() => {
+                setSelectedSearch(null); // Clear input on back
+                setCurrentView('lens-search');
+            }} 
             userRank={userRank?.rank}
             isReviewMode={selectedSearch?.isReview}
           />
@@ -219,7 +223,10 @@ function HomeContent() {
         {currentView === 'versus' && (
           <VersusArena 
             data={analysisResult} 
-            onBack={() => setCurrentView('lens-search')}
+            onBack={() => {
+                setSelectedSearch(null); // Clear input on back
+                setCurrentView('lens-search');
+            }}
           />
         )}
         {currentView === 'discovery' && (

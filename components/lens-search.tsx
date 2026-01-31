@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FocalAlignmentLoader } from '@/components/focal-alignment-loader'; 
 import { LensInput } from '@/components/lens-input';
+import { LensBackground } from '@/components/lens-background';
 import { GlobalFeed } from '@/components/global-feed';
 import { analyzeImage } from '@/app/actions/analyze';
 import { Modal } from '@/components/ui/modal';
@@ -25,13 +26,7 @@ interface LensSearchProps {
   onClearError?: () => void;
 }
 
-const recentScans = [
-  { name: 'Sony WH-1000XM5', score: 9.2, status: 'verified' },
-  { name: 'AirPods Pro', score: 8.7, status: 'verified' },
-  { name: 'Generic Blender', score: 2.1, status: 'rejected' },
-  { name: 'iPhone 15 Pro', score: 8.9, status: 'verified' },
-  { name: 'Budget Monitor', score: 4.3, status: 'caution' },
-];
+
 
 export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initialReviewMode = false, user, error, onClearError }: LensSearchProps & { user?: { isGuest: boolean; rank: string; xp: number; nextRankXP: number } | null }) {
   const router = useRouter();
@@ -44,11 +39,9 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
   const [searchMode, setSearchMode] = useState<'text' | 'image'>(initialMode);
   const [reviewMode, setReviewMode] = useState(initialReviewMode);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
-  const [displayedScans, setDisplayedScans] = useState<typeof recentScans>([]);
-  const [scanIndex, setScanIndex] = useState(0);
+
   
-  // Background Nodes State - Fixes Hydration Mismatch
-  const [bgNodes, setBgNodes] = useState<Array<{left: string, top: string, delay: string, opacity: number}>>([]);
+
 
   // Toast Error Handler
   // Toast Error Handler
@@ -135,40 +128,14 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
     }
   }, [error, onClearError]);
 
-  const [bgNodesInitialized, setBgNodesInitialized] = useState(false); // To prevent re-running random gen
-  useEffect(() => {
-    if (!bgNodesInitialized) {
-        setBgNodes([...Array(20)].map(() => ({
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            delay: `${Math.random() * 5}s`,
-            opacity: Math.random() * 0.5 + 0.2
-        })));
-        setBgNodesInitialized(true);
-    }
-  }, [bgNodesInitialized]);
+
 
   // User Rank State - now derived from props
   const userRank = user;
 
-  useEffect(() => {
-    // Cycle through scans
-    const interval = setInterval(() => {
-      setScanIndex((prev) => (prev + 1) % recentScans.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
-  useEffect(() => {
-    // Show scans in sequence
-    const displayed = [];
-    for (let i = 0; i < 3; i++) {
-      displayed.push(recentScans[(scanIndex + i) % recentScans.length]);
-    }
-    setDisplayedScans(displayed);
-  }, [scanIndex]);
 
-  const handleImageAnalysis = async (file: File) => {
+  const handleImageAnalysis = useCallback(async (file: File) => {
       setIsAnalyzingImage(true);
       const formData = new FormData();
       formData.append('image', file);
@@ -202,41 +169,48 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
       } finally {
          setIsAnalyzingImage(false);
       }
-  };
+  }, [onSearch]);
 
   // Toggle Logic: 
   // If Going to Versus -> Ensure at least 2 inputs
   // If Going to Single -> Reset to 1 input (keep first value)
-  const toggleMode = () => {
+  const toggleMode = useCallback(() => {
        if (!isVersusMode) {
-           setQueries([queries[0], '']); // Start with 2 slots
+           setQueries(prev => [prev[0], '']); // Start with 2 slots - updated to use callback for safety
            setIsVersusMode(true);
        } else {
-           setQueries([queries[0]]); // Back to single
+           setQueries(prev => [prev[0]]); // Back to single
            setIsVersusMode(false);
        }
-  };
+  }, [isVersusMode]);
 
-  const updateQuery = (index: number, val: string) => {
-       const newQueries = [...queries];
-       newQueries[index] = val;
-       setQueries(newQueries);
-  };
+  const updateQuery = useCallback((index: number, val: string) => {
+       setQueries(prev => {
+           const newQueries = [...prev];
+           newQueries[index] = val;
+           return newQueries;
+       });
+  }, []);
 
-  const addProduct = () => {
-      if (queries.length < 4) {
-          setQueries([...queries, '']);
-      }
-  };
+  const addProduct = useCallback(() => {
+      setQueries(prev => {
+          if (prev.length < 4) {
+              return [...prev, ''];
+          }
+          return prev;
+      });
+  }, []);
 
-  const removeProduct = (index: number) => {
-      if (queries.length > 2) {
-          const newQueries = queries.filter((_, i) => i !== index);
-          setQueries(newQueries);
-      }
-  };
+  const removeProduct = useCallback((index: number) => {
+      setQueries(prev => {
+          if (prev.length > 2) {
+              return prev.filter((_, i) => i !== index);
+          }
+          return prev;
+      });
+  }, []);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     // Filter empty strings
     const validQueries = queries.map(q => q.trim()).filter(q => q.length > 0);
     
@@ -254,9 +228,9 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
           isReview: reviewMode 
       });
     }
-  };
+  }, [queries, isVersusMode, reviewMode, onSearch]);
 
-  const handleExampleClick = (example: string) => {
+  const handleExampleClick = useCallback((example: string) => {
     if (example.includes(' vs ')) {
          setIsVersusMode(true);
          const parts = example.split(' vs ');
@@ -269,7 +243,7 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
     setIsVersusMode(false);
     setQueries([example]);
     onSearch(example, `/product/${example.toLowerCase().replace(/\s+/g, '-')}`, { mode: 'text', isVersus: false });
-  };
+  }, [onSearch]);
 
   // derived state for checks
   const canSearch = queries.some(q => q.trim().length > 0);
@@ -277,82 +251,8 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-16 relative overflow-hidden">
       {/* --- SOTA FORENSIC BACKGROUND LAYER --- */}
-      <div className="absolute inset-0 pointer-events-none">
-          {/* 1. Deep Base Gradient */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)]" />
-          
-          {/* 2. Animated Grid with scanning effect */}
-          <div 
-            className="absolute inset-0 opacity-[0.15] dark:opacity-[0.08]" 
-            style={{ 
-              backgroundImage: `linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)`,
-              backgroundSize: '40px 40px',
-              maskImage: 'radial-gradient(circle at 50% 50%, black, transparent 80%)'
-            }} 
-          />
-          
-          {/* 3. Floating Blue Nebulae (Optimized Blur) - Increased Density */}
-          <motion.div 
-            animate={{ 
-                x: [0, 80, -80, 0], 
-                y: [0, -50, 50, 0],
-                rotate: [0, 180, 360],
-                scale: [1, 1.2, 0.8, 1]
-            }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 -left-40 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[140px] mix-blend-screen opacity-40 dark:opacity-15" 
-          />
-          <motion.div 
-            animate={{ 
-                x: [0, -60, 60, 0], 
-                y: [0, 80, -80, 0],
-                rotate: [360, 180, 0],
-                scale: [1.1, 0.9, 1.2, 1.1]
-            }}
-            transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-0 -right-40 w-[700px] h-[700px] bg-blue-600/20 rounded-full blur-[160px] mix-blend-screen opacity-40 dark:opacity-15" 
-          />
-          <motion.div 
-            animate={{ 
-                x: [-100, 100, -100], 
-                y: [100, -100, 100],
-                scale: [0.8, 1.1, 0.8]
-            }}
-            transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[180px] mix-blend-screen opacity-30 dark:opacity-10" 
-          />
-          <motion.div 
-            animate={{ 
-                x: [200, -200, 200], 
-                y: [0, 150, 0],
-            }}
-            transition={{ duration: 40, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-20 right-1/4 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] mix-blend-screen opacity-20 dark:opacity-5" 
-          />
-
-          {/* 4. Scanning Line */}
-          <motion.div 
-            animate={{ y: ['-100%', '200%'] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.5)] z-0"
-          />
-
-          {/* 5. Random Technical "Nodes" (Dust) */}
-          <div className="absolute inset-0 opacity-20">
-             {bgNodes.map((node, i) => (
-                 <div 
-                    key={i}
-                    className="absolute w-1 h-1 bg-primary rounded-full animate-pulse"
-                    style={{ 
-                        left: node.left, 
-                        top: node.top,
-                        animationDelay: node.delay,
-                        opacity: node.opacity
-                    }}
-                 />
-             ))}
-          </div>
-      </div>
+      {/* --- SOTA FORENSIC BACKGROUND LAYER --- */}
+      <LensBackground />
 
       <div className="mx-auto w-full max-w-2xl relative">
         {/* Decorative Background Elements */}

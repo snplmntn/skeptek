@@ -23,6 +23,8 @@ export interface MarketData {
   productUrl: string;
   launchDate?: string; // SOTA 2026: Track product age
   supersededBy?: string; // SOTA 2026: Track newer alternatives
+  msrp?: string; // SOTA 2026: Original Launch Price
+  competitorPriceRange?: string; // SOTA 2026: Market Context
   isRateLimited?: boolean; // SOTA 2026: Flag if data fetch was throttled
 }
 
@@ -34,8 +36,9 @@ export interface RedditData {
     negative: number;
     neutral: number;
   },
-  sources?: { title: string; url: string }[];
+  sources?: { title: string; url: string; snippet?: string }[];
   botProbability?: number;
+  searchSuggestions?: string[];
   authenticityFlags?: string[];
 }
 
