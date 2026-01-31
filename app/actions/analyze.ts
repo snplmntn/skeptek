@@ -154,7 +154,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
                status.update("Price unconfirmed. Engaging Python Deep Scout...");
                try {
                   // Call Python Microservice
-                  const deepRes = await fetch('http://localhost:8000/tools/market_deep_dive', {
+                  const deepRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/tools/market_deep_dive`, {
                       method: 'POST',
                       headers: {'Content-Type': 'application/json'},
                       body: JSON.stringify({ url: marketData.productUrl })

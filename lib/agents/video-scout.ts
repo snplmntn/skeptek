@@ -8,7 +8,7 @@ async function fetchTranscript(videoId: string): Promise<any[]> {
     try {
         // 1. Python Service (Primary)
         try {
-             const pyRes = await fetch(`http://localhost:8000/transcript?video_id=${videoId}`, {
+             const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/transcript?video_id=${videoId}`, {
                  signal: AbortSignal.timeout(10000) // 10s timeout
              });
              
@@ -401,7 +401,7 @@ async function analyzeTranscript(productName: string, items: any[]): Promise<any
  */
 export async function getVideoInsight(videoUrl: string): Promise<any> {
     try {
-        const res = await fetch('http://localhost:8000/tools/video_insight', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/tools/video_insight`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: videoUrl }),

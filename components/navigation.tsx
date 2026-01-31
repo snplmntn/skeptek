@@ -45,7 +45,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
 
   return (
     <nav className="border-b border-slate-200 dark:border-white/5 forensic-glass sticky top-0 z-[100]">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 md:px-6 py-3">
         {/* Logo Section */}
         <div className="flex items-center gap-8">
             <Link 

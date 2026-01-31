@@ -57,7 +57,7 @@ async function runAgenticLoop(
         if (marketData.price === "Unknown" && marketData.productUrl) {
              status.update("Performing deep market scan...");
              try {
-                const response = await fetch('http://localhost:8000/tools/market_deep_dive', {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/tools/market_deep_dive`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: marketData.productUrl })

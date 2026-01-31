@@ -37,7 +37,7 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
         console.log(`[Reddit Scout] Engaging Python Microservice for: "${optimizedQuery}"`);
         
         // 1. Call Local Tool
-        const searchRes = await fetch('http://localhost:8000/tools/reddit_search', {
+        const searchRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/tools/reddit_search`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: optimizedQuery })
@@ -69,7 +69,7 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
         const topThreads = threads.slice(0, 2);
         const scrapedContents = await Promise.all(topThreads.map(async (t: any) => {
             try {
-                const scrapeRes = await fetch(`http://localhost:8000/scrape?url=${encodeURIComponent(t.url)}`);
+                const scrapeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/scrape?url=${encodeURIComponent(t.url)}`);
                 const scrapeData = await scrapeRes.json();
                 return {
                     title: t.title,

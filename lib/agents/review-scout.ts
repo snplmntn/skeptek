@@ -44,7 +44,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
     // 1. Attempt High-Fidelity Scrape via Python/Playwright Microservice (if running)
     try {
         console.log(`[Review Scout] 🚀 Attempting High-Fidelity Scrape via localhost:8000...`);
-        const scraperRes = await fetch(`http://localhost:8000/scrape?url=${encodeURIComponent(url)}`, {
+        const scraperRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/scrape?url=${encodeURIComponent(url)}`, {
              method: 'GET',
              headers: { 'Content-Type': 'application/json' },
              signal: AbortSignal.timeout(45000) // 45s timeout for scraper (Auto-Scroll is slow)

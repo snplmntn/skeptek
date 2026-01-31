@@ -146,8 +146,8 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
           {/* Right Section: Price, Deal & Score */}
           <div className="flex items-center gap-6">
             {fairnessData.current > 0 && (
-              <div className="hidden md:flex flex-col items-end gap-1">
-                <span className="text-xl font-black text-primary font-mono tracking-tighter italic">
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-sm md:text-xl font-black text-primary font-mono tracking-tighter italic">
                   ${fairnessData.current}
                 </span>
                 {fairnessData.url && (
@@ -210,7 +210,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
            <BentoGridItem
              title="The Verdict"
              description={<span className="text-sm font-medium leading-relaxed block mt-2 text-foreground/90">{product.verdict}</span>}
-             header={<div className={`h-24 w-full rounded-xl p-4 flex items-center justify-center text-4xl font-black uppercase tracking-[0.2em] ${getVerdictStyle()}`}>{product.recommendation}</div>}
+             header={<div className={`h-24 w-full rounded-xl p-4 flex items-center justify-center text-3xl md:text-4xl font-black uppercase tracking-[0.2em] ${getVerdictStyle()}`}>{product.recommendation}</div>}
              className="md:col-span-2"
              icon={<Shield className="h-4 w-4 text-neutral-500" />}
            />
@@ -439,7 +439,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
             </div>
 
             {/* The Main Connective Bar - Added mx-12 to prevent label clipping */}
-            <div className="relative h-6 bg-slate-200 dark:bg-slate-800/50 rounded-full mb-32 mt-8 mx-12">
+            <div className="relative h-6 bg-slate-200 dark:bg-slate-800/50 rounded-full mb-32 mt-8 mx-4 md:mx-12">
                 
                 {/* Fair Value Zone (Green Pill) */}
                 <div 

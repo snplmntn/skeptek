@@ -37,7 +37,7 @@ export async function checkLinkValidity(url: string | undefined): Promise<boolea
         // ---------------------------------------------------------
         try {
              // console.log(`[LinkVerifier] 🐍 Verifying via Python: ${url}`);
-             const pyRes = await fetch("http://localhost:8000/verify", {
+             const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/verify`, {
                  method: "POST",
                  headers: { "Content-Type": "application/json" },
                  body: JSON.stringify({ url }),

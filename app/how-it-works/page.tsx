@@ -73,13 +73,13 @@ export default function HowItWorks() {
 
       <Navigation mode="static" />
 
-      <div className="mx-auto max-w-7xl px-8 pt-16 pb-16 relative z-10 flex flex-col justify-center min-h-[calc(100vh-80px)]">
+      <div className="mx-auto max-w-7xl px-6 md:px-8 pt-16 pb-16 relative z-10 flex flex-col justify-center min-h-[calc(100vh-80px)]">
         <div className="text-center mb-16 space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 text-primary border border-primary/20 text-[11px] font-mono uppercase tracking-widest mb-3">
                 <ScanSearch className="w-4 h-4" /> System Architecture
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-foreground mb-4">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground mb-4">
                 Inside the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Lens</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">

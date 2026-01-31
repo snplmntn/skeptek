@@ -15,7 +15,7 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
     // 1. SOTA 2026: Try Python Microservice (Reliable API Wrapper)
     try {
         console.log(`[YouTube Transcript] 🐍 Calling Python Service for: ${videoId}`);
-        const res = await fetch(`http://localhost:8000/transcript?video_id=${videoId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/transcript?video_id=${videoId}`, {
              signal: AbortSignal.timeout(10000) // 10s timeout
         });
         

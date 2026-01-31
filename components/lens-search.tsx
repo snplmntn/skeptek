@@ -261,7 +261,7 @@ export function LensSearch({ onSearch, initialQuery, initialMode = 'text', initi
 
         {/* Hero Section */}
         <div className="mb-20 text-center relative z-10">
-          <h1 className="mb-2 text-6xl font-black tracking-tight text-foreground bg-gradient-to-b from-zinc-800 to-zinc-500 dark:from-white dark:to-slate-500 bg-clip-text text-transparent">
+          <h1 className="mb-2 text-4xl md:text-6xl font-black tracking-tight text-foreground bg-gradient-to-b from-zinc-800 to-zinc-500 dark:from-white dark:to-slate-500 bg-clip-text text-transparent">
             Skeptek
           </h1>
           <p className="text-sm font-mono tracking-[0.2em] uppercase text-primary/80">
