@@ -1,5 +1,7 @@
 'use server';
 
+import crypto from 'crypto';
+
 import { createStreamableValue } from 'ai/rsc';
 import { marketScout } from '@/lib/agents/market-scout';
 import { redditScout } from '@/lib/agents/reddit-scout';
@@ -47,7 +49,8 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         // --- 0.5. CACHE CHECK (SOTA Optimization) ---
         // SOTA: If in Review Mode, we SKIP CACHE to ensure we aren't loading old "Simulated" data.
         // We want a fresh identity check for the reviewer.
-        const shouldSkipCache = options?.isReviewMode;
+        const isReviewMode = options?.isReviewMode;
+        const shouldSkipCache = isReviewMode;
         
         const cachedData = !shouldSkipCache ? await getCachedProduct(query) : null;
         
@@ -105,10 +108,29 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       const canonicalName = marketData?.title || mainProductQuery;
       console.log(`[Hive Mind] Canonical Name established: "${canonicalName}" (Original: "${query}")`);
 
+      // ---------------------------------------------------------
+      // SOTA: CANONICAL CACHE LAYER (Layer 2)
+      // We found the "Real Name". Check if we have analyzed this real name before.
+      // ---------------------------------------------------------
+      if (!isReviewMode) {
+          const cachedCanonical = await getCachedProduct(canonicalName);
+          if (cachedCanonical) {
+              console.log(`[Cache] CANONICAL HIT found for "${canonicalName}"! Splicing into current session.`);
+              
+              // ALIASING: Save the user's "messy" query as an alias to this clean data
+              // So next time "Macbook M1" hits Layer 1 instantly.
+              setCachedProduct(query, cachedCanonical.productName, cachedCanonical.category, cachedCanonical, 'alias').catch(e => console.error("Alias Cache Failed", e));
+
+              status.update("Restoring previous analysis (Canonical Match)...");
+              await new Promise(r => setTimeout(r, 400));
+              result.done(cachedCanonical);
+              status.done("Complete");
+              return;
+          }
+      }
+
       // Node 2 & 3: Agentic Scout Dispatch (The Followers)
       status.update("Agentically gathering evidence...");
-      
-      const isReviewMode = options?.isReviewMode;
       
       // Initialize Data Buckets
       let redditData: any = null;
@@ -339,7 +361,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       }
 
       // GAMIFICATION: Award XP for Analysis
-      awardXP(25).catch(err => console.error("XP Award Failed", err));
+      awardXP(25, supabase).catch(err => console.error("XP Award Failed", err));
 
     // HACKATHON: Push to Supabase Realtime Feed
       try {
@@ -590,6 +612,52 @@ async function handleComparison(items: string[], status: any, result: any) {
         }
 
         result.done(json);
+        
+        // SOTA: Cache the Comparison Result
+        const comparisonKey = items.sort().join(','); // Normalized key: "a,b"
+        setCachedProduct(comparisonKey, json.title, "Comparison", json, 'compare').catch(e => console.error("Failed to cache comparison", e));
+
+        // SOTA: Cache Warming (Extract individual products from the Comparison JSON)
+        // The comparison JSON has `products: [{ name, score, verdict, ... }]`
+        // We can save these as valid "individual" cache entries!
+        if (json.products && Array.isArray(json.products)) {
+             json.products.forEach((p: any) => {
+                 // We need to map the Comparison Product Schema to the Standard Product Schema
+                 // distinct schemas (Judge vs Comparison).
+                 // Standard Schema has: { productName, score, verdict, priceAnalysis, ... }
+                 // Comparison Schema has: { name, score, verdict, details... }
+                 // They are close enough to be useful!
+                 
+                 // Parse Price if available
+                 let numericPrice = 0;
+                 if (p.price) {
+                      const match = p.price.toString().match(/[\d,.]+/);
+                      if (match) numericPrice = parseFloat(match[0].replace(/,/g, ''));
+                 }
+
+                 const warmPayload = {
+                     productName: p.name,
+                     score: p.score,
+                     verdict: p.verdict,
+                     category: "comparison-derived",
+                     priceAnalysis: {
+                         currentPrice: numericPrice,
+                         currency: "$", // Assumption for now
+                         priceStatus: "Normal"
+                     },
+                     // Map other fields as best as possible
+                     pros: p.details?.pros || [],
+                     cons: p.details?.cons || [],
+                     sources: p.sources // We injected this earlier!
+                 };
+                 
+                 // Save to cache using the Product Name
+                 // Use type='canonical' to indicate it came from a high-trust comparison
+                 setCachedProduct(p.name, p.name, "comparison-derived", warmPayload, 'canonical').catch(e => console.error("Cache Warming Failed", e));
+                 console.log(`[Hive Mind] Warmed cache for "${p.name}"`);
+             });
+        }
+
         status.done("Complete");
 
     } catch (e: any) {
@@ -632,7 +700,23 @@ export async function analyzeImage(formData: FormData) {
 
     // Convert to base64 for Gemini
     const arrayBuffer = await file.arrayBuffer();
-    const imageData = Buffer.from(arrayBuffer).toString("base64");
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // 1.5 SOTA: Check Visual Cache
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex');
+    const cacheKey = `visual:${hash}`;
+    
+    // Check Cache
+    const cachedVisual = await getCachedProduct(cacheKey);
+    if (cachedVisual) {
+         console.log(`[Visual] Cache HIT for hash ${hash}`);
+         return {
+             success: true,
+             data: cachedVisual
+         };
+    }
+
+    const imageData = buffer.toString("base64");
 
     const prompt = `
       Analyze this image for product details.
@@ -668,22 +752,29 @@ export async function analyzeImage(formData: FormData) {
     // SOTA: Visual Match with Cache
     // Try to find if we've already analyzed this product textually
     const cached = await getCachedProduct(json.productName);
-    if (cached) {
-         return {
-             success: true,
-             data: {
-                 ...json,
-                 cachedAnalysis: cached // Pass this back so frontend can show "Deep Analysis Available"
-             }
-         };
-    }
+    
+    const finalData = {
+         ...json,
+         cachedAnalysis: cached // Pass this back so frontend can show "Deep Analysis Available"
+    };
 
-    // HACKATHON: Skipped pushing visual scan to Supabase to prevent duplicates.
-    // The actual "Judge" analysis (analyzeProduct) triggered by the frontend will handle the trusted DB insert.
+    // SOTA: Save to Visual Cache
+    // We save the RESULT of the image analysis, keyed by the image hash.
+    setCachedProduct(cacheKey, json.productName, "visual-scan", finalData, 'visual').catch(e => console.error("Visual Cache Failed", e));
+    
+    // SOTA: Warm the Text Cache?
+    // If the image analysis was high confidence ("AirPods Pro"), users might search for it.
+    // But the payload here is thin ({productName, isScamLikely}). 
+    // It's not the full "Judge" report. So we probably SHOULDN'T overwrite the main text cache 
+    // with this thin data, UNLESS we want to store it as a "stub".
+    // Decision: Only cache the Visual Result (Hash -> Name) for now, as per plan "Visual Scans -> Cache Key: Hash".
+    // The "Side-Effect" in plan said: "Once... full analysis is complete... SAVE to text-based cache".
+    // But here we only do the "Identity" step. We don't do the full analysis yet.
+    // So we just cache the Identity.
 
     return {
       success: true,
-      data: json,
+      data: finalData, // Return the data
     };
   } catch (error: any) {
     console.error("Gemini Vision Analysis Error:", error);

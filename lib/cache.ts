@@ -29,10 +29,31 @@ export async function getCachedProduct(query: string) {
 /**
  * Save analysis result to cache
  */
-export async function setCachedProduct(query: string, productName: string, category: string | null, analysisData: any) {
+export async function setCachedProduct(
+  query: string, 
+  productName: string, 
+  category: string | null, 
+  analysisData: any,
+  type: 'text' | 'visual' | 'compare' | 'url' | 'canonical' | 'alias' = 'text'
+) {
   const queryKey = normalizeQuery(query);
   const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour TTL
+  
+  // Dynamic TTL based on Type
+  switch (type) {
+      case 'visual':
+          expiresAt.setDate(expiresAt.getDate() + 30); // 30 Days (Hash is stable)
+          break;
+      case 'canonical':
+      case 'alias':
+          expiresAt.setDate(expiresAt.getDate() + 7); // 7 Days (Mapping is relatively stable)
+          break;
+      case 'compare':
+          expiresAt.setDate(expiresAt.getDate() + 3); // 3 Days
+          break;
+      default:
+          expiresAt.setHours(expiresAt.getHours() + 24); // 24 Hours (Standard text search)
+  }
 
   const { error } = await supabase
     .from('product_cache')
@@ -41,7 +62,8 @@ export async function setCachedProduct(query: string, productName: string, categ
       product_name: productName,
       category: category,
       data: analysisData,
-      expires_at: expiresAt.toISOString()
+      expires_at: expiresAt.toISOString(),
+      type: type
     }, {
       onConflict: 'query_key'
     });
@@ -49,7 +71,7 @@ export async function setCachedProduct(query: string, productName: string, categ
   if (error) {
     console.error('[Cache] Failed to save:', error);
   } else {
-    console.log(`[Cache] SAVED "${query}" (expires: ${expiresAt.toISOString()})`);
+    console.log(`[Cache] SAVED "${query}" [${type}] (expires: ${expiresAt.toISOString()})`);
   }
 }
 

@@ -14,7 +14,7 @@ export interface TrendingScan {
   real_value: string;
 }
 
-    export async function getTrendingScans(categoryFilter: string = 'All') {
+export async function getTrendingScans(categoryFilter: string = 'All') {
     try {
         const supabase = await createClient();
         
@@ -70,5 +70,36 @@ export interface TrendingScan {
     } catch (error) {
         console.error("Discovery API Error:", error);
         return { top: [], trap: null };
+    }
+}
+
+export async function getCategories(): Promise<string[]> {
+    try {
+        const supabase = await createClient();
+        
+        // Fetch distinct categories directly from the view
+        // Note: Supabase doesn't have a distinct() method in JS client roughly,
+        // but passing a column to select can effectively work if we process it,
+        // or using a raw RPC if needed. 
+        // Best approach with simple query builder: fetch all categories (lightweight) and uniq them in JS
+        // OR better: use .select('category') and rely on the fact we only need the names.
+        
+        // Ideally we would do .select('category', { distinct: true }) but that's not standard
+        // Let's just grab existing categories from the view
+        const { data, error } = await supabase
+            .from('product_metrics_view')
+            .select('category')
+            .gte('avg_trust_score', 60); // FILTER: Only categories with "Podium-worthy" products
+
+        if (error) throw error;
+        if (!data) return [];
+
+        // Unique set of non-null categories
+        const categories = Array.from(new Set(data.map((d: any) => d.category).filter(Boolean)));
+        return categories.sort();
+
+    } catch (error) {
+        console.error("Category Fetch Error:", error);
+        return [];
     }
 }

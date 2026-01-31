@@ -22,7 +22,7 @@ Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model
 ### The Agent Swarm
 1.  **🕵️ Market Scout (SOTA 2026 Grounding)**
     *   **Model**: `gemini-3.0-flash`
-    *   **Role**: The first line of defense. It uses **Google Search Grounding** to traverse the live web, verifying product existence, current street pricing, and official technical specifications. 
+    *   **Role**: The first line of defense. It uses **Google Search Grounding** to traverse the live web, verifying product existence, **Original MSRP**, and **Competitor Pricing** to establish a baseline for value.
     *   **Chronological Awareness**: It now tracks **Release Dates** and **Successor Models** (e.g., M1 vs M4), ensuring you don't buy "new" tech that is actually 4 years old.
     *   **Python Muscle**: Connects to a dedicated **Python Microservice** for deep market verification when standard APIs fail.
 
@@ -35,6 +35,7 @@ Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model
 3.  **⚖️ The Judge (Reasoning Core)**
     *   **Model**: `gemini-3.0-flash`
     *   **Role**: The synthesis engine. It ingests the raw data from the Scouts, cross-references Reddit user sentiment against official specs.
+    *   **Price Integrity**: It enforces a **Zero-Hallucination Protocol**, using verified numeric price data to calculate Fair Value (MSRP - Depreciation) rather than guessing.
     *   **SOTA Verification**: It applies **Bot/Astroturfing Detection** algorithms to Reddit threads and penalizes products with suspicious praise.
     *   **Output**: A detailed "Verdict" (Buy/Avoid/Consider) and a "Truth Score" calibrated to the current date (Jan 2026).
 
@@ -44,6 +45,10 @@ Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model
 *   **📉 Fairness Meter**: An algorithmic visualization that compares the *asking price* vs. the *fair market value* based on verified defects and competitor pricing.
 *   **🎮 Gamified Field Reports**: Earn **XP** and rank up from **Window Shopper** to **Skeptek God** by submitting your own verified user reviews. Your community rank influences the weight of your reviews in the global analysis engine.
 *   **🛡️ Analysis UI**: A "Glassmorphism" design system featuring scanlines, focal loaders, and high-contrast data displays.
+*   **🧠 Hive Mind Memory (New!)**: A multi-modal caching system that remembers everything.
+    *   **Visual Hashing**: Uploading a photo of a product instantly unlocks its text-based analysis (SHA-256).
+    *   **Comparison Warming**: Analyzing "iPhone 15 vs S24" automatically pre-caches the individual data for both phones, making future searches instant.
+    *   **Canonical Aliasing**: Intelligently links "Macbook M1" (alias) to "Apple MacBook Air 2020" (canonical), preventing redundant AI analysis.
 
 ## 🛠️ Tech Stack
 *   **Brain (Frontend)**: Next.js 14, Tailwind CSS, Framer Motion
@@ -51,34 +56,63 @@ Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model
 *   **Intelligence**: Google Gemini 3.0 (Flash & Pro Preview)
 *   **Database**: Supabase (PostgreSQL, Realtime)
 
-## 📦 Installation
-Clone the repository and install the dependencies:
+## 📦 Installation & Setup
+
+### 1. Prerequisites
+- **Node.js** (v18+)
+- **Python** (v3.10+)
+- **Supabase Account** (for Auth & Database)
+- **Google Cloud Platform Account** (for Gemini & Vertex AI)
+
+### 2. Environment Variables
+Create a `.env.local` file in the root directory:
 
 ```bash
-git clone https://github.com/your-username/skeptek.git
-cd skeptek
+# Core AI Keys (Gemini 3)
+GOOGLE_API_KEY=your_gemini_api_key
+YOUTUBE_API_KEY=your_youtube_data_api_key
+
+# Supabase (Database & Auth)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_supabase_anon_key
+
+# Google Cloud Vertex AI (Optional - for Enterprise Grounding)
+GOOGLE_GENAI_USE_VERTEXAI=true
+GOOGLE_CLOUD_PROJECT=your_gcp_project_id
+GOOGLE_CLOUD_LOCATION=global
+VERTEX_SEARCH_DATA_STORE_ID=your_vertex_datastore_id
+```
+
+### 3. Install Dependencies
+
+**Frontend (The Brain)**
+```bash
 npm install
 ```
 
-Set up your environment variables:
+**Backend (The Muscle)**
 ```bash
-# .env.local
-GOOGLE_API_KEY=your_gemini_api_key_here
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+cd backend
+pip install -r requirements.txt
+cd ..
 ```
 
-Run the Python Backend (The Muscle):
+### 4. Running Skeptek
+
+**Step 1: Ignite the Python Microservice**
+This handles complex Selenium scraping and deep market verification.
 ```bash
-# In a new terminal
-pip install -r backend/requirements.txt
+# Terminal 1
 python backend/main.py
+# Runs on http://localhost:8000
 ```
 
-Run the Next.js Frontend (The Brain):
+**Step 2: Launch the Next.js Frontend**
+The main application interface.
 ```bash
-# In a separate terminal
+# Terminal 2
 npm run dev
+# Runs on http://localhost:3000
 ```
 
 ## 🏆 Hackathon Submission Details

@@ -47,27 +47,37 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
     <nav className="border-b border-slate-200 dark:border-white/5 forensic-glass sticky top-0 z-[100]">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
         {/* Logo Section */}
-        <Link 
-            href="/" 
-            onClick={(e) => {
-                if (onViewChange) {
-                    e.preventDefault();
-                    onViewChange('lens-search');
-                }
-            }}
-            className="flex items-center gap-3 group"
-        >
-             <div className="relative w-11 h-11 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(59,130,246,0.2)] group-hover:scale-105 transition-all overflow-hidden">
-                <div className="absolute inset-0 bg-primary/20 animate-pulse" />
-                <img src="/icon.png" alt="Skeptek Icon" className="w-8 h-8 object-contain relative z-10 brightness-110" />
-             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-black text-foreground tracking-tighter group-hover:text-primary transition-colors leading-none uppercase italic">
-                  Skeptek
-              </span>
-              <span className="text-[7px] font-mono tracking-[0.4em] text-muted-foreground uppercase mt-0.5">ANALYSIS_ENGINE</span>
-            </div>
-        </Link>
+        <div className="flex items-center gap-8">
+            <Link 
+                href="/" 
+                onClick={(e) => {
+                    if (onViewChange) {
+                        e.preventDefault();
+                        onViewChange('lens-search');
+                    }
+                }}
+                className="flex items-center gap-3 group"
+            >
+                 <div className="relative w-11 h-11 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(59,130,246,0.2)] group-hover:scale-105 transition-all overflow-hidden">
+                    <div className="absolute inset-0 bg-primary/20 animate-pulse" />
+                    <img src="/icon.png" alt="Skeptek Icon" className="w-8 h-8 object-contain relative z-10 brightness-110" />
+                 </div>
+                <div className="flex flex-col">
+                  <span className="text-lg font-black text-foreground tracking-tighter group-hover:text-primary transition-colors leading-none uppercase italic">
+                      Skeptek
+                  </span>
+                  <span className="text-[7px] font-mono tracking-[0.4em] text-muted-foreground uppercase mt-0.5">ANALYSIS_ENGINE</span>
+                </div>
+            </Link>
+
+            {mode === 'static' && (
+                <Link href="/">
+                    <Button variant="ghost" size="sm" className="hidden md:flex text-muted-foreground hover:text-foreground font-medium text-xs uppercase tracking-wider gap-2">
+                        <span>←</span> Back
+                    </Button>
+                </Link>
+            )}
+        </div>
         
         <div className="flex items-center gap-4">
              <ThemeToggle />
@@ -108,7 +118,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
                   </Button>
               </Link>
           ) : (
-             <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-white/10">
+             <div className="flex items-center gap-3">
                  
                  <Popover>
                     <PopoverTrigger asChild>
@@ -175,13 +185,7 @@ export function Navigation({ currentView = 'lens-search', onViewChange, mode = '
              </div>
           )}
 
-          {mode === 'static' && (
-             <Link href="/">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground font-medium">
-                    ← Back to Search
-                </Button>
-            </Link>
-          )}
+
         </div>
       </div>
     </nav>

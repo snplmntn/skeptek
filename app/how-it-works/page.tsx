@@ -13,16 +13,24 @@ export default function HowItWorks() {
       id: 1,
       title: 'Grounded Recon',
       icon: Telescope,
-      desc: 'Our Market Scout tracks live street prices and release dates, ensuring you don\'t buy "new" tech that\'s actually 4 years old.',
+      desc: (
+        <>
+          We start by verifying the facts. Using <strong className="text-foreground">Google Search</strong>, we track down the product&apos;s original launch price (MSRP) and compare it to current prices across major retailers to ensure you aren&apos;t overpaying.
+        </>
+      ),
       color: 'text-blue-500',
       bg: 'bg-blue-500/10',
       border: 'border-blue-500/20'
     },
     {
       id: 2,
-      title: 'Forensic Audio',
+      title: 'Visual & Audio Analysis',
       icon: Microscope,
-      desc: 'The Video Scout doesn\'t just watch; it listens. We analyze high-fidelity transcripts to catch "micro-complaints" reviewers try to hide.',
+      desc: (
+        <>
+          Our AI agents watch and listen to <strong className="text-foreground">YouTube</strong> reviews for you. We detect physical defects in video frames and analyze spoken audio to catch complaints that aren&apos;t in the description.
+        </>
+      ),
       color: 'text-emerald-500',
       bg: 'bg-emerald-500/10',
       border: 'border-emerald-500/20'
@@ -31,7 +39,11 @@ export default function HowItWorks() {
       id: 3,
       title: 'Community Intel',
       icon: ShieldCheck,
-      desc: 'Verified Field Reports from ranked users (Cadet to Oracle). We filter out astroturfing to show you raw, honest ownership experiences.',
+      desc: (
+        <>
+          We combine our own <strong className="text-foreground">Skeptek Field Reports</strong> with deep scans of <strong className="text-foreground">Reddit</strong> threads. Our system filters out fake &quot;bot&quot; reviews, leaving only the raw, honest truth from actual community members.
+        </>
+      ),
       color: 'text-indigo-500',
       bg: 'bg-indigo-500/10',
       border: 'border-indigo-500/20'
@@ -40,7 +52,11 @@ export default function HowItWorks() {
       id: 4,
       title: 'The Verdict',
       icon: Gavel,
-      desc: 'The Judge synthesizes all data into a 2026-calibrated Truth Score. It penalizes legacy hardware and rewards genuine value.',
+      desc: (
+        <>
+          We combine every piece of data into a single <strong className="text-foreground">Truth Score</strong>. By enforcing strict price checks, we ensure our verdict is based on verified numbers, not AI guesses.
+        </>
+      ),
       color: 'text-purple-500',
       bg: 'bg-purple-500/10',
       border: 'border-purple-500/20'
@@ -128,17 +144,77 @@ export default function HowItWorks() {
             </div>
         </div>
 
+        {/* Gamification Section */}
+
+
         <div className="text-center mt-16">
             <Link href="/">
                 <Button size="lg" className="h-16 px-10 rounded-full text-lg shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.6)] transition-all hover:-translate-y-1 group bg-primary hover:bg-primary/90">
                     <Fingerprint className="w-6 h-6 mr-3" />
-                    Start Your Investigation
+                    Scan a Product
                     <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
             </Link>
             <p className="mt-5 text-xs uppercase tracking-widest text-muted-foreground font-mono">
                 Analysis takes seconds • No account required
             </p>
+            
+            {/* Gamification Section (Moved Below) */}
+            <div className="mt-20 max-w-4xl mx-auto mb-16">
+                <div className="relative p-8 rounded-3xl border border-primary/20 bg-primary/5 backdrop-blur-sm overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    
+                    <div className="relative z-10 text-center">
+                        <h2 className="text-3xl font-black text-foreground mb-6 uppercase italic tracking-tighter">
+                            Rise Through the <span className="text-primary">Ranks</span>
+                        </h2>
+                        
+                        <div className="grid md:grid-cols-3 gap-6 text-left">
+                            <div className="bg-background/40 p-5 rounded-xl border border-white/5">
+                                <h4 className="font-bold text-lg mb-2 flex items-center gap-2 text-primary">
+                                    <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">1</span>
+                                    Earn XP
+                                </h4>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Get points for sharing your real experiences.
+                                </p>
+                            </div>
+
+                            <div className="bg-background/40 p-5 rounded-xl border border-white/5">
+                                <h4 className="font-bold text-lg mb-2 flex items-center gap-2 text-purple-400">
+                                    <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full">2</span>
+                                    Rank Up
+                                </h4>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Level up from a newbie to a top-tier reviewer.
+                                </p>
+                            </div>
+
+                            <div className="bg-background/40 p-5 rounded-xl border border-white/5">
+                                <h4 className="font-bold text-lg mb-2 flex items-center gap-2 text-amber-400">
+                                    <span className="text-xs bg-amber-500 text-black px-2 py-0.5 rounded-full">3</span>
+                                    Influence
+                                </h4>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Your reviews help others find the truth.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Secondary Review Button */}
+                        <div className="mt-8">
+                             <Link href="/?action=review">
+                                <Button variant="outline" className="gap-2 rounded-full border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-500 transition-all hover:scale-105">
+                                    <span className="font-semibold">Review a Product</span>
+                                    <span className="text-emerald-500/70">→</span>
+                                </Button>
+                             </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
       </div>
     </main>

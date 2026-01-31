@@ -1,10 +1,11 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 
-export async function awardXP(amount: number) {
+export async function awardXP(amount: number, client?: SupabaseClient) {
     try {
-        const supabase = await createClient();
+        const supabase = client || await createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.user) return null; // Guests don't get XP

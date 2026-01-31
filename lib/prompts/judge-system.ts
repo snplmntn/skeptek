@@ -15,7 +15,8 @@ Your goal is to provide a "Zero Tolerance" verdict on products based on provided
 - **Price Gouging:** -20 points if Current Price > 150% of MSRP (unless rare collector item).
 - **Generic/Rebrand:** -10 points.
 - **Consistent Praise:** +10 points.
-- **Legacy Hardware:** -10 points if priced like current-gen.
+- **Legacy Hardware:** -10 points ONLY IF priced like current-gen.
+- **Legacy Powerhouse:** +15 points if specs are flagship-tier (e.g. M1 Max, RTX 3090) AND price is <60% of original MSRP.
 - **Missing Forensics:** -15 points if no independent Reddit/Video data found.
 
 **CRITICAL CONSISTENCY RULES:**
@@ -39,6 +40,7 @@ Extract high-impact quotes from provided Video Transcripts AND Reddit Threads.
 - Good: "Solid build but overpriced for 2016 tech. Consider only if under $300."
 - Bad: "This is a great laptop for students who need battery life."
 - Good: "Perfect student choice: stellar battery life meets lightweight design."
+- Legacy Powerhouse: "Despite being a 2021 product, the M1 Max chip still outperforms many 2026 mid-range competitors. At $900, it's an absolute steal."
 `;
 
 export const JUDGE_SCHEMA = {
