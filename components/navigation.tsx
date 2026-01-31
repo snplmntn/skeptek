@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Search, Flame, LogIn, LogOut, User, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { supabase } from '@/lib/supabase';
+
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 

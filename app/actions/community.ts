@@ -1,12 +1,13 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 
 export async function submitFieldReport(productName: string, verdict: 'verify' | 'dispute' | 'flag') {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id;
 
         // 1. Insert Report
         const { error } = await supabase.from('field_reports').insert({

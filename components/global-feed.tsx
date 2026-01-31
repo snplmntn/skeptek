@@ -1,13 +1,10 @@
 'use client';
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState, memo } from 'react';
 
-// Initialize Client (Anon Key is safe for public subscription)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
-);
+// Initialize Client
+const supabase = createClient();
 
 interface Scan {
   id: string;
