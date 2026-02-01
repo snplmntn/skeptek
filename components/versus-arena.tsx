@@ -8,7 +8,7 @@ import { Crown, Plus, Check, Activity, ThumbsUp, AlertTriangle, AlertCircle, Tre
 import { cn } from '@/lib/utils';
 
 
-// Shared Types (ideally move to types file)
+// local type definitions
   interface ProductDetails {
     trustScore: { score: number; label: string };
     sentiment: { positive: number; neutral: number; negative: number };
@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
     differences: Array<{ category: string; scores: Record<string, number> }>;
   }
 
-  // --- MOCK DATA (Fallback) ---
+  // --- mock data (fallback) ---
   const MOCK_COMPARISONS: Comparison[] = [
     {
       id: 1,
@@ -71,20 +71,20 @@ import { cn } from '@/lib/utils';
   ];
 
 interface VersusArenaProps {
-    data?: Comparison; // The real data from backend (optional)
+    data?: Comparison; // the real data from backend (optional)
     onBack?: () => void;
 }
 
 export function VersusArena({ data, onBack }: VersusArenaProps) {
-  // If real data is passed (Comparison mode active), use it. 
-  // Otherwise default to the first mock item for "Discovery" mode.
+  // if real data is passed (comparison mode active), use it. 
+  // otherwise default to the first mock item for "discovery" mode.
   
-  // Transform backend data format to internal format if necessary or use directly if schema matches.
-  // The schema from analyze.ts matches 'Comparison' interface reasonably well, but key names need alignment.
+  // transform backend data format to internal format if necessary or use directly if schema matches.
+  // the schema from analyze.ts matches 'comparison' interface reasonably well, but key names need alignment.
   
   const activeComparison = data || MOCK_COMPARISONS[0];
   
-  // Sort products by score for layout
+  // sort products by score for layout
   const comparison = {
     ...activeComparison,
     products: [...activeComparison.products].sort((a, b) => b.score - a.score)
@@ -93,9 +93,9 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
   const [selectedComparison, setSelectedComparison] = useState(0);
   const [hoveredStat, setHoveredStat] = useState<string | null>(null);
 
-  // If using real data, we don't need the mock selector at the top
+  // if using real data, we don't need the mock selector at the top
   const showSelector = !data;
-  const comparisons = MOCK_COMPARISONS; // Use mock list for selector if in discovery mode
+  const comparisons = MOCK_COMPARISONS; // use mock list for selector if in discovery mode
 
   const getRecommendationBadge = (recommendation: string) => {
     const styles = {
@@ -139,12 +139,12 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                 Comparison<span className="text-primary">Matrix</span>
             </h1>
             <p className="text-muted-foreground font-mono text-xs tracking-[0.3em] uppercase opacity-70">
-                Forensic Analysis Unit // Comparative Data
+                Deep Analysis Unit // Comparative Data
             </p>
         </motion.div>
 
 
-        {/* Comparison Selector - Only Show in Discovery/Demo Mode */}
+        {/* comparison selector - only show in discovery/demo mode */}
         {showSelector && (
             <div className="mb-12 flex justify-center gap-4 flex-wrap">
             {comparisons.map((comp, idx) => (
@@ -164,10 +164,10 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
             </div>
         )}
 
-        {/* Battle Station Grid */}
+        {/* battle station grid */}
         <div className="grid lg:grid-cols-12 gap-8 items-start">
             
-            {/* LEFT: Product Cards */}
+            {/* left: product cards */}
             <div className="lg:col-span-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <AnimatePresence mode="popLayout">
                     {comparison.products.map((product, i) => (
@@ -193,12 +193,12 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                         : "border-border hover:border-primary/30 h-[440px]"
                                 )}
                             >
-                                {/* Winner Glow Effect */}
+                                {/* winner glow effect */}
                                 {product.isWinner && (
                                     <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
                                 )}
 
-                                {/* Card Header */}
+                                {/* card header */}
                                 <div className="p-6 text-center relative z-10 flex flex-col h-full">
                                     {product.isWinner && (
                                         <div className="inline-flex mx-auto items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary text-[10px] font-black uppercase tracking-wider mb-4 shadow-[0_0_10px_rgba(59,130,246,0.3)] animate-pulse">
@@ -209,14 +209,14 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                         {product.name}
                                     </h3>
 
-                                    {/* Forensic Verdict Badge */}
+                                    {/* smart verdict badge */}
                                     {product.recommendation && (
                                         <div className="mb-6">
                                             {getRecommendationBadge(product.recommendation)}
                                         </div>
                                     )}
 
-                                    {/* Score Ring */}
+                                    {/* score ring */}
                                     <div className="relative w-28 h-28 mx-auto mb-8 group-hover:scale-105 transition-transform duration-300">
                                         <svg className="h-full w-full -rotate-90 text-muted/20" viewBox="0 0 100 100">
                                             <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="6" />
@@ -246,7 +246,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                     </div>
 
 
-                                    {/* Card Footer: Price & Source */}
+                                    {/* card footer: price & source */}
                                     {(product.sources?.market?.price && product.sources.market.price !== 'Unknown' && product.sources.market.productUrl) && (
                                         <div className="mt-auto pt-6 border-t border-border/30">
                                             <div className="text-xl font-black text-primary font-mono tracking-tighter mb-1">
@@ -264,10 +264,10 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                 </AnimatePresence>
             </div>
 
-            {/* RIGHT: Comparative Analytics */}
+            {/* right: comparative analytics */}
             <div className="lg:col-span-4 space-y-6">
                 
-                {/* Winner Insight */}
+                {/* winner insight */}
                 {comparison.winReason && (
                     <motion.div 
                         initial={{ opacity: 0, x: 20 }}
@@ -275,7 +275,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                         key={comparison.winReason}
                         className="bg-primary/5 border border-primary/20 p-5 rounded-2xl relative overflow-hidden group hover:bg-primary/10 transition-all duration-500 shadow-[0_0_30px_rgba(59,130,246,0.05)] border-l-4 border-l-primary"
                     >
-                        {/* Holographic Glow Layer */}
+                        {/* holographic glow layer */}
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         
                         <div className="absolute -right-4 -top-4 text-primary/10 group-hover:text-primary/15 transition-colors">
@@ -293,11 +293,11 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                     </motion.div>
                 )}
 
-                {/* Specs Breakdown */}
+                {/* specs breakdown */}
                 <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
                     <div className="p-4 bg-muted/30 border-b border-border flex items-center justify-between">
                          <h3 className="text-sm font-bold text-foreground uppercase tracking-wide flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-muted-foreground" /> Forensic Specs
+                            <Activity className="w-4 h-4 text-muted-foreground" /> Technical Specs
                          </h3>
                     </div>
                     <div className="p-3 space-y-1">
@@ -315,7 +315,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                         <span className="text-xs font-bold text-muted-foreground group-hover/stat:text-foreground uppercase tracking-wide">{item.category}</span>
                                     </div>
                                     
-                                    {/* Stat Bars */}
+                                    {/* stat bars */}
                                     <div className="space-y-3">
                                         {comparison.products.map(product => {
                                             const score = item.scores[product.id] || 0;
@@ -363,7 +363,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
             </div>
         </div>
 
-        {/* Deep Dive Section */}
+        {/* deep dive section */}
         <div className={cn(
             "mt-16 grid gap-6",
             comparison.products.length <= 2 ? "md:grid-cols-2" : "md:grid-cols-3 lg:grid-cols-3"
@@ -410,10 +410,10 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                              </ul>
                          </div>
                          
-                         {/* Verdict Panel */}
+                         {/* verdict panel */}
                          <div className={cn("p-4 rounded-xl border transition-all duration-300", getVerdictStyle(product.verdictType))}>
                             <div className="text-[10px] font-mono mb-2 flex items-center gap-2 font-black uppercase tracking-widest opacity-80">
-                                <Shield className="w-3.5 h-3.5" /> Forensic Verdict
+                                <Shield className="w-3.5 h-3.5" /> Smart Verdict
                             </div>
                             <p className="text-xs leading-relaxed font-bold mb-1">
                                 {product.details.trustScore.label}
@@ -423,8 +423,8 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                             </p>
                          </div>
 
-                         {/* Sources Panel */}
-                         {/* Data Source Verification */}
+                         {/* sources panel */}
+                         {/* data source verification */}
                          {product.sources && (
                             ((product.sources.market?.productUrl && product.sources.market.price !== 'Unknown') || 
                              ((product.sources.reddit as any)?.sources?.length > 0) || 
@@ -435,7 +435,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                      <Activity className="w-3 h-3" /> Evidence Sources
                                  </div>
                                  <div className="grid gap-2">
-                                     {/* 1. Market Source (View Deal) */}
+                                     {/* 1. market source (view deal) */}
                                      {(product.sources.market?.productUrl && product.sources.market.price !== 'Unknown') && (
                                          <a 
                                             href={product.sources.market.productUrl} 
@@ -459,9 +459,9 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                          </a>
                                      )}
 
-                                     {/* 2. Forensic Sources (Social/Video) */}
+                                     {/* 2. evidence sources (social/video) */}
                                      <div className="grid gap-2">
-                                         {/* Reddit Sources */}
+                                         {/* reddit sources */}
                                          {(product.sources.reddit as any)?.sources && (product.sources.reddit as any).sources.map((source: any, idx: number) => (
                                              <a 
                                                 key={idx}
@@ -487,7 +487,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
                                              </a>
                                          ))}
                                          
-                                         {/* Video Sources */}
+                                         {/* video sources */}
                                          {product.sources.video && product.sources.video.map((video: any, idx: number) => (
                                               <a 
                                                 key={idx}
@@ -534,7 +534,7 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
             ))}
         </div>
 
-        {/* Quick Nav: Search Again */}
+        {/* quick nav: search again */}
         <div className="mt-20 mb-24 flex flex-col items-center gap-6">
             <div className="h-px w-24 bg-gradient-to-r from-transparent via-border to-transparent" />
             <Button

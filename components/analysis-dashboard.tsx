@@ -3,17 +3,32 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shield, Plus, Search, ExternalLink } from 'lucide-react';
+import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shield, Plus, Search, ExternalLink, Mic2, Volume2, Zap } from 'lucide-react';
+
+import { VerificationModule } from '@/components/verification-module';
+import { BentoGrid, BentoGridItem } from '@/components/BentoGrid';
 
 interface AnalysisDashboardProps {
   search: { title: string; url: string };
   data?: any; // Accepting the AI result
   onBack: () => void;
+  userRank?: string; // New Prop
+  isReviewMode?: boolean; // New Prop
 }
 
-export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardProps) {
+export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', isReviewMode = false }: AnalysisDashboardProps) {
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
+  
+  // Auto-scroll to review section if in Review Mode
+  React.useEffect(() => {
+    if (isReviewMode) {
+        const element = document.getElementById('verification-module');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+  }, [isReviewMode]);
 
   // Use real data if available, otherwise fallback to mock (or empty)
   const product = data ? {
@@ -106,7 +121,6 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
       </div>
 
       {/* Sticky Glass Header */}
-      {/* Sticky Glass Header */}
       <div className="sticky top-[68px] z-40 forensic-glass border-b border-foreground/5 dark:border-white/5">
         <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
           <div className="flex-1">
@@ -117,14 +131,22 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
             >
               <span className="opacity-50 group-hover:-translate-x-1 transition-transform">←</span> Back to Search
             </Button>
-            <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-white">{product.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-white">{product.name}</h1>
+              {data?.isLowConfidence && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold text-rose-500 animate-pulse">
+                  <AlertCircle className="w-3 h-3" />
+                  PROVISIONAL ANALYSIS
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Section: Price, Deal & Score */}
           <div className="flex items-center gap-6">
             {fairnessData.current > 0 && (
-              <div className="hidden md:flex flex-col items-end gap-1">
-                <span className="text-xl font-black text-primary font-mono tracking-tighter italic">
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-sm md:text-xl font-black text-primary font-mono tracking-tighter italic">
                   ${fairnessData.current}
                 </span>
                 {fairnessData.url && (
@@ -170,84 +192,119 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
 
       {/* Main Content */}
       <div className="mx-auto max-w-4xl px-6 py-8">
-        {/* Verdict Hero Card */}
-        <div className={`mb-8 p-8 border-l-4 forensic-glass ${getVerdictStyle()}`}>
-          <div className="grid md:grid-cols-2 gap-8 relative z-10">
-            <div>
-              <div className="flex items-center gap-4 mb-4">
-                  <h2 className="text-xs font-mono uppercase tracking-[0.3em] text-slate-400">Our Verdict</h2>
-                  {getRecommendationBadge()}
-              </div>
-              <p className="text-lg font-medium leading-relaxed font-sans text-foreground dark:text-slate-100">
-                {product.verdict}
-              </p>
-            </div>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-500/80 mb-3 flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 glow-sm" />
-                   The Good
-                </h3>
-                <ul className="space-y-2 text-sm text-foreground/80 dark:text-slate-300">
-                  {product.pros.map((pro: string) => (
-                    <li key={pro} className="flex gap-3 items-center">
-                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="font-mono text-xs text-foreground dark:text-slate-200">{pro}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-[10px] font-mono uppercase tracking-widest text-amber-600 dark:text-amber-500/80 mb-3 flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500 glow-sm" />
-                   The Bad
-                </h3>
-                <ul className="space-y-2 text-sm text-foreground/80 dark:text-slate-300">
-                  {product.cons.map((con: string) => (
-                    <li key={con} className="flex gap-3 items-center">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span className="font-mono text-xs text-foreground dark:text-slate-200">{con}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+        
+        <div className="mb-8" id="verification-module">
+            <VerificationModule 
+                productName={product.name} 
+                currentTrustScore={product.rating} 
+                userRank={userRank} 
+                initialOpen={isReviewMode}
+                aiConfidence={data?.confidence}
+            />
         </div>
 
-        {/* Real User Discussions (Reddit Sources) */}
-        {data?.sources?.reddit?.sources && data.sources.reddit.sources.length > 0 && (
-          <div className="mb-8 p-6 forensic-glass rounded-2xl border border-white/5">
-            <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400 mb-4">Real User Discussions</h3>
-            <div className="flex flex-wrap gap-3">
-              {data.sources.reddit.sources.map((source: { title: string; url: string }) => {
-                 let hostname = '';
-                 try { hostname = new URL(source.url).hostname; } catch (e) { hostname = 'reddit.com'; }
+        {/* NEW: bento grid verdict */}
+        <BentoGrid className="mb-12">
+           <BentoGridItem
+             title="The Verdict"
+             description={<span className="text-sm font-medium leading-relaxed block mt-2 text-foreground/90">{product.verdict}</span>}
+             header={<div className={`h-24 w-full rounded-xl p-4 flex items-center justify-center text-3xl md:text-4xl font-black uppercase tracking-[0.2em] ${getVerdictStyle()}`}>{product.recommendation}</div>}
+             className="md:col-span-2"
+             icon={<Shield className="h-4 w-4 text-neutral-500" />}
+           />
+           <BentoGridItem
+             title="Score Analysis"
+             description={<div className={`text-[10px] font-bold font-mono mt-2 px-2 py-0.5 rounded-full border w-fit ${
+                product.verdictType === 'positive' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                product.verdictType === 'caution' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                'bg-rose-500/10 text-rose-500 border-rose-500/20'
+             }`}>{product.verdictType.toUpperCase()}</div>}
+             header={
+                <div className="h-24 w-full rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 flex items-center justify-center border border-black/5 dark:border-white/5 shadow-inner">
+                    <span className="text-5xl font-black tracking-tighter text-foreground drop-shadow-sm">{product.rating}</span>
+                </div>
+             }
+             className="md:col-span-1"
+             icon={<Zap className="h-4 w-4 text-neutral-500" />}
+           />
+           <BentoGridItem
+             title="Merits"
+             description={<ul className="space-y-2 mt-2">{product.pros.slice(0,4).map((p: string) => <li key={p} className="flex gap-2 text-xs items-start"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5"/><span>{p}</span></li>)}</ul>}
+             className="md:col-span-1"
+             icon={<Check className="h-4 w-4 text-emerald-500" />}
+           />
+           <BentoGridItem
+             title="Drawbacks"
+             description={<ul className="space-y-2 mt-2">{product.cons.slice(0,4).map((c: string) => <li key={c} className="flex gap-2 text-xs items-start"><AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5"/><span>{c}</span></li>)}</ul>}
+             className="md:col-span-1"
+             icon={<AlertTriangle className="h-4 w-4 text-rose-500" />}
+           />
+           <BentoGridItem
+             title="Market Status"
+             description={fairnessData.current > fairnessData.fairValue.max ? "Price Warning: Overpriced" : "Fair Market Value Verified"}
+             header={<div className={`h-24 w-full rounded-xl ${fairnessData.current > fairnessData.fairValue.max ? "bg-rose-500/10 border-rose-500/20" : "bg-emerald-500/10 border-emerald-500/20"} border flex items-center justify-center font-mono text-2xl font-bold opacity-50`}>${fairnessData.current}</div>}
+             className="md:col-span-1"
+             icon={<ExternalLink className="h-4 w-4 text-neutral-500" />}
+           />
+        </BentoGrid>
+
+        {/* NEW: Community Intel (Generalized) */}
+        {data?.audioInsights && data.audioInsights.length > 0 && (
+          <div className="mb-12">
+            <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+               Community Intel
+               <div className="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-[8px] text-primary">SOURCE_DUMP</div>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data.audioInsights.map((insight: any, i: number) => {
+                 const isReddit = insight.sourceUrl?.includes('reddit') || false;
+                 
                  return (
-                <a
-                  key={source.url}
-                  href={source.url}
-                  target="_blank"
-                  className="inline-flex items-center gap-3 px-4 py-2 bg-foreground/5 dark:bg-white/5 hover:bg-foreground/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground dark:hover:text-white text-[11px] font-mono rounded-lg border border-foreground/5 dark:border-white/5 hover:border-primary/50 transition-all group"
+                <div 
+                    key={i} 
+                    onClick={() => insight.sourceUrl && window.open(insight.sourceUrl, '_blank')}
+                    className={`p-5 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden group ${insight.sourceUrl ? 'cursor-pointer hover:bg-white/5 transition-colors' : ''}`}
                 >
-                  <div className="relative w-3.5 h-3.5 flex-shrink-0">
-                      <MessageSquare className="absolute inset-0 w-full h-full text-slate-600" />
-                      <img 
-                        src={`https://www.google.com/s2/favicons?domain=reddit.com&sz=32`} 
-                        alt="icon"
-                        className="absolute inset-0 w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-opacity"
-                        onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
-                      />
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      {isReddit ? <MessageSquare className="w-8 h-8" /> : <Mic2 className="w-8 h-8" />}
                   </div>
-                  <span className="max-w-[180px] truncate">{source.title}</span>
-                  <span className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-primary">↗</span>
-                </a>
-              )})}
+                  <div className="flex items-start gap-4 h-full">
+                    <div className={`p-2 rounded-lg shrink-0 ${insight.sentiment === 'negative' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {insight.sentiment === 'negative' ? <Volume2 className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                               {insight.topic || 'General Info'}
+                               {insight.sourceUrl && <ExternalLink className="w-3 h-3 opacity-50" />}
+                           </span>
+                           {insight.timestamp && insight.timestamp !== '0:00' && insight.timestamp.toUpperCase() !== 'N/A' && !isReddit && (
+                               <span className="text-[10px] font-mono text-primary font-bold">{insight.timestamp}</span>
+                           )}
+                           {isReddit && (
+                               <span className="text-[9px] font-mono text-slate-500 uppercase">Reddit Thread</span>
+                           )}
+                        </div>
+                        <p className="text-sm font-medium italic text-foreground leading-relaxed">
+                          "{insight.quote}"
+                        </p>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2">
+                          <div className={`w-1.5 h-1.5 rounded-full ${insight.sentiment === 'negative' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                          <span className="text-[9px] font-mono uppercase tracking-widest opacity-50">
+                             Source Sentiment: {insight.sentiment}
+                          </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )})} 
             </div>
           </div>
         )}
 
-        {/* Video Reviews - Only show if videos exist */}
+        {/* Video Reviews (Second) */}
         {videos.length > 0 && (
           <div className="mb-8">
              <h2 className="mb-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-400">Video Reviews</h2>
@@ -304,10 +361,42 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
           </div>
         )}
 
+        {/* Real User Discussions (Reddit Sources) - (Third) */}
+        {data?.sources?.reddit?.sources && data.sources.reddit.sources.length > 0 && (
+          <div className="mb-8 p-6 forensic-glass rounded-2xl border border-white/5">
+            <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400 mb-4">Real User Discussions</h3>
+            <div className="flex flex-wrap gap-3">
+              {data.sources.reddit.sources.map((source: { title: string; url: string }) => {
+                 let hostname = '';
+                 try { hostname = new URL(source.url).hostname; } catch (e) { hostname = 'reddit.com'; }
+                 return (
+                <a
+                  key={source.url}
+                  href={source.url}
+                  target="_blank"
+                  className="inline-flex items-center gap-3 px-4 py-2 bg-foreground/5 dark:bg-white/5 hover:bg-foreground/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground dark:hover:text-white text-[11px] font-mono rounded-lg border border-foreground/5 dark:border-white/5 hover:border-primary/50 transition-all group"
+                >
+                  <div className="relative w-3.5 h-3.5 flex-shrink-0">
+                      <MessageSquare className="absolute inset-0 w-full h-full text-slate-600" />
+                      <img 
+                        src={`https://www.google.com/s2/favicons?domain=reddit.com&sz=32`} 
+                        alt="icon"
+                        className="absolute inset-0 w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-opacity"
+                        onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
+                      />
+                  </div>
+                  <span className="max-w-[180px] truncate">{source.title}</span>
+                  <span className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-primary">↗</span>
+                </a>
+              )})}
+            </div>
+          </div>
+        )}
+
         {/* Price Fairness Meter */}
         <div className="mb-12">
           <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
-             Price Fairness
+             Price Analysis
             <div className="group relative">
                 <HelpCircle className="w-3.5 h-3.5 text-slate-400 cursor-help" />
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 w-64 p-4 forensic-glass text-slate-300 text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 shadow-2xl border border-white/10 font-mono leading-relaxed">
@@ -318,7 +407,6 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
             </div>
           </h2>
           <div className="p-8 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden">
-            {/* Background Accent */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             
             
@@ -347,8 +435,8 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                 </div>
             </div>
 
-            {/* The Main Connective Bar */}
-            <div className="relative h-6 bg-slate-800/50 rounded-full mb-32 mt-8">
+            {/* The Main Connective Bar - Added mx-12 to prevent label clipping */}
+            <div className="relative h-6 bg-slate-200 dark:bg-slate-800/50 rounded-full mb-32 mt-8 mx-4 md:mx-12">
                 
                 {/* Fair Value Zone (Green Pill) */}
                 <div 
@@ -358,7 +446,6 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                         width: `${((fairnessData.fairValue.max - fairnessData.fairValue.min) / fairnessData.max) * 100}%`
                     }}
                 >
-                     {/* Label Below */}
                      <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap z-10 flex flex-col items-center">
                         <div className="w-px h-2 bg-emerald-500/50" />
                         <div className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-500/50 dark:text-emerald-200 border px-3 py-1.5 rounded-lg text-xs font-mono font-bold shadow-xl">
@@ -367,8 +454,7 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                      </div>
                 </div>
 
-                {/* Current Price Marker (Blue Dot) */}
-                 <div 
+                <div 
                     className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-[0_0_15px_rgba(59,130,246,1)] z-30 transition-all duration-1000"
                     style={{ left: `${Math.min(100, (fairnessData.current / fairnessData.max) * 100)}%`, marginLeft: '-10px' }}
                 >
@@ -398,42 +484,44 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
                 )}
             </div>
               
-              {/* Price Health Summary */}
-              <div className="mt-8 mb-4 p-4 rounded-xl bg-foreground/5 border border-foreground/5 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                  <div className={`p-2 rounded-lg ${fairnessData.current > fairnessData.fairValue.max ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                      {fairnessData.current > fairnessData.fairValue.max ? <AlertTriangle className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
-                  </div>
-                  <div>
-                      <h4 className={`text-xs font-black uppercase tracking-widest mb-1 ${fairnessData.current > fairnessData.fairValue.max ? 'text-rose-500' : 'text-emerald-500'}`}>
-                          Price Health: {fairnessData.current > fairnessData.fairValue.max ? 'Overpriced' : 'Fair Market Value'}
-                      </h4>
-                      <p className="text-[11px] text-muted-foreground font-mono leading-relaxed max-w-xl">
-                          {fairnessData.current > fairnessData.fairValue.max 
-                            ? `Current pricing is $${fairnessData.current - fairnessData.fairValue.max} above the identified fair market valuation. Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
-                            : `The current list price of $${fairnessData.current} aligns with our forensic data model. This represents a transparent transaction with no identified "skeptic" red flags.`
-                          }
-                      </p>
-                  </div>
-              </div>
-
-              {/* View Deal Button */}
-              {fairnessData.url && (
-                <div className="mt-12 pt-6 border-t border-foreground/5 dark:border-white/5 flex justify-end">
-                  <Button 
-                    size="sm"
-                    className="bg-primary hover:bg-blue-500 text-white gap-3 rounded-xl px-6 font-mono text-[10px] tracking-widest uppercase py-6 pl-5"
-                    onClick={() => window.open(fairnessData.url, '_blank')}
-                  >
-                     <img 
-                        src={`https://www.google.com/s2/favicons?domain=${new URL(fairnessData.url).hostname}&sz=64`}
-                        className="w-5 h-5 rounded bg-white p-0.5 object-contain"
-                        alt="store"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                     />
-                    View Deal <span className="text-xs opacity-50">↗</span>
-                  </Button>
+            {/* Price Health Summary & View Deal */}
+            <div className="mt-8 mb-4 flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-foreground/5 border border-foreground/5 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                <div className="flex items-start gap-4 flex-1">
+                    <div className={`p-3 rounded-xl shrink-0 ${fairnessData.current > fairnessData.fairValue.max ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {fairnessData.current > fairnessData.fairValue.max ? <AlertTriangle className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
+                    </div>
+                    <div>
+                        <h4 className={`text-sm font-black uppercase tracking-widest mb-1.5 ${fairnessData.current > fairnessData.fairValue.max ? 'text-rose-500' : 'text-emerald-500'}`}>
+                            {fairnessData.current > fairnessData.fairValue.max ? 'Price Alert: Overpriced' : 'Verified: Fair Market Value'}
+                        </h4>
+                        <p className="text-xs text-muted-foreground font-mono leading-relaxed">
+                            {fairnessData.current > fairnessData.fairValue.max 
+                            ? `Current pricing is $${(fairnessData.current - fairnessData.fairValue.max).toFixed(2)} above the identified fair market valuation.${data?.sources?.market?.msrp ? ` (MSRP: ${data.sources.market.msrp})` : ''} Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
+                            : `The current list price of $${fairnessData.current.toFixed(2)} aligns with our analysis model.${data?.sources?.market?.msrp ? ` (MSRP: ${data.sources.market.msrp})` : ''} This represents a transparent transaction with no identified "skeptic" red flags.`
+                            }
+                        </p>
+                    </div>
                 </div>
-              )}
+
+                {/* Integrated View Deal Button */}
+                {fairnessData.url && (
+                    <Button 
+                        size="sm"
+                        className="shrink-0 bg-primary hover:bg-blue-500 text-white gap-3 rounded-xl px-6 font-mono text-[10px] tracking-widest uppercase h-12 shadow-lg shadow-blue-500/20"
+                        onClick={() => window.open(fairnessData.url, '_blank')}
+                    >
+                        <img 
+                            src={`https://www.google.com/s2/favicons?domain=${(() => {
+                                try { return new URL(fairnessData.url).hostname; }
+                                catch { return 'google.com'; }
+                            })()}&sz=64`}
+                            className="w-5 h-5 rounded bg-white p-0.5 object-contain"
+                            alt="store"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                        View Deal <span className="text-xs opacity-50">↗</span>
+                    </Button>
+                )}
             </div>
           </div>
 
@@ -456,5 +544,6 @@ export function AnalysisDashboard({ search, data, onBack }: AnalysisDashboardPro
             </Button>
         </div>
       </div>
+    </div>
   );
 }

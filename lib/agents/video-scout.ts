@@ -1,11 +1,117 @@
-import { geminiFlash } from '../gemini';
+import { geminiFlash, geminiGroundingModel } from '../gemini';
 import { AgentState, VideoData } from './scout-types';
 import { withRetry } from '../retry';
+import { filterValidLinks } from '../link-verifier';
+
+// enhanced fetch with robust error handling for python/node microservices
+async function fetchTranscript(videoId: string): Promise<any[]> {
+    try {
+        // 1. python service (primary)
+        try {
+             const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/transcript?video_id=${videoId}`, {
+                 signal: AbortSignal.timeout(10000) // 10s timeout
+             });
+             
+             const text = await pyRes.text(); // Read raw first
+             
+             if (pyRes.ok) {
+                 try {
+                     const data = JSON.parse(text);
+                     if (data.transcript) {
+                         console.log(`[YouTube Transcript] ✅ Success via Python for ${videoId} (${data.transcript.length} segments)`);
+                         return data.transcript;
+                     } else {
+                         console.warn(`[YouTube Transcript] 🐍 Python returned OK but missing transcript:`, data);
+                     }
+                 } catch (parseErr) {
+                     console.warn(`[YouTube Transcript] 🐍 Python returned invalid JSON: ${text.substring(0, 50)}...`);
+                 }
+             } else {
+                 console.warn(`[YouTube Transcript] 🐍 Python Error (${pyRes.status}): ${text.substring(0, 200)}`);
+             }
+        } catch (pyErr: any) {
+             console.warn(`[YouTube Transcript] Python Service connection failed: ${pyErr.message}`);
+        }
+
+        // 2. node.js fallback (youtube-transcript-dist - unofficial)
+        console.log(`[YouTube Transcript] 🌍 Fetching transcript via Node Scraper for: ${videoId}`);
+        
+        let getSubtitles;
+        try {
+             // Safe Import for CommonJS/ESM Interop
+             const scraperModule = await import('youtube-captions-scraper');
+             // @ts-ignore
+             getSubtitles = scraperModule.getSubtitles || scraperModule.default?.getSubtitles || scraperModule.default;
+        } catch (importErr) {
+             console.error("[YouTube Transcript] Failed to import node scraper:", importErr);
+             return [];
+        }
+
+        if (typeof getSubtitles !== 'function') {
+             console.error("[YouTube Transcript] scraper.getSubtitles is not a function:", getSubtitles);
+             return [];
+        }
+        
+        // This library often throws, so we wrap it
+        let subtitles = [];
+        try {
+             subtitles = await getSubtitles({
+                videoID: videoId,
+                lang: 'en'
+            });
+        } catch (scraperInternalErr: any) {
+             console.warn(`[YouTube Transcript] Node Scraper Internal Crash: ${scraperInternalErr.message}`);
+             return [];
+        }
+        
+        return subtitles;
+
+    } catch (error: any) {
+        console.error(`[YouTube Transcript] Error for ${videoId}: ${error.message}`);
+        // Return null so we can filter it out gracefully
+        return [];
+    }
+}
+
+
+// official youtube data api v3 integration
+async function searchYouTubeApi(query: string): Promise<any[] | null> {
+    const apiKey = process.env.YOUTUBE_API_KEY || process.env.GOOGLE_API_KEY;
+    // google search tool is powerful, but api is ground truth.
+    if (!apiKey) return null;
+
+    try {
+        console.log(`[Video Scout] 📡 Calling YouTube API v3 for: "${query}"`);
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=5&key=${apiKey}`);
+        
+        if (!res.ok) {
+            console.warn(`[Video Scout] YouTube API Error: ${res.status} ${res.statusText}`);
+            return null; 
+        }
+
+        const data = await res.json();
+        if (!data.items || data.items.length === 0) return [];
+
+        return data.items.map((item: any) => ({
+            id: item.id.videoId,
+            title: item.snippet.title,
+            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+            author: item.snippet.channelTitle, 
+            description: item.snippet.description
+        }));
+    } catch (e) {
+        console.error("YouTube API Exception", e);
+        return null;
+    }
+}
+
+
 
 /**
- * The Video Scout (Grounded):
- * Uses Gemini Grounding (Google Search) to find YouTube Video Reviews.
- * SOTA 2026: Hive Mind Aware - uses canonical name if available.
+ * the video scout (grounded):
+ * uses gemini grounding (google search) to find youtube video reviews.
+ * uses canonical name if available.
+ * fetches transcripts for deeper audio-level forensics.
  */
 export async function videoScout(input: AgentState | string): Promise<VideoData[]> {
   // Hive Mind Logic: Determine the best query
@@ -16,58 +122,83 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
   console.log(`[Video Scout] Grounding Search for: ${query}`);
   
   try {
-    const result = await withRetry(
-      async () => {
-        const prompt = `
-          Find video reviews for: "${query}".
-          
-          SEARCH STRATEGY:
-          1. Look for YouTube links (youtube.com/watch, youtu.be).
-          2. Look for "Video" sections in Google Search results.
-          3. Look for Reddit threads that might *contain* video links (e.g. "Review of InPlay GS650").
-          
-          STRICT GROUNDING RULES:
-          1. **NO INVENTION**: You must ONLY use links/IDs that appear in the search results.
-          2. **Link Extraction**: If you see a Google Redirect (vertexaisearch...), trust it if the context implies it's a video.
-          3. **Title Match**: The title must closely match the product.
-          
-          Format:
-          [
-            {
-              "id": "11_CHAR_ID",
-              "title": "Actual Title Found",
-              "url": "https://www.youtube.com/watch?v=..."
-            }
-          ]
-        `;
-
-        // Strategy Pivot: Remove strict 'site:youtube.com' to allow finding videos via other platforms/aggregators
-        return await geminiFlash.generateContent({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          tools: [{ googleSearch: {} }] as any, 
-        });
-      },
-      {
-        maxRetries: 3,
-        baseDelay: 1000,
-        onRetry: (attempt, delay) => {
-          console.warn(`[Video Scout] Retry ${attempt}/3 after ${Math.round(delay)}ms`);
-        }
-      }
-    );
-
-    const text = result.response.text();
-    console.log(`[Video Scout] Raw Output:`, text.substring(0, 500) + "...");
-
-    // Manual Robust JSON Extraction
-    const start = text.indexOf('[');
-    const end = text.lastIndexOf(']');
-    if (start === -1 || end === -1) return [];
+    let rawVideos: any[] = [];
     
-    const jsonStr = text.substring(start, end + 1);
-    const rawVideos = JSON.parse(jsonStr);
+    // 1. try official api
+    const apiResults = await searchYouTubeApi(query);
+    if (apiResults && apiResults.length > 0) {
+        console.log(`[Video Scout] ✅ Found ${apiResults.length} videos via Official API.`);
+        rawVideos = apiResults;
+    } 
 
-    // VALIDATION: Filter out hallucinated/invalid IDs
+    // 2. fallback to gemini grounding (search tool)
+    if (rawVideos.length === 0) {
+        try {
+            const result = await withRetry(
+              async () => {
+                const prompt = `
+                  Find video reviews for: "${query}".
+                  
+                  SEARCH STRATEGY:
+                  1. USE THE GOOGLE SEARCH TOOL. This is mandatory.
+                  2. Look for YouTube links (youtube.com/watch, youtu.be) in the search results.
+                  3. Look for "Video" sections in Google Search results.
+                  
+                  STRICT GROUNDING RULES:
+                  1. **NO INVENTION**: You must ONLY use links/IDs that appear in the provided Google Search results.
+                  2. **Link Extraction**: Trust the Search Tool's output.
+                  3. **Title Match**: The title must closely match the product.
+                  4. **ANTI-HALLUCINATION**: IF NO VIDEO LINKS ARE FOUND IN THE SEARCH RESULTS, RETURN []. DO NOT MAKE UP IDs.
+                  
+                  Format:
+                  [
+                    {
+                      "id": "11_CHAR_ID",
+                      "title": "Actual Title Found",
+                      "url": "https://www.youtube.com/watch?v=..."
+                    }
+                  ]
+                `;
+
+                // Verify with Gemini 2.5 (Grounding)
+                return await geminiGroundingModel.generateContent({
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    tools: [{ googleSearch: {} }] as any, 
+                });
+              },
+              {
+                maxRetries: 3,
+                baseDelay: 1000,
+                onRetry: (attempt, delay) => {
+                  console.warn(`[Video Scout] Retry ${attempt}/3 after ${Math.round(delay)}ms`);
+                }
+              }
+            );
+
+            const text = result.text || "";
+            // check grounding (verification)
+            const grounding = result.candidates?.[0]?.groundingMetadata;
+            if (!grounding) {
+                console.warn(`[Video Scout] ⚠️ No Grounding Metadata found for "${query}". Potential Hallucination Risk.`);
+            } else {
+                const chunks = grounding.groundingChunks?.length || 0;
+                console.log(`[Video Scout] Grounding verified: ${chunks} chunks.`);
+            }
+
+            // console.log(`[Video Scout] Raw Output:`, text.substring(0, 500) + "...");
+
+            const start = text.indexOf('[');
+            const end = text.lastIndexOf(']');
+            if (start !== -1 && end !== -1) {
+                const jsonStr = text.substring(start, end + 1);
+                rawVideos = JSON.parse(jsonStr);
+            }
+        } catch (geminiError) {
+            console.error("[Video Scout] Gemini Fallback Failed:", geminiError);
+        }
+    }
+
+    // validation: filter out hallucinated/invalid ids
     const ytIdRegex = /^[a-zA-Z0-9_-]{11}$/;
     
     // Aggressive filtering patterns for known hallucinated placeholders
@@ -75,31 +206,30 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         'vid_', 'actual_id', '11_CHAR', 'REAL_11', 'youtube_id', 'video_id', 'INSERT_ID', 'example', '12345678901', '1234567890'
     ];
     
-    // Track seen IDs to prevent duplicates within the same result set
+    // track seen ids to prevent duplicates within the same result set
     const seenIds = new Set<string>();
 
-    const videos = rawVideos.filter((v: any) => {
+    const validatedVideos = rawVideos.filter((v: any) => {
         const id = v.id;
         
-        // 1. Structural Validation (Relaxed for SOTA 2026 Redirect handling)
+        // 1. structural validation (relaxed for redirect handling)
         if (!id || typeof id !== 'string') {
              return false; // Only completely invalid types
         }
         
-        // If it's a redirect URL or weird ID, we might need different logic, 
-        // but for now let's just ensure it's not a glaring placeholder.
+        // 2. placeholder check
         const isPlaceholder = placeholderPatterns.some(pattern => id.toLowerCase().includes(pattern.toLowerCase()));
         if (isPlaceholder) {
           console.warn(`[Video Scout] Placeholder ID detected: ${id}`);
           return false;
         }
 
-        // 3. Deduplication
+        // 3. deduplication
         if (seenIds.has(id)) {
             return false;
         }
         
-        // 4. Product Relevance (Strict)
+        // 4. product relevance (strict)
         const productKeywords = query.toLowerCase().split(' ').filter(w => w.length > 2);
         const titleLower = (v.title || '').toLowerCase();
         
@@ -114,18 +244,93 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         return true;
     });
 
-    const enrichedVideos = videos.map((v: any) => ({
-      id: v.id,
-      title: v.title,
-      url: v.url || `https://www.youtube.com/watch?v=${v.id}`,
-      thumbnail: `https://img.youtube.com/vi/${v.id}/mqdefault.jpg`,
-      moment: "0:00",
-      tag: "Review",
-      tagType: "warning" as const
+    // zero-trust verification (backend specialist)
+    console.log(`[Video Scout] verifying ${validatedVideos.length} links...`);
+    const verifiedVideos = await filterValidLinks(validatedVideos);
+    console.log(`[Video Scout] Zero-Trust Result: ${verifiedVideos.length} valid links.`);
+
+    if (verifiedVideos.length === 0) {
+        console.warn(`[Video Scout] No valid videos found. Returning [].`);
+        return [];
+    }
+
+    // node 2.5: deep video forensics (parallel)
+    // only fetch for top 2 to preserve performance and latency
+    console.log(`[Video Scout] Deep Forensics on top ${Math.min(2, verifiedVideos.length)} videos...`);
+    
+    const enrichedVideos = await Promise.all(verifiedVideos.map(async (v: any, index: number) => {
+      // Limit to top 2 for deep analysis to save time
+      if (index >= 2) return {
+          id: v.id,
+          title: v.title,
+          url: v.url || `https://www.youtube.com/watch?v=${v.id}`,
+          thumbnail: `https://img.youtube.com/vi/${v.id}/mqdefault.jpg`,
+          moment: "0:00",
+          tag: "Video Review",
+          tagType: "warning" as const
+      };
+
+
+      // parallel: fetch transcript and visual insight (only for #1 video to save overhead)
+      const transcriptPromise = fetchTranscript(v.id);
+      
+      // phase 3: visual insight (the "eyes")
+      // only run on the first video to be efficient.
+      const visionPromise = (index === 0) ? getVideoInsight(v.url || `https://www.youtube.com/watch?v=${v.id}`) : Promise.resolve(null);
+
+      const [transcriptItems, visualData] = await Promise.all([transcriptPromise, visionPromise]);
+
+      let forensics = null;
+
+      if (transcriptItems) {
+          // perform forensic analysis on the transcript
+          forensics = await analyzeTranscript(v.title, transcriptItems);
+      }
+      
+      // Merge Visual Insight into Forensics
+      if (visualData) {
+          if (!forensics) forensics = {};
+          
+          forensics.visual = {
+              holdingProduct: visualData.reviewerHoldingProduct,
+              defectsDetected: !!visualData.visualDefects,
+              defectDescription: visualData.visualDefects,
+              angryFace: visualData.angryFaceDetected
+          };
+          
+          // boost tag if visual defects found
+          if (visualData.visualDefects && visualData.visualDefects !== "None") {
+              forensics.defectFound = true; 
+              forensics.defectType = `Visual: ${visualData.visualDefects}`;
+          }
+      }
+
+      return {
+        id: v.id,
+        title: v.title,
+        url: v.url || `https://www.youtube.com/watch?v=${v.id}`,
+        thumbnail: `https://img.youtube.com/vi/${v.id}/mqdefault.jpg`,
+        moment: forensics?.keyMoment || "0:00",
+        tag: forensics?.defectFound ? "Defect Detected" : "Forensic Verified",
+        tagType: (forensics?.defectFound ? "alert" : (transcriptItems ? "success" : "warning")) as "alert" | "success" | "warning",
+        forensics: forensics
+      };
     }));
 
-    console.log(`[Video Scout] Validated ${enrichedVideos.length}/${rawVideos.length} videos`);
-    return enrichedVideos;
+    console.log(`[Video Scout] Validated & Enriched ${enrichedVideos.length}/${rawVideos.length} videos`);
+    
+    // quality sorting & limiting (top 4)
+    // priority: defect detected > verified transcript > google rank
+    const sortedVideos = enrichedVideos.sort((a, b) => {
+        const score = (v: any) => {
+            if (v.forensics?.defectFound) return 3; // Top Priority
+            if (v.tagType === 'success') return 2;  // Valid Transcript
+            return 1; // Basic Match
+        };
+        return score(b) - score(a);
+    });
+
+    return sortedVideos.slice(0, 4);
 
   } catch (error: any) {
     console.error(`[Video Scout] Failed after retries:`, {
@@ -135,4 +340,79 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
     });
     return [];
   }
+}
+
+/**
+ * deep forensic analysis of transcript
+ * scans for defects, failures, and key moments.
+ */
+async function analyzeTranscript(productName: string, items: any[]): Promise<any> {
+    try {
+        // 1. prepare context (limit to ~15k chars to fit in flash window quickly)
+        const fullText = items.map(i => `[${Math.floor(i.offset / 1000)}s] ${i.text}`).join('\n').slice(0, 15000);
+        
+        const prompt = `
+            Analyze this video transcript for product "${productName}".
+            
+            TASKS:
+            1. DETECT DEFECTS: Look for mentions of "breaking", "fail", "wobble", "disconnect", "bad quality", "return", "dead pixel", "issue".
+            2. EXTRACT MOMENT: Find the ONE most critical segment (timestamp + quote).
+            3. SUMMARY: Brief 1-sentence thought on the video's sentiment.
+            
+            IMPORTANT: FORMATTING (Few-Shot Examples)
+            - Defect Type: "Hinge wobble" (Short, < 5 words)
+            - Key Moment: "3:45" (M:SS format only)
+            - Key Quote: "The screen flickers when..." (Keep under 100 chars)
+
+            TRANSCRIPT:
+            ${fullText}
+            
+            RETURN JSON:
+            {
+               "defectFound": boolean,
+               "defectType": string | null,
+               "keyMoment": string (format "M:SS"),
+               "keyQuote": string,
+               "sentiment": "positive" | "semineutral" | "negative"
+            }
+        `;
+
+        const result = await geminiFlash.generateContent({
+             contents: [{ role: "user", parts: [{ text: prompt }] }],
+             generationConfig: { responseMimeType: "application/json" }
+        });
+
+        const text = result.text || "{}";
+        const start = text.indexOf('{');
+        const end = text.lastIndexOf('}');
+        if (start === -1) return null;
+        
+        return JSON.parse(text.substring(start, end + 1));
+
+    } catch (e) {
+        console.error("[Video Scout] Forensics Failed:", e);
+        return null;
+    }
+}
+
+/**
+ * phase 3: visual insight (python muscle)
+ * downloads video and uses gemini vision to detect physical defects/reactions.
+ */
+export async function getVideoInsight(videoUrl: string): Promise<any> {
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/tools/video_insight`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: videoUrl }),
+            signal: AbortSignal.timeout(60000) // 60s timeout for download
+        });
+        
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json.status === 'success' ? json.data : null;
+    } catch (e) {
+        console.warn("[Video Scout] Visual Insight Failed:", e);
+        return null;
+    }
 }
