@@ -6,5 +6,5 @@ beautifulsoup4
 requests
 youtube-transcript-api
 yt-dlp
-opencv-python-headless
+opencv-python
 google-generativeai

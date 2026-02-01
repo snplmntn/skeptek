@@ -82,7 +82,7 @@ export function VerificationModule({ productName, currentTrustScore, userRank = 
                     Analysis Data Coverage: <span className={aiConfidence < 70 ? 'text-rose-500' : 'text-emerald-500'}>{aiConfidence}%</span>. 
                     Your feedback helps improve our accuracy.
                  </p>
-                 {/* Confidence Bar */}
+                 {/* confidence bar */}
                  <div className="mt-3 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
                     <div 
                         className={`h-full transition-all duration-1000 ${aiConfidence < 70 ? 'bg-rose-500' : 'bg-emerald-500'}`}
@@ -100,7 +100,7 @@ export function VerificationModule({ productName, currentTrustScore, userRank = 
 
         {isOpen && (
             <div className="space-y-6 animate-in slide-in-from-top-2">
-                {/* Vote Selection */}
+                {/* vote selection */}
                 <div className="grid grid-cols-3 gap-3">
                     <button 
                         onClick={() => setAgreement(1)}
@@ -125,7 +125,7 @@ export function VerificationModule({ productName, currentTrustScore, userRank = 
                     </button>
                 </div>
 
-                {/* Optional Comment */}
+                {/* optional comment */}
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Field Notes (Optional)</label>
                     <Textarea 
@@ -136,7 +136,7 @@ export function VerificationModule({ productName, currentTrustScore, userRank = 
                     />
                 </div>
 
-                {/* Actions */}
+                {/* actions */}
                 <div className="flex gap-3 justify-end">
                     <Button 
                         variant="ghost" 

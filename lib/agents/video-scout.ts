@@ -3,10 +3,10 @@ import { AgentState, VideoData } from './scout-types';
 import { withRetry } from '../retry';
 import { filterValidLinks } from '../link-verifier';
 
-// SOTA 2026: Enhanced fetch with robust error handling for Python/Node Microservices
+// enhanced fetch with robust error handling for python/node microservices
 async function fetchTranscript(videoId: string): Promise<any[]> {
     try {
-        // 1. Python Service (Primary)
+        // 1. python service (primary)
         try {
              const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/transcript?video_id=${videoId}`, {
                  signal: AbortSignal.timeout(10000) // 10s timeout
@@ -33,7 +33,7 @@ async function fetchTranscript(videoId: string): Promise<any[]> {
              console.warn(`[YouTube Transcript] Python Service connection failed: ${pyErr.message}`);
         }
 
-        // 2. Node.js Fallback (Youtube-Transcript-Dist - Unofficial)
+        // 2. node.js fallback (youtube-transcript-dist - unofficial)
         console.log(`[YouTube Transcript] 🌍 Fetching transcript via Node Scraper for: ${videoId}`);
         
         let getSubtitles;
@@ -74,10 +74,10 @@ async function fetchTranscript(videoId: string): Promise<any[]> {
 }
 
 
-// SOTA 2026: Official YouTube Data API v3 Integration
+// official youtube data api v3 integration
 async function searchYouTubeApi(query: string): Promise<any[] | null> {
     const apiKey = process.env.YOUTUBE_API_KEY || process.env.GOOGLE_API_KEY;
-    // SOTA: Google Search Tool is powerful, but API is ground truth.
+    // google search tool is powerful, but api is ground truth.
     if (!apiKey) return null;
 
     try {
@@ -108,10 +108,10 @@ async function searchYouTubeApi(query: string): Promise<any[] | null> {
 
 
 /**
- * The Video Scout (Grounded):
- * Uses Gemini Grounding (Google Search) to find YouTube Video Reviews.
- * SOTA 2026: Hive Mind Aware - uses canonical name if available.
- * NOW: Fetches transcripts for deeper audio-level forensics.
+ * the video scout (grounded):
+ * uses gemini grounding (google search) to find youtube video reviews.
+ * uses canonical name if available.
+ * fetches transcripts for deeper audio-level forensics.
  */
 export async function videoScout(input: AgentState | string): Promise<VideoData[]> {
   // Hive Mind Logic: Determine the best query
@@ -124,14 +124,14 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
   try {
     let rawVideos: any[] = [];
     
-    // 1. Try Official API
+    // 1. try official api
     const apiResults = await searchYouTubeApi(query);
     if (apiResults && apiResults.length > 0) {
         console.log(`[Video Scout] ✅ Found ${apiResults.length} videos via Official API.`);
         rawVideos = apiResults;
     } 
 
-    // 2. Fallback to Gemini Grounding (Search Tool)
+    // 2. fallback to gemini grounding (search tool)
     if (rawVideos.length === 0) {
         try {
             const result = await withRetry(
@@ -176,7 +176,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
             );
 
             const text = result.text || "";
-            // Check Grounding (SOTA 2026 Verification)
+            // check grounding (verification)
             const grounding = result.candidates?.[0]?.groundingMetadata;
             if (!grounding) {
                 console.warn(`[Video Scout] ⚠️ No Grounding Metadata found for "${query}". Potential Hallucination Risk.`);
@@ -185,7 +185,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
                 console.log(`[Video Scout] Grounding verified: ${chunks} chunks.`);
             }
 
-            console.log(`[Video Scout] Raw Output:`, text.substring(0, 500) + "...");
+            // console.log(`[Video Scout] Raw Output:`, text.substring(0, 500) + "...");
 
             const start = text.indexOf('[');
             const end = text.lastIndexOf(']');
@@ -198,7 +198,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         }
     }
 
-    // VALIDATION: Filter out hallucinated/invalid IDs
+    // validation: filter out hallucinated/invalid ids
     const ytIdRegex = /^[a-zA-Z0-9_-]{11}$/;
     
     // Aggressive filtering patterns for known hallucinated placeholders
@@ -206,30 +206,30 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         'vid_', 'actual_id', '11_CHAR', 'REAL_11', 'youtube_id', 'video_id', 'INSERT_ID', 'example', '12345678901', '1234567890'
     ];
     
-    // Track seen IDs to prevent duplicates within the same result set
+    // track seen ids to prevent duplicates within the same result set
     const seenIds = new Set<string>();
 
     const validatedVideos = rawVideos.filter((v: any) => {
         const id = v.id;
         
-        // 1. Structural Validation (Relaxed for SOTA 2026 Redirect handling)
+        // 1. structural validation (relaxed for redirect handling)
         if (!id || typeof id !== 'string') {
              return false; // Only completely invalid types
         }
         
-        // 2. Placeholder Check
+        // 2. placeholder check
         const isPlaceholder = placeholderPatterns.some(pattern => id.toLowerCase().includes(pattern.toLowerCase()));
         if (isPlaceholder) {
           console.warn(`[Video Scout] Placeholder ID detected: ${id}`);
           return false;
         }
 
-        // 3. Deduplication
+        // 3. deduplication
         if (seenIds.has(id)) {
             return false;
         }
         
-        // 4. Product Relevance (Strict)
+        // 4. product relevance (strict)
         const productKeywords = query.toLowerCase().split(' ').filter(w => w.length > 2);
         const titleLower = (v.title || '').toLowerCase();
         
@@ -244,7 +244,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         return true;
     });
 
-    // Zero-Trust Verification (Backend Specialist)
+    // zero-trust verification (backend specialist)
     console.log(`[Video Scout] verifying ${validatedVideos.length} links...`);
     const verifiedVideos = await filterValidLinks(validatedVideos);
     console.log(`[Video Scout] Zero-Trust Result: ${verifiedVideos.length} valid links.`);
@@ -254,8 +254,8 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
         return [];
     }
 
-    // Node 2.5: Deep Video Forensics (Parallel)
-    // SOTA: Only fetch for top 2 to preserve performance and latency
+    // node 2.5: deep video forensics (parallel)
+    // only fetch for top 2 to preserve performance and latency
     console.log(`[Video Scout] Deep Forensics on top ${Math.min(2, verifiedVideos.length)} videos...`);
     
     const enrichedVideos = await Promise.all(verifiedVideos.map(async (v: any, index: number) => {
@@ -271,11 +271,11 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
       };
 
 
-      // PARALLEL: Fetch Transcript AND Visual Insight (only for #1 video to save overhead)
+      // parallel: fetch transcript and visual insight (only for #1 video to save overhead)
       const transcriptPromise = fetchTranscript(v.id);
       
-      // Phase 3: Visual Insight (The "Eyes")
-      // Only run on the FIRST video to be efficient.
+      // phase 3: visual insight (the "eyes")
+      // only run on the first video to be efficient.
       const visionPromise = (index === 0) ? getVideoInsight(v.url || `https://www.youtube.com/watch?v=${v.id}`) : Promise.resolve(null);
 
       const [transcriptItems, visualData] = await Promise.all([transcriptPromise, visionPromise]);
@@ -283,7 +283,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
       let forensics = null;
 
       if (transcriptItems) {
-          // Perform Forensic Analysis on the Transcript
+          // perform forensic analysis on the transcript
           forensics = await analyzeTranscript(v.title, transcriptItems);
       }
       
@@ -298,7 +298,7 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
               angryFace: visualData.angryFaceDetected
           };
           
-          // Boost tag if visual defects found
+          // boost tag if visual defects found
           if (visualData.visualDefects && visualData.visualDefects !== "None") {
               forensics.defectFound = true; 
               forensics.defectType = `Visual: ${visualData.visualDefects}`;
@@ -319,8 +319,8 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
 
     console.log(`[Video Scout] Validated & Enriched ${enrichedVideos.length}/${rawVideos.length} videos`);
     
-    // SOTA 2026: Quality Sorting & Limiting (Top 4)
-    // Priority: Defect Detected > Verified Transcript > Google Rank
+    // quality sorting & limiting (top 4)
+    // priority: defect detected > verified transcript > google rank
     const sortedVideos = enrichedVideos.sort((a, b) => {
         const score = (v: any) => {
             if (v.forensics?.defectFound) return 3; // Top Priority
@@ -343,12 +343,12 @@ export async function videoScout(input: AgentState | string): Promise<VideoData[
 }
 
 /**
- * Deep Forensic Analysis of Transcript
- * Scans for defects, failures, and key moments.
+ * deep forensic analysis of transcript
+ * scans for defects, failures, and key moments.
  */
 async function analyzeTranscript(productName: string, items: any[]): Promise<any> {
     try {
-        // 1. Prepare Context (Limit to ~15k chars to fit in Flash window quickly)
+        // 1. prepare context (limit to ~15k chars to fit in flash window quickly)
         const fullText = items.map(i => `[${Math.floor(i.offset / 1000)}s] ${i.text}`).join('\n').slice(0, 15000);
         
         const prompt = `
@@ -396,8 +396,8 @@ async function analyzeTranscript(productName: string, items: any[]): Promise<any
 }
 
 /**
- * Phase 3: Visual Insight (Python Muscle)
- * Downloads video and uses Gemini Vision to detect physical defects/reactions.
+ * phase 3: visual insight (python muscle)
+ * downloads video and uses gemini vision to detect physical defects/reactions.
  */
 export async function getVideoInsight(videoUrl: string): Promise<any> {
     try {

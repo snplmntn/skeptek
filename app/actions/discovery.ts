@@ -77,15 +77,7 @@ export async function getCategories(): Promise<string[]> {
     try {
         const supabase = await createClient();
         
-        // Fetch distinct categories directly from the view
-        // Note: Supabase doesn't have a distinct() method in JS client roughly,
-        // but passing a column to select can effectively work if we process it,
-        // or using a raw RPC if needed. 
-        // Best approach with simple query builder: fetch all categories (lightweight) and uniq them in JS
-        // OR better: use .select('category') and rely on the fact we only need the names.
-        
-        // Ideally we would do .select('category', { distinct: true }) but that's not standard
-        // Let's just grab existing categories from the view
+        // fetch categories directly from the view
         const { data, error } = await supabase
             .from('product_metrics_view')
             .select('category')

@@ -121,7 +121,6 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
       </div>
 
       {/* Sticky Glass Header */}
-      {/* Sticky Glass Header */}
       <div className="sticky top-[68px] z-40 forensic-glass border-b border-foreground/5 dark:border-white/5">
         <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
           <div className="flex-1">
@@ -194,7 +193,6 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
       {/* Main Content */}
       <div className="mx-auto max-w-4xl px-6 py-8">
         
-        {/* NEW: Verification Module */}
         <div className="mb-8" id="verification-module">
             <VerificationModule 
                 productName={product.name} 
@@ -205,7 +203,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
             />
         </div>
 
-        {/* NEW: SOTA Bento Grid Verdict */}
+        {/* NEW: bento grid verdict */}
         <BentoGrid className="mb-12">
            <BentoGridItem
              title="The Verdict"
@@ -409,7 +407,6 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
             </div>
           </h2>
           <div className="p-8 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden">
-            {/* Background Accent */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             
             
@@ -449,7 +446,6 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                         width: `${((fairnessData.fairValue.max - fairnessData.fairValue.min) / fairnessData.max) * 100}%`
                     }}
                 >
-                     {/* Label Below */}
                      <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap z-10 flex flex-col items-center">
                         <div className="w-px h-2 bg-emerald-500/50" />
                         <div className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-500/50 dark:text-emerald-200 border px-3 py-1.5 rounded-lg text-xs font-mono font-bold shadow-xl">
@@ -458,8 +454,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                      </div>
                 </div>
 
-                {/* Current Price Marker (Blue Dot) */}
-                 <div 
+                <div 
                     className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-[0_0_15px_rgba(59,130,246,1)] z-30 transition-all duration-1000"
                     style={{ left: `${Math.min(100, (fairnessData.current / fairnessData.max) * 100)}%`, marginLeft: '-10px' }}
                 >

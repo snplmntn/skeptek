@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState, memo } from 'react';
 
-// Initialize Client
+// initialize client
 const supabase = createClient();
 
 interface Scan {
@@ -20,7 +20,7 @@ export const GlobalFeed = memo(function GlobalFeed() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial Fetch (Get last 5)
+    // initial fetch (get last 5)
     supabase
       .from('scans')
       .select('*')
@@ -31,7 +31,7 @@ export const GlobalFeed = memo(function GlobalFeed() {
         setLoading(false);
       });
 
-    // Realtime Subscription
+    // realtime subscription
     const channel = supabase
       .channel('global-watchtower')
       .on(
@@ -42,7 +42,7 @@ export const GlobalFeed = memo(function GlobalFeed() {
           const newScan = payload.new as Scan;
           setScans((prev) => [newScan, ...prev].slice(0, 5));
           
-          // Flash "Live" indicator
+          // flash "live" indicator
           setTimeout(() => setIsLive(false), 2000);
         }
       )
@@ -66,16 +66,16 @@ export const GlobalFeed = memo(function GlobalFeed() {
         </p>
       </div>
       
-      {/* Marquee Container */}
+      {/* marquee container */}
       <div className="relative w-full overflow-hidden mask-gradient-x">
-        {/* Animated Track - Duplicated content for seamless loop */}
+        {/* animated track - duplicated content for seamless loop */}
         <div className="animate-horizontal-marquee flex items-center w-max gap-4">
             {scans.length > 0 ? [...scans, ...scans, ...scans, ...scans].map((scan, idx) => ( // Quadrupled for seamless loop & width safety
             <div
                 key={`${scan.id}-${idx}`}
                 className="group flex items-center justify-between p-3 gap-6 rounded-xl border border-slate-200 dark:border-white/5 bg-white/80 dark:bg-white/5 backdrop-blur-md hover:bg-white dark:hover:bg-white/10 transition-colors cursor-default min-w-[300px]"
             >
-                {/* Product Info */}
+                {/* product info */}
                 <div className="flex items-center gap-3 overflow-hidden">
                     <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] shrink-0 ${
                          scan.status === 'verified' ? 'bg-emerald-500 text-emerald-500' :
@@ -93,9 +93,9 @@ export const GlobalFeed = memo(function GlobalFeed() {
                     </div>
                 </div>
 
-                {/* Right: Score Badge */}
+                {/* right: score badge */}
                 <div className="flex items-center gap-3 shrink-0">
-                    {/* Status Pill */}
+                    {/* status pill */}
                     <div className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
                         scan.status === 'verified' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
                         scan.status === 'caution' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
@@ -104,7 +104,7 @@ export const GlobalFeed = memo(function GlobalFeed() {
                         {scan.status}
                     </div>
 
-                    {/* Trust Score */}
+                    {/* trust score */}
                     <div className="flex flex-col items-end leading-none">
                          <span className={`text-lg font-black tabular-nums tracking-tighter ${
                             scan.status === 'verified' ? 'text-emerald-500' :
@@ -123,7 +123,7 @@ export const GlobalFeed = memo(function GlobalFeed() {
             )}
         </div>
         
-        {/* Mask Gradients for fade effect */}
+        {/* mask gradients for fade effect */}
         <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent z-10" />
 

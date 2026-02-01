@@ -2,19 +2,19 @@ import { geminiFlash, geminiGroundingModel } from '../gemini';
 import { MarketData } from './scout-types';
 import { withRetry } from '../retry';
 import { checkLinkValidity } from '../link-verifier';
-import { reviewScout } from './review-scout'; // SOTA 2026
+import { reviewScout } from './review-scout';
 
 /**
- * The Market Scout (Grounded):
- * Uses Gemini with Google Search Grounding to find accurate specs and pricing.
- * SOTA 2026: Includes exponential backoff retry for resilience.
+ * the market scout (grounded):
+ * uses gemini with google search grounding to find accurate specs and pricing.
+ * includes exponential backoff retry for resilience.
  */
 export async function marketScout(query: string): Promise<MarketData | null> {
   console.log(`[Market Scout] Grounding Search for: ${query}`);
   
-  // SOTA 2026: Direct URL Handling (Anti-Hallucination)
-  // If the query is a specific URL, we MUST trust the page content (via Python Scraper)
-  // over a generic Google Search which might pick up "Recommended Products" sidebars.
+  // direct url handling (anti-hallucination)
+  // if the query is a specific url, we must trust the page content (via python scraper)
+  // over a generic google search which might pick up "recommended products" sidebars.
   if (query.startsWith('http://') || query.startsWith('https://')) {
        console.log(`[Market Scout] detected URL. Delegating to Review Scout for specific scrape...`);
        const scraped = await reviewScout(query);
@@ -30,7 +30,7 @@ export async function marketScout(query: string): Promise<MarketData | null> {
                 console.log(`[Market Scout] ✅ Scraper Identity Confirmed: "${scraped.productName}"`);
                 return {
                     title: scraped.productName,
-                    price: scraped.price || 'Check Site', // SOTA 2026: Use scraper data
+                    price: scraped.price || 'Check Site', // use scraper data
                     specs: {
                         Source: scraped.source,
                         Summary: scraped.summary
@@ -79,7 +79,7 @@ export async function marketScout(query: string): Promise<MarketData | null> {
           }
         `;
 
-        // SOTA: Use Google Search Grounding
+        // use google search grounding
        return await geminiGroundingModel.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       tools: [{ googleSearch: {} }] as any, // Type assertion for SDK compatibility
@@ -101,10 +101,10 @@ export async function marketScout(query: string): Promise<MarketData | null> {
     const jsonStr = text.substring(start, end + 1);
     const json = JSON.parse(jsonStr);
     
-    // SOTA 2026: Active URL Verification
-    // Ensure the "View Deal" link is actually alive (prevent 404s).
+    // active url verification
+    // ensure the "view deal" link is actually alive (prevent 404s).
     if (json.productUrl) {
-        // Use Global Link Verifier (Python Backend capable)
+        // use global link verifier (python backend capable)
         const isAlive = await checkLinkValidity(json.productUrl);
         if (!isAlive) {
             console.warn(`[Market Scout] URL Dead/Unreachable (${json.productUrl}). Falling back to Search.`);
@@ -121,7 +121,7 @@ export async function marketScout(query: string): Promise<MarketData | null> {
       status: error.status
     });
     
-    // Strict Mode: No fallback data.
+    // strict mode: no fallback data.
     return {
       title: query,
       price: 'Unknown',

@@ -1,7 +1,7 @@
 export function getFriendlyErrorMessage(error: string): { title: string; message: string; isTechnical: boolean, originalError: string } {
   const err = (error || "").toLowerCase();
   
-  // Google Generative AI Errors
+  // google generative ai errors
   if (err.includes('googlegenerativeai')) {
       return {
           title: "AI Service Busy",
@@ -11,7 +11,7 @@ export function getFriendlyErrorMessage(error: string): { title: string; message
       };
   }
 
-  // 403: Usually Quota or Billing, or Missing Key. To a user, this is a "System" issue.
+  // 403: usually quota or billing, or missing key. to a user, this is a "system" issue.
   if (err.includes('403') || err.includes('forbidden') || err.includes('api key')) {
     return {
       title: "Service Unavailable",
@@ -21,17 +21,17 @@ export function getFriendlyErrorMessage(error: string): { title: string; message
     };
   }
   
-  // 429: Rate Limiting
+  // 429: rate limiting
   if (err.includes('429') || err.includes('quota') || err.includes('rate limit') || err.includes('resource exhausted')) {
     return {
       title: "High Demand",
       message: "We're experiencing a surge in searches right now. Please wait a moment and try again.",
-      isTechnical: true, // It is technical, but temporary
+      isTechnical: true, // it is technical, but temporary
       originalError: error
     };
   }
   
-  // Network / Fetch
+  // network / fetch
   if (err.includes('network') || err.includes('fetch') || err.includes('connection') || err.includes('upstream')) {
     return {
       title: "Connection Lost",
@@ -41,17 +41,17 @@ export function getFriendlyErrorMessage(error: string): { title: string; message
     };
   }
   
-  // Safety / Policy
+  // safety / policy
   if (err.includes('safety') || err.includes('policy') || err.includes('blocked') || err.includes('harmful')) {
     return {
       title: "Analysis Skipped",
       message: "We couldn't process this image due to safety guidelines. Please try a different product image.",
-      isTechnical: false, // Not a technical glitch, but a policy enforcement
+      isTechnical: false, // not a technical glitch, but a policy enforcement
       originalError: error
     };
   }
 
-  // Fallback for generic empty data or unknowns
+  // fallback for generic empty data or unknowns
   if (err.includes('no data') || err.includes('insufficient')) {
      return {
         title: "No Clear Results",
@@ -61,7 +61,7 @@ export function getFriendlyErrorMessage(error: string): { title: string; message
      };
   }
 
-  // Default Catch-All
+  // default catch-all
   return {
     title: "Something Went Wrong",
     message: "An unexpected error occurred. Please try again.",

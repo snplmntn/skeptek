@@ -12,13 +12,13 @@ export interface ReviewData {
   url: string;
   userReviews?: string[];
   productName?: string; 
-  price?: string; // SOTA 2026: Capture price during scrape
+  price?: string; // capture price during scrape
 }
 
 /**
- * Review Scout - Dual Mode:
- * Mode A: Specific URL scraping
- * Mode B: Search trusted review sites
+ * review scout - dual mode:
+ * mode a: specific url scraping
+ * mode b: search trusted review sites
  */
 export async function reviewScout(input: string): Promise<ReviewData | null> {
   const isUrl = input.startsWith('http://') || input.startsWith('https://');
@@ -31,7 +31,7 @@ export async function reviewScout(input: string): Promise<ReviewData | null> {
 }
 
 /**
- * Mode A: Scrape a specific URL for review content
+ * mode a: scrape a specific url for review content
  */
 async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
   console.log(`[Review Scout] Scraping URL: ${url}`);
@@ -40,8 +40,8 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
     let html = "";
     let usedBackend = false;
 
-    // SOTA 2026: Hybrid Scraping Architecture
-    // 1. Attempt High-Fidelity Scrape via Python/Playwright Microservice (if running)
+    // hybrid scraping architecture
+    // 1. attempt high-fidelity scrape via python/playwright microservice (if running)
     try {
         console.log(`[Review Scout] 🚀 Attempting High-Fidelity Scrape via localhost:8000...`);
         const scraperRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/scrape?url=${encodeURIComponent(url)}`, {
@@ -52,7 +52,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
         
         if (scraperRes.ok) {
              const data = await scraperRes.json();
-             // DEBUG: Log the backend response
+             // debug: log the backend response
              console.log(`[Review Scout] Backend Response: ${data.text?.substring(0, 150)}...`);
              
              if (data.html) {
@@ -65,7 +65,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
         console.warn(`[Review Scout] ⚠️ Scraper Microservice unavailable (Timeout/Error). Falling back.`);
     }
 
-    // 2. Fallback: Standard Fetch (Low-Fidelity)
+    // 2. fallback: standard fetch (low-fidelity)
     if (!usedBackend) {
         html = await withRetry(async () => {
             const res = await fetch(url, {
@@ -79,7 +79,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
         }, { maxRetries: 2, baseDelay: 1000 });
     }
 
-    // 3. Fallback: Gemini URL Grounding (If Fetch Failed or Blocked)
+    // 3. fallback: gemini url grounding (if fetch failed or blocked)
     if (!html || html.length < 500) {
          console.log(`[Review Scout] 🌍 Fetch failed/blocked. Asking Gemini to read the link via Google Search...`);
          const prompt = `
@@ -102,7 +102,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
                 contents: [{ role: "user", parts: [{ text: prompt }] }],
                 tools: [
                     { googleSearch: {} },
-                    { url_context: {} } // SOTA 2026: Direct Browser-level URL Access
+                    { url_context: {} } // direct browser-level url access
                 ] as any,
              });
              
@@ -111,7 +111,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
              const end = text.lastIndexOf('}');
              if (start !== -1 && end !== -1) {
                   const json = JSON.parse(text.substring(start, end + 1));
-                  // SOTA: Identity Verification
+                  // identity verification
                   if (json.productName && !json.productName.toLowerCase().includes("not found") && json.productName.length > 2) {
                       return { ...json, source: 'Gemini Search', url: url };
                   }
@@ -121,14 +121,14 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
          }
     }
 
-    // If we still have no HTML, we cannot proceed with Cheerio parsing
+    // if we still have no html, we cannot proceed with cheerio parsing
     if (!html) return null;
 
     const $ = cheerio.load(html);
     
-    // Extract text content (remove scripts, styles)
+    // extract text content (remove scripts, styles)
     $('script, style, nav, footer, header').remove();
-    // Common selectors for e-commerce sites (Shopee, Amazon, BestBuy)
+    // common selectors for e-commerce sites (shopee, amazon, bestbuy)
     const reviewSelectors = [
       '.shopee-product-rating__main', 
       '.review-text', 
@@ -144,11 +144,11 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
         });
     });
 
-    // Fallback to body if no specific reviews found
+    // fallback to body if no specific reviews found
     const textContent = (specificReviewText.length > 100 ? specificReviewText : $('body').text())
         .replace(/\s+/g, ' ').trim().slice(0, 8000); // Increased limit for reviews
 
-    // Use Gemini to extract structured review data
+    // use gemini to extract structured review data
     const prompt = `
       Analyze this webpage content which is likely a product page or a review.
       
@@ -183,7 +183,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
 
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Robust extraction: find { and } to handle potential markdown backticks
+    // robust extraction: find { and } to handle potential markdown backticks
     const startIdx = text.indexOf('{');
     const endIdx = text.lastIndexOf('}');
     if (startIdx === -1 || endIdx === -1) throw new Error("No JSON object found in response");
@@ -191,14 +191,14 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
     const jsonStr = text.substring(startIdx, endIdx + 1);
     const json = JSON.parse(jsonStr);
 
-    // SOTA 2026: Anti-Hallucination Identity Validation
+    // anti-hallucination identity validation
     if (!json.productName || json.productName.toLowerCase().includes("not found") || json.productName.length < 3) {
         console.warn(`[Review Scout] 🚨 Scraper failed to identify a real product (Got: "${json.productName}"). Aborting.`);
         return null;
     }
 
-    // SOTA 2026: Price Fallback (Deep Grounding)
-    // If we have a product name but NO price, ask Gemini specifically for the price.
+    // price fallback (deep grounding)
+    // if we have a product name but no price, ask gemini specifically for the price.
     if (!json.price || json.price.toLowerCase().includes("not specified") || json.price === "0" || json.price.includes("Check Site")) {
         console.log(`[Review Scout] 🏷️ Price missing from DOM. Attempting Deep Grounding for: ${json.productName}`);
         try {
@@ -232,7 +232,7 @@ async function scrapeSpecificUrl(url: string): Promise<ReviewData | null> {
 }
 
 /**
- * Mode B: Search trusted review sites
+ * mode b: search trusted review sites
  */
 async function searchReviewSites(productName: string): Promise<ReviewData | null> {
   console.log(`[Review Scout] Searching review sites for: ${productName}`);
@@ -275,7 +275,7 @@ async function searchReviewSites(productName: string): Promise<ReviewData | null
     if (!grounding) {
         console.warn(`[Review Scout] ⚠️ No Grounding Metadata found.`);
     }
-    // Manual JSON extraction
+    // manual json extraction
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     if (start === -1 || end === -1) return null;
@@ -283,7 +283,7 @@ async function searchReviewSites(productName: string): Promise<ReviewData | null
     const jsonStr = text.substring(start, end + 1);
     const json = JSON.parse(jsonStr);
 
-    // Zero-Trust Verification (Backend Specialist)
+    // zero-trust verification (backend specialist)
     console.log(`[Review Scout] Verifying source URL: ${json.url}`);
     const isValid = await checkLinkValidity(json.url);
     if (!isValid) {

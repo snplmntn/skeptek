@@ -6,15 +6,20 @@ import { useSearchParams } from 'next/navigation';
 import { analyzeProduct } from '@/app/actions/analyze';
 import { Navigation } from '@/components/navigation';
 import { LensSearch } from '@/components/lens-search';
-import { AnalysisDashboard } from '@/components/analysis-dashboard';
-import { VersusArena } from '@/components/versus-arena';
-import { DiscoveryPodium } from '@/components/discovery-podium';
-import { FocalAlignmentLoader } from '@/components/focal-alignment-loader'; 
-import { ForensicLensLoader } from '@/components/forensic-lens-loader';
-import { ProfileReportsView } from '@/components/profile-reports-view';
 import { Modal } from '@/components/ui/modal';
+import dynamic from 'next/dynamic';
+import { Loader2 } from 'lucide-react';
+
+const AnalysisDashboard = dynamic(() => import('@/components/analysis-dashboard').then(mod => mod.AnalysisDashboard), { 
+    loading: () => <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>,
+    ssr: false 
+});
+const VersusArena = dynamic(() => import('@/components/versus-arena').then(mod => mod.VersusArena), { ssr: false });
+const DiscoveryPodium = dynamic(() => import('@/components/discovery-podium').then(mod => mod.DiscoveryPodium), { ssr: false });
+const ForensicLensLoader = dynamic(() => import('@/components/forensic-lens-loader').then(mod => mod.ForensicLensLoader), { ssr: false });
+const ProfileReportsView = dynamic(() => import('@/components/profile-reports-view').then(mod => mod.ProfileReportsView), { ssr: false });
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Info, Loader2 } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 import { getFriendlyErrorMessage } from '@/lib/error-mapping';
 import { getUserProfile } from '@/app/actions/user';
 
@@ -36,12 +41,12 @@ function HomeContent() {
   const [analysisStatus, setAnalysisStatus] = useState<string>("");
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   
-  // Error Handling State
+  // error handling state
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'data' | 'network'>('data');
   const [isErrorOpen, setIsErrorOpen] = useState(false);
 
-  // User Rank State
+  // user rank state
   const [userRank, setUserRank] = useState<{ isGuest: boolean; rank: string; xp: number; nextRankXP: number; email?: string | null } | null>(null);
 
   useEffect(() => {
@@ -49,7 +54,7 @@ function HomeContent() {
   }, []);
 
   const handleSearch = async (title: string, url: string, metadata?: { mode: 'text' | 'image', isVersus: boolean, isReview?: boolean }) => {
-    // 1. Enter Analysis Mode (Loader)
+    // 1. enter analysis mode (loader)
     setSelectedSearch({ title, url, mode: metadata?.mode, isReview: metadata?.isReview });
     setCurrentView('analyzing');
     setIsAnalysisFinishing(false);
@@ -58,16 +63,16 @@ function HomeContent() {
     setErrorMsg(null);
 
 
-    // 2. Call the Server Action (Orchestrator)
+    // 2. call the server action (orchestrator)
     try {
         const { status, result } = await analyzeProduct(title, { isReviewMode: metadata?.isReview });
 
-        // Stream the status updates (Fan-Out progress)
+        // stream the status updates (fan-out progress)
         for await (const message of readStreamableValue(status)) {
             if (message) setAnalysisStatus(message as string);
         }
 
-        // Stream the final result (Fan-In synthesis)
+        // stream the final result (fan-in synthesis)
         let finalData = null;
         for await (const data of readStreamableValue(result)) {
              setAnalysisResult(data);
@@ -78,33 +83,33 @@ function HomeContent() {
             throw new Error("No data received");
         }
 
-        // Check for Backend Reports Errors (like 429s or No Data)
+        // check for backend reports errors (like 429s or no data)
         if (finalData.isError || finalData.error) {
-             // Handle gracefully without throwing
+             // handle gracefully without throwing
              setErrorMsg(finalData.error || "Analysis was halted due to a system error.");
              setErrorType('data');
-             setAnalysisStatus("Analysis Failed"); // Update status text
-             // Do NOT switch view yet. Let animation finish.
+             setAnalysisStatus("Analysis Failed"); // update status text
+             // do not switch view yet. let animation finish.
              setIsAnalysisFinishing(true);
              return;
         }
 
-        // Trigger finish animation only after we have data
+        // trigger finish animation only after we have data
         setIsAnalysisFinishing(true);
 
     } catch (error) {
         console.error("Unexpected System Error", error);
-        // Fallback for unexpected crashes (e.g. network fail)
+        // fallback for unexpected crashes (e.g. network fail)
         setErrorMsg((error as Error).message);
         setErrorType('network');
-        setAnalysisStatus("System Error"); // Update status text
-        // Do NOT switch view yet. Let animation finish.
+        setAnalysisStatus("System Error"); // update status text
+        // do not switch view yet. let animation finish.
         setIsAnalysisFinishing(true);
     }
   };
 
   const handleAnalysisComplete = () => {
-        // ERROR HANDLING GATE: If an error was caught during fetch, show it now
+        // error handling gate: if an error was caught during fetch, show it now
         if (errorMsg) {
              setIsErrorOpen(true);
              setCurrentView('lens-search');
@@ -113,24 +118,24 @@ function HomeContent() {
 
         if (!selectedSearch || !analysisResult) return; 
         
-        // STRICT GATEKEEPER: Ensure we have actual data before showing results
-        // This prevents "Ghost Pages" where the backend returns success but empty data
+        // strict gatekeeper: ensure we have actual data before showing results
+        // this prevents "ghost pages" where the backend returns success but empty data
         
         let isValidData = false;
 
         if (analysisResult.type === 'comparison') {
-             // For comparisons, check if we hit the fallback "Data Unavailable" state
-             // The backend sets winReason="Data Unavailable" and pros=["Simulation"] on failure
+             // for comparisons, check if we hit the fallback "data unavailable" state
+             // the backend sets winreason="data unavailable" and pros=["simulation"] on failure
              const isFallback = analysisResult.winReason === "Data Unavailable" || 
                                 analysisResult.products?.some((p: any) => p.details?.pros?.includes("Simulation"));
              isValidData = !isFallback && (analysisResult.products && analysisResult.products.length > 0);
         } else {
-             // For single products, check if it's explicitly marked as simulated or missing name
+             // for single products, check if it's explicitly marked as simulated or missing name
              const isSimulated = analysisResult.isSimulated || false;
-             // SOTA: In Review Mode, we allow simulated/basic data because the USER is the verifier.
+             // if in review mode, we allow simulated/basic data because the user is the verifier.
              const allowSimulation = selectedSearch?.isReview;
              
-             // Guard: If analysisResult is empty/null, it's invalid.
+             // guard: if analysisresult is empty/null, it's invalid.
              const hasName = !!analysisResult.productName;
              
              isValidData = (allowSimulation || !isSimulated) && hasName;
@@ -145,14 +150,14 @@ function HomeContent() {
              return;
         }
 
-        // Check for specific backend signal first
+        // check for specific backend signal first
         if (analysisResult.type === 'comparison') {
              setCurrentView('versus');
              return;
         }
 
         const lowerTitle = selectedSearch.title.toLowerCase();
-        // Fallback intent check
+        // fallback intent check
         if (lowerTitle.includes(' vs ') || lowerTitle.includes(' versus ') || lowerTitle.includes(' compare ') || lowerTitle.includes(' or ')) {
             setCurrentView('versus');
         } else {
@@ -166,7 +171,7 @@ function HomeContent() {
 
   const handleRetry = () => {
        setIsErrorOpen(false);
-       // Just go back to search view, pre-filling is handled by passing selectedSearch.title prop
+       // just go back to search view, pre-filling is handled by passing selectedSearch.title prop
        setCurrentView('lens-search');
   };
 
@@ -194,7 +199,7 @@ function HomeContent() {
           />
         )}
         
-        {/* Loader State */}
+        {/* loader state */}
         {currentView === 'analyzing' && (
              <div className="fixed inset-0 z-50 bg-background">
                 <ForensicLensLoader 
@@ -207,13 +212,13 @@ function HomeContent() {
              </div>
         )}
 
-        {/* Results States */}
+        {/* results states */}
         {currentView === 'analysis' && (
           <AnalysisDashboard 
             search={selectedSearch || { title: "Demo Product Analysis", url: "#" }} 
             data={analysisResult}
             onBack={() => {
-                setSelectedSearch(null); // Clear input on back
+                setSelectedSearch(null); // clear input on back
                 setCurrentView('lens-search');
             }} 
             userRank={userRank?.rank}
@@ -224,7 +229,7 @@ function HomeContent() {
           <VersusArena 
             data={analysisResult} 
             onBack={() => {
-                setSelectedSearch(null); // Clear input on back
+                setSelectedSearch(null); // clear input on back
                 setCurrentView('lens-search');
             }}
           />

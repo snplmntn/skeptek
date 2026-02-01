@@ -9,7 +9,8 @@ export const LensBackground = memo(function LensBackground() {
 
   useEffect(() => {
     if (!bgNodesInitialized) {
-        setBgNodes([...Array(20)].map(() => ({
+        // Reduced from 20 to 12 for mobile performance
+        setBgNodes([...Array(12)].map(() => ({
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             delay: `${Math.random() * 5}s`,
@@ -20,67 +21,48 @@ export const LensBackground = memo(function LensBackground() {
   }, [bgNodesInitialized]);
 
   return (
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden content-visibility-auto">
           {/* 1. Deep Base Gradient */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_70%)]" />
           
-          {/* 2. Animated Grid with scanning effect */}
+          {/* 2. Animated Grid - Static on initial load, low opacity */}
           <div 
-            className="absolute inset-0 opacity-[0.15] dark:opacity-[0.08]" 
+            className="absolute inset-0 opacity-[0.10] dark:opacity-[0.05]" 
             style={{ 
               backgroundImage: `linear-gradient(to right, #3b82f6 1px, transparent 1px), linear-gradient(to bottom, #3b82f6 1px, transparent 1px)`,
-              backgroundSize: '40px 40px',
+              backgroundSize: '60px 60px', // Larger grid = fewer lines = more perf
               maskImage: 'radial-gradient(circle at 50% 50%, black, transparent 80%)'
             }} 
           />
           
-          {/* 3. Floating Blue Nebulae (Optimized Blur) - Increased Density */}
+          {/* 3. Floating Nebulae - Reduced Blur & Count */}
           <motion.div 
             animate={{ 
-                x: [0, 80, -80, 0], 
-                y: [0, -50, 50, 0],
+                x: [0, 50, -50, 0], 
+                y: [0, -30, 30, 0],
                 rotate: [0, 180, 360],
-                scale: [1, 1.2, 0.8, 1]
             }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 -left-40 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[140px] mix-blend-screen opacity-40 dark:opacity-15" 
+            transition={{ duration: 40, repeat: Infinity, ease: "linear" }} // "linear" is cheaper than "easeInOut"
+            className="absolute top-0 -left-40 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[80px] mix-blend-screen opacity-30 dark:opacity-10 will-change-transform" 
           />
           <motion.div 
             animate={{ 
-                x: [0, -60, 60, 0], 
-                y: [0, 80, -80, 0],
+                x: [0, -40, 40, 0], 
+                y: [0, 50, -50, 0],
                 rotate: [360, 180, 0],
-                scale: [1.1, 0.9, 1.2, 1.1]
             }}
-            transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-0 -right-40 w-[700px] h-[700px] bg-blue-600/20 rounded-full blur-[160px] mix-blend-screen opacity-40 dark:opacity-15" 
-          />
-          <motion.div 
-            animate={{ 
-                x: [-100, 100, -100], 
-                y: [100, -100, 100],
-                scale: [0.8, 1.1, 0.8]
-            }}
-            transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[180px] mix-blend-screen opacity-30 dark:opacity-10" 
-          />
-          <motion.div 
-            animate={{ 
-                x: [200, -200, 200], 
-                y: [0, 150, 0],
-            }}
-            transition={{ duration: 40, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-20 right-1/4 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] mix-blend-screen opacity-20 dark:opacity-5" 
+            transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-0 -right-40 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[90px] mix-blend-screen opacity-30 dark:opacity-10 will-change-transform" 
           />
 
-          {/* 4. Scanning Line */}
+          {/* 4. Scanning Line - Slower, minimal impact */}
           <motion.div 
             animate={{ y: ['-100%', '200%'] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.5)] z-0"
+            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent z-0 opacity-50"
           />
 
-          {/* 5. Random Technical "Nodes" (Dust) */}
+          {/* 5. Nodes - Reduced count handled by state */}
           <div className="absolute inset-0 opacity-20">
              {bgNodes.map((node, i) => (
                  <div 
@@ -90,7 +72,8 @@ export const LensBackground = memo(function LensBackground() {
                         left: node.left, 
                         top: node.top,
                         animationDelay: node.delay,
-                        opacity: node.opacity
+                        opacity: node.opacity,
+                        willChange: 'opacity'
                     }}
                  />
              ))}

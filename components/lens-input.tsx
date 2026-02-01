@@ -3,6 +3,7 @@
 import React, { useState, useCallback, memo } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Scan } from "lucide-react";
+// reusable input component for the lens interface
 import { cn } from "@/lib/utils";
 
 interface LensInputProps {

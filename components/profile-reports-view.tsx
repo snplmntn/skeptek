@@ -106,7 +106,7 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
             >
-                {/* Header */}
+                {/* header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-white/5">
                     <div className="space-y-2">
                         <button 
@@ -125,7 +125,7 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                     </div>
                 </div>
 
-                {/* Reports List */}
+                {/* reports list */}
                 <div className="grid gap-4">
                     {loading ? (
                         Array.from({ length: 3 }).map((_, i) => (
@@ -181,7 +181,7 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                                     className="group relative overflow-hidden rounded-2xl border border-white/5 bg-card/50 backdrop-blur-sm p-6 hover:border-primary/20 transition-all"
                                 >
                                     <div className="flex flex-col md:flex-row gap-6">
-                                        {/* Status Badge */}
+                                        {/* status badge */}
                                         <div className="flex-1 space-y-3">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
@@ -245,7 +245,7 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                                             )}
                                         </div>
 
-                                        {/* Actions */}
+                                        {/* actions */}
                                         {editingId !== report.id && (
                                             <div className="flex md:flex-col items-center justify-end gap-2 border-l border-white/5 pl-6 md:min-w-[120px]">
                                                 <button 
@@ -266,7 +266,7 @@ export function ProfileReportsView({ onBack }: { onBack: () => void }) {
                                         )}
                                     </div>
                                     
-                                    {/* Glass decor */}
+                                    {/* glass decor */}
                                     <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
                                         <FileText className="w-16 h-16 rotate-12" />
                                     </div>

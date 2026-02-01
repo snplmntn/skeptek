@@ -3,12 +3,12 @@ import { AgentState, RedditData } from './scout-types';
 import { withRetry } from '../retry';
 
 /**
- * The Reddit Scout (Grounded via Gemini 2.5):
- * Uses Native Gemini Grounding (googleSearch) to find and summarize Reddit threads.
- * SOTA 2026: Hive Mind Aware - uses canonical name if available.
+ * the reddit scout (grounded via gemini 2.5):
+ * uses native gemini grounding (googlesearch) to find and summarize reddit threads.
+ * hive mind aware - uses canonical name if available.
  */
 export async function redditScout(input: AgentState | string): Promise<RedditData | null> {
-  // Hive Mind Logic: Determine the best query
+  // hive mind logic: determine the best query
   const query = typeof input === 'string' 
       ? input 
       : (input.canonicalName || input.initialQuery);
@@ -16,22 +16,22 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
   console.log(`[Reddit Scout] Grounding Search for: ${query}`);
   
   try {
-    // SOTA 2026: Query Optimization (Anti-Tunneling)
-    // Simplify "Apple 2025 MacBook Pro with the M5 chip" to "MacBook Pro M5 Reddit"
+    // query optimization (anti-tunneling)
+    // simplify "apple 2025 macbook pro with the m5 chip" to "macbook pro m5 reddit"
     const optimizedQuery = await withRetry(async () => {
         const res = await geminiFlash.generateContent({
              contents: [{ role: "user", parts: [{ text: `Convert this product name into a short, effective Reddit search query (3-5 keywords max): "${query}"` }] }]
         });
         const text = res.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || query;
-        // Fix: Remove markdown (**, *, _, etc) and quotes
+        // fix: remove markdown (**, *, _, etc) and quotes
         return text.replace(/["*_]/g, ''); 
     }, { maxRetries: 2 });
 
     console.log(`[Reddit Scout] 🎯 Optimized Query: "${optimizedQuery}"`);
 
-    // SOTA 2026: HYBRID SEARCH (Python Microservice + Gemini Analysis)
-    // We use the Python backend to perform a "Headless Manual Search" which guarantees real URLs.
-    // Then we feed those URLs/Titles to Gemini to analyze.
+    // hybrid search (python microservice + gemini analysis)
+    // we use the python backend to perform a "headless manual search" which guarantees real urls.
+    // then we feed those urls/titles to gemini to analyze.
 
     try {
         console.log(`[Reddit Scout] Engaging Python Microservice for: "${optimizedQuery}"`);
@@ -64,8 +64,8 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
             };
         }
 
-        // 2. Scrape the Top 2 Threads for REAL Comments
-        // We use the /scrape endpoint to get the actual discussion text.
+        // 2. scrape the top 2 threads for real comments
+        // we use the /scrape endpoint to get the actual discussion text.
         const topThreads = threads.slice(0, 2);
         const scrapedContents = await Promise.all(topThreads.map(async (t: any) => {
             try {
@@ -86,11 +86,11 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
 
         if (validScrapes.length === 0) {
              console.warn("[Reddit Scout] Scraped content empty. Using titles only (Fallback).");
-             // Fallback to title-based inference if scraping fails
+             // fallback to title-based inference if scraping fails
              validScrapes.push(...threads.slice(0, 3).map((t: any) => ({ title: t.title, url: t.url, text: "Content unavailable." })));
         }
 
-        // 3. Analyze Scraped Content with Gemini
+        // 3. analyze scraped content with gemini
         const prompt = `
           Analyze these Reddit discussions about "${optimizedQuery}":
           
@@ -128,13 +128,13 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
         
         let text = result.text || "{}";
         
-        // Robust JSON Extraction (SOTA 2026)
+        // robust json extraction
         try {
-            // 1. Strip Markdown
+            // 1. strip markdown
             if (text.includes("```")) {
                 text = text.replace(/```json/g, "").replace(/```/g, "").trim();
             }
-            // 2. Find JSON boundaries
+            // 2. find json boundaries
             const start = text.indexOf('{');
             const end = text.lastIndexOf('}');
             if (start !== -1 && end !== -1) {
@@ -143,7 +143,7 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
             
             const json = JSON.parse(text);
             
-            // Attach VERIFIED sources
+            // attach verified sources
             json.sources = threads.slice(0, 4).map((t: any) => ({
                 title: t.title,
                 url: t.url,
@@ -158,7 +158,7 @@ export async function redditScout(input: AgentState | string): Promise<RedditDat
 
     } catch (err) {
         console.error("Reddit Scout Microservice Error:", err);
-        // Fallback to generic return
+        // fallback to generic return
          return {
             threadTitle: "Analysis Failed",
             comments: ["Could not retrieve Reddit data."],

@@ -36,7 +36,7 @@ export function DiscoveryPodium() {
       setLoading(true);
       setActiveCategory(cat);
       
-      // Minimum mock delay for "SOTA" feel if data load is too fast (prevents layout flicker)
+      // minimum mock delay if data load is too fast (prevents layout flicker)
       const [result] = await Promise.all([
           getTrendingScans(cat),
           new Promise(r => setTimeout(r, 400)) 
@@ -52,7 +52,7 @@ export function DiscoveryPodium() {
 
   return (
     <div className="min-h-screen bg-background px-6 py-12 relative overflow-hidden">
-       {/* Background Grid Decoration */}
+       {/* background grid decoration */}
        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
       <div className="mx-auto max-w-5xl relative z-10">
@@ -69,7 +69,7 @@ export function DiscoveryPodium() {
             </p>
         </motion.div>
 
-        {/* Category Filter Bubbles */}
+        {/* category filter bubbles */}
         <div className="flex flex-wrap justify-center gap-2 mb-12">
             {categories.map((cat) => (
                 <button
@@ -88,17 +88,17 @@ export function DiscoveryPodium() {
             ))}
         </div>
 
-        {/* CONTENT AREA: Either Loader or Data */}
+        {/* content area: either loader or data */}
         {loading ? (
              <div className="w-full animate-pulse">
-                 {/* Podium Skeleton */}
+                 {/* podium skeleton */}
                  <div className="flex items-end justify-center gap-4 md:gap-8 mb-24 h-64">
                      <div className="w-32 h-40 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-50" />
                      <div className="w-40 h-56 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-70" />
                      <div className="w-32 h-32 bg-slate-200 dark:bg-slate-800 rounded-t-2xl opacity-50" />
                  </div>
 
-                 {/* Grid Skeleton */}
+                 {/* grid skeleton */}
                  <div className="grid md:grid-cols-2 gap-6">
                      <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl opacity-50" />
                      <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl opacity-50" />
@@ -107,14 +107,14 @@ export function DiscoveryPodium() {
         ) : (
             <AnimatePresence mode="wait">
                 <motion.div
-                    key={activeCategory} // Trigger re-animation on category change
+                    key={activeCategory} // trigger re-animation on category change
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
                 >
                     {top.length === 0 ? (
-                        // EMPTY STATE
+                        // empty state
                         <div className="min-h-[50vh] flex flex-col items-center justify-center text-center p-12 relative">
                             <CloudLightning className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                             <h2 className="text-xl font-bold uppercase tracking-widest text-muted-foreground mb-2">System Initializing</h2>
@@ -124,7 +124,7 @@ export function DiscoveryPodium() {
                         </div>
                     ) : (
                         <>
-                        {/* Podium Layout - 3D Effect */}
+                        {/* podium layout - 3d effect */}
                         <div className="mb-24 flex items-end justify-center gap-4 md:gap-8 perspective-1000 min-h-[300px]">
                         
                         {/* 2nd Place - Silver */}
@@ -239,7 +239,7 @@ export function DiscoveryPodium() {
                         </>
                     )}
 
-                    {/* Bento Grid Layout for Lists - Only show if we have data */}
+                    {/* bento grid layout for lists - only show if we have data */}
                     {top.length > 0 && (
                         <div className="grid md:grid-cols-2 gap-6 items-start">
                         

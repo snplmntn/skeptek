@@ -7,14 +7,14 @@ export interface TranscriptItem {
 }
 
 /**
- * Fetches the transcript for a given YouTube video ID.
- * SOTA 2026: Scraping-based approach to bypass API quotas.
- * NOW: Returns structured data with timestamps for deep forensics.
+ * fetches the transcript for a given youtube video id.
+ * scraping-based approach to bypass api quotas.
+ * now: returns structured data with timestamps for deep forensics.
  */
 export async function fetchTranscript(videoId: string): Promise<TranscriptItem[] | null> {
-    // 1. SOTA 2026: Try Python Microservice (Reliable API Wrapper)
+    // 1. try python microservice (reliable api wrapper)
     try {
-        console.log(`[YouTube Transcript] 🐍 Calling Python Service for: ${videoId}`);
+        // console.log(`[youtube transcript] 🐍 calling python service for: ${videoId}`);
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/transcript?video_id=${videoId}`, {
              signal: AbortSignal.timeout(10000) // 10s timeout
         });
@@ -22,7 +22,7 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
         if (res.ok) {
             const data = await res.json();
             if (data.transcript && Array.isArray(data.transcript)) {
-                console.log(`[YouTube Transcript] ✅ Python Service returned ${data.transcript.length} lines.`);
+                // console.log(`[youtube transcript] ✅ python service returned ${data.transcript.length} lines.`);
                 return data.transcript.map((t: any) => ({
                     text: t.text,
                     duration: (t.duration || 0) * 1000,
@@ -31,13 +31,13 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
             }
         }
     } catch (e) {
-        console.warn(`[YouTube Transcript] Python Service unavailable/failed. Falling back to Node scraper.`);
+        // console.warn(`[youtube transcript] python service unavailable/failed. falling back to node scraper.`);
     }
 
     try {
-        console.log(`[YouTube Transcript] 🌍 Fetching transcript via Node Scraper for: ${videoId}`);
+        // console.log(`[youtube transcript] 🌍 fetching transcript via node scraper for: ${videoId}`);
         
-        // 2. Fallback: Fetch Video Page (Legacy Node Scraper)
+        // 2. fallback: fetch video page (legacy node scraper)
         const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         const response = await fetch(videoUrl, {
             headers: {
@@ -53,7 +53,7 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
         const html = await response.text();
         const $ = cheerio.load(html);
 
-        // 2. Extract ytInitialPlayerResponse
+        // 2. extract ytinitialplayerresponse
         let playerResponse: any = null;
         $('script').each((i, el) => {
             const content = $(el).html() || '';
@@ -63,14 +63,14 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
                     try {
                         playerResponse = JSON.parse(match[1]);
                     } catch (e) {
-                        console.error("[YouTube Transcript] Failed to parse player response JSON");
+                        console.error("[youtube transcript] failed to parse player response json");
                     }
                 }
             }
         });
 
         if (!playerResponse) {
-            // Alternative: check for var ytInitialPlayerResponse
+            // alternative: check for var ytinitialplayerresponse
             const match = html.match(/var ytInitialPlayerResponse = (\{.*?\});/);
             if (match) {
                 playerResponse = JSON.parse(match[1]);
@@ -78,11 +78,11 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
         }
 
         if (!playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks) {
-            console.warn(`[YouTube Transcript] No captions found for video: ${videoId}`);
+            console.warn(`[youtube transcript] no captions found for video: ${videoId}`);
             return null;
         }
 
-        // 3. Find English Track (priority: manual > auto-generated)
+        // 3. find english track (priority: manual > auto-generated)
         const tracks = playerResponse.captions.playerCaptionsTracklistRenderer.captionTracks;
         const englishTrack = tracks.find((t: any) => t.languageCode === 'en' && !t.kind) || 
                            tracks.find((t: any) => t.languageCode === 'en') ||
@@ -92,7 +92,7 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
              return null;
         }
 
-        // 4. Fetch Transcript Data
+        // 4. fetch transcript data
         const transcriptResponse = await fetch(englishTrack.baseUrl + '&fmt=json3');
         if (!transcriptResponse.ok) {
             throw new Error("Failed to fetch transcript data");
@@ -100,7 +100,7 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
 
         const transcriptData = await transcriptResponse.json();
         
-        // 5. Parse into Structured Items
+        // 5. parse into structured items
         if (!transcriptData.events) return null;
 
         const items: TranscriptItem[] = transcriptData.events
@@ -112,11 +112,11 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
             }))
             .filter((i: TranscriptItem) => i.text.length > 0);
 
-        console.log(`[YouTube Transcript] Successfully fetched ${items.length} segments for ${videoId}`);
+        // console.log(`[youtube transcript] successfully fetched ${items.length} segments for ${videoId}`);
         return items;
 
     } catch (error) {
-        console.error(`[YouTube Transcript] Error for ${videoId}:`, error);
+        console.error(`[youtube transcript] error for ${videoId}:`, error);
         return null;
     }
 }

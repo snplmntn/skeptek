@@ -1,23 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 
-const projectId = process.env.GOOGLE_CLOUD_PROJECT || "skeptek-hackathon";
-const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
-
-console.log(`[Gemini] Initializing Vertex AI Client for project: ${projectId} (${location})`);
-
+// initialized with api key (google ai gateway)
 export const genAI = new GoogleGenAI({
-  // vertexai: true, // Disabled: User lacks ADC. Falling back to Google AI gateway with API Key.
   apiKey: process.env.GOOGLE_API_KEY,
-  // project: projectId,
-  // location: location,
 });
 
-// SOTA 2026: Export Model Names for consistency
+// export model names for consistency
 export const MODEL_FLASH = "gemini-3-flash-preview"; 
 export const MODEL_PRO = "gemini-3-pro-preview";
 
-// Helper to keep similar API surface for easier refactoring, 
-// though we will update agents to use the new signature.
+// helper to keep similar api surface for easier refactoring
 export const geminiFlash = {
     generateContent: async (params: any) => {
         return await genAI.models.generateContent({
@@ -36,12 +28,11 @@ export const geminiPro = {
     }
 };
 
-// SOTA 2026: Grounding Model (Gemini 3 Flash)
-// User Note: Gemini 3 supports grounding!
+// grounding model (gemini 3 flash)
 export const geminiGroundingModel = {
     generateContent: async (params: any) => {
         return await genAI.models.generateContent({
-            model: "gemini-3-flash-preview", 
+            model: MODEL_FLASH, 
             ...params
         });
     }

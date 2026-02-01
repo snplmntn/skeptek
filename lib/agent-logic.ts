@@ -1,5 +1,5 @@
 
-// --- PHASE 2: AGENTIC BRAIN ---
+// --- phase 2: agentic brain ---
 
 async function runAgenticLoop(
     query: string, 
@@ -7,19 +7,17 @@ async function runAgenticLoop(
     isReviewMode: boolean = false
 ): Promise<any> {
     
-    // 1. Initial Grounding (Google Search)
+    // 1. initial grounding (google search)
     status.update("Connecting to global knowledge...");
-    // const googleGrounding = await geminiFlash.generateContent(...) // TODO: Native Grounding
-    // For now, we simulate this or use Market Scout as "Grounding Tool"
     
-    const marketData = await marketScout(query); // Identification
+    const marketData = await marketScout(query); // identification
     if (!marketData || !marketData.title) {
         throw new Error("Product Identity Unverified");
     }
     const canonicalName = marketData.title;
     status.update(`Identified: ${canonicalName}`);
 
-    // Context Accumulator
+    // context accumulator
     const context: any = {
         market: marketData,
         reddit: null,
@@ -27,16 +25,16 @@ async function runAgenticLoop(
         internal: await getFieldReports(canonicalName)
     };
 
-    // 2. Decision Step: Do we need more info?
-    // In a full agent, we'd ask Gemini. Here, we implement the "Brain" logic:
+    // 2. decision step: do we need more info?
+    // in a full agent, we'd ask gemini. here, we implement the "brain" logic:
     
     if (!isReviewMode) {
-        // PARALLEL EXECUTION of Tools (Optimization over strictly sequential)
-        // But we frame it as "Agent Decisions"
+        // parallel execution of tools (optimization over strictly sequential)
+        // but we frame it as "agent decisions"
         
         status.update("Gathering forensic evidence...");
         
-        // Tool 1: Reddit
+        // tool 1: reddit
         context.reddit = await redditScout({
              initialQuery: query,
              canonicalName: canonicalName,
@@ -44,7 +42,7 @@ async function runAgenticLoop(
              confidence: 100
         });
 
-        // Tool 2: YouTube
+        // tool 2: youtube
         context.video = await videoScout({
              initialQuery: query,
              canonicalName: canonicalName,
@@ -53,7 +51,7 @@ async function runAgenticLoop(
              confidence: 100
         });
 
-        // Tool 3: Deep Dive (Python Muscle) - Only if price is missing
+        // tool 3: deep dive (python muscle) - only if price is missing
         if (marketData.price === "Unknown" && marketData.productUrl) {
              status.update("Performing deep market scan...");
              try {
@@ -64,11 +62,11 @@ async function runAgenticLoop(
                 });
                 const deepData = await response.json();
                 if (deepData.status === 'success') {
-                    console.log("[Brain] Deep Dive Successful:", deepData.data);
-                    context.market.price = deepData.data.price; // Update context
+                    // console.log("[brain] deep dive successful:", deepData.data);
+                    context.market.price = deepData.data.price; // update context
                 }
              } catch (e) {
-                 console.warn("[Brain] Deep Dive Failed, ignoring:", e);
+                 // console.warn("[brain] deep dive failed, ignoring:", e);
              }
         }
     }

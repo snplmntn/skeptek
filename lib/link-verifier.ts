@@ -1,18 +1,18 @@
 
 /**
- * Zero-Trust Link Verification Utility.
- * SOTA 2026: Prevents hallucinations by confirming URLs exist before returning them.
+ * zero-trust link verification utility.
+ * prevents hallucinations by confirming urls exist before returning them.
  * 
- * STRATEGIES:
- * 1. YouTube: Uses oEmbed endpoint (Definitive check for video existence).
- * 2. Reddit: Uses .json endpoint (Definitive check for thread existence).
- * 3. General: Uses HEAD request.
+ * strategies:
+ * 1. youtube: uses oembed endpoint (definitive check for video existence).
+ * 2. reddit: uses .json endpoint (definitive check for thread existence).
+ * 3. general: uses head request.
  */
 
 export async function checkLinkValidity(url: string | undefined): Promise<boolean> {
     if (!url) return false;
     
-    // Quick Regex Validation first
+    // quick regex validation first
     if (!/^(https?:\/\/)/i.test(url)) return false;
 
     const controller = new AbortController();
@@ -23,7 +23,7 @@ export async function checkLinkValidity(url: string | undefined): Promise<boolea
         const hostname = urlObj.hostname.toLowerCase();
 
         // ---------------------------------------------------------
-        // STRATEGY 1: YOUTUBE (oEmbed - FAST & RELIABLE)
+        // strategy 1: youtube (oembed - fast & reliable)
         // ---------------------------------------------------------
         if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
             const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
@@ -33,10 +33,10 @@ export async function checkLinkValidity(url: string | undefined): Promise<boolea
         }
 
         // ---------------------------------------------------------
-        // STRATEGY 2: PYTHON BACKEND (SOTA 2026 - RELIABLE)
+        // strategy 2: python backend (reliable)
         // ---------------------------------------------------------
         try {
-             // console.log(`[LinkVerifier] 🐍 Verifying via Python: ${url}`);
+             // console.log(`[linkverifier] 🐍 verifying via python: ${url}`);
              const pyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/verify`, {
                  method: "POST",
                  headers: { "Content-Type": "application/json" },
@@ -49,16 +49,13 @@ export async function checkLinkValidity(url: string | undefined): Promise<boolea
                  clearTimeout(timeout);
                  if (data.valid) return true;
                  
-                 // If Python explicitly says "Invalid" (404), trust it.
                  if (data.reason && data.reason.includes("404")) return false;
              }
         } catch (pyErr) {
-             // Backend down or timeout? Fallback to legacy checks.
-             // console.warn("[LinkVerifier] Python verification failed, falling back.");
         }
 
         // ---------------------------------------------------------
-        // STRATEGY 3: REDDIT (.json check - LEGACY FALLBACK)
+        // strategy 3: reddit (.json check - legacy fallback)
         // ---------------------------------------------------------
         if (hostname.includes('reddit.com') && url.includes('/comments/')) {
                 const jsonUrl = urlObj.pathname.endsWith('.json') 
@@ -74,15 +71,15 @@ export async function checkLinkValidity(url: string | undefined): Promise<boolea
                 clearTimeout(timeout);
                 if (response.ok) return true;
                 
-                // SOTA 2026: Strict Mode
-                // We DO NOT accept 403/429 as "Valid" anymore because it masks hallucinations.
-                // If Node fetch is blocked, we must rely on Strategy 2 (Python/Selenium).
-                // If Python failed earlier, we accept that we cannot verify this link.
+                // strict mode
+                // we do not accept 403/429 as "valid" anymore because it masks hallucinations.
+                // if node fetch is blocked, we must rely on strategy 2 (python/selenium).
+                // if python failed earlier, we accept that we cannot verify this link.
                 return false;
         }
 
         // ---------------------------------------------------------
-        // STRATEGY 4: GENERAL FALLBACK (HEAD)
+        // strategy 4: general fallback (head)
         // ---------------------------------------------------------
         try {
             const response = await fetch(url, {
@@ -97,7 +94,7 @@ export async function checkLinkValidity(url: string | undefined): Promise<boolea
             return true;
         } catch (headError) {
             if (controller.signal.aborted) throw headError;
-            // Retry with GET Range
+            // retry with get range
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -117,13 +114,13 @@ export async function checkLinkValidity(url: string | undefined): Promise<boolea
 }
 
 /**
- * Validates a list of items with URL property in parallel.
- * Limits concurrency to avoid flooding.
+ * validates a list of items with url property in parallel.
+ * limits concurrency to avoid flooding.
  */
 export async function filterValidLinks<T extends { url: string }>(items: T[]): Promise<T[]> {
     if (!items || items.length === 0) return [];
 
-    // Process in batches of 5 to respect rate limits
+    // process in batches of 5 to respect rate limits
     const BATCH_SIZE = 5;
     const validItems: T[] = [];
 

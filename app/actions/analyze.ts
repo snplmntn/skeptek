@@ -27,7 +27,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
   // We don't await this immediately so we can return the stream to the client
   (async () => {
     try {
-        // 2026 HIVE MIND ORCHESTRATION (DAG)
+        // hive mind orchestration (dag)
 
         // 0. INTENT DETECTION: Is this a comparison?
         const comparisonMarkers = [' vs ', ' versus ', ' or ', ' compare '];
@@ -46,8 +46,8 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
             }
         }
         
-        // --- 0.5. CACHE CHECK (SOTA Optimization) ---
-        // SOTA: If in Review Mode, we SKIP CACHE to ensure we aren't loading old "Simulated" data.
+        // --- 0.5. cache check (optimization) ---
+        // if in review mode, we skip cache to ensure we aren't loading old "simulated" data.
         // We want a fresh identity check for the reviewer.
         const isReviewMode = options?.isReviewMode;
         const shouldSkipCache = isReviewMode;
@@ -109,7 +109,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       console.log(`[Hive Mind] Canonical Name established: "${canonicalName}" (Original: "${query}")`);
 
       // ---------------------------------------------------------
-      // SOTA: CANONICAL CACHE LAYER (Layer 2)
+      // canonical cache layer (layer 2)
       // We found the "Real Name". Check if we have analyzed this real name before.
       // ---------------------------------------------------------
       if (!isReviewMode) {
@@ -188,7 +188,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       console.log("--- [DEBUG] Field Reports ---");
       console.log(`Found ${fieldReports.length} internal community reports`);
 
-      // SOTA 2026: RETRY LOGIC (Before failing)
+      // retry logic (before failing)
       // If we found NO Reddit or Video data, it might be a canonical name mismatch.
       // Retry ONCE with the raw initial query or a simplified version.
       if (!isReviewMode) {
@@ -222,19 +222,19 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
           }
       }
 
-      // ERROR HANDLING (Zero-Tolerance SOTA Policy)
+      // error handling (zero-tolerance policy)
       const hasReddit = redditData && redditData.comments && redditData.comments.length > 0;
       const hasVideo = videoData && videoData.length > 0;
       const hasReview = professionalReview && professionalReview.summary;
   
-      // SOTA Safeguard: Abort if no INDEPENDENT data found.
+      // safeguard: abort if no independent data found.
       // We assume 'reviewScoutData' (URL scrape) is NOT an independent review.
       if (!isReviewMode && !hasReddit && !hasVideo && (!hasReview || !!reviewScoutData)) {
-          console.error("[Brain] 🚨 SOTA Safeguard Triggered: No valid forensic data found.");
+          console.error("[Brain] 🚨 Safeguard Triggered: No valid forensic data found.");
           status.update("Analyses Aborted: Insufficient Evidence.");
           result.done({ 
               isError: true, 
-              error: "SOTA 2026 Safeguard: No verified community discussions or video evidence found for this specific query. Verdict generation halted to maintain zero-hallucination standards.",
+              error: "Safeguard: No verified community discussions or video evidence found for this specific query. Verdict generation halted to maintain zero-hallucination standards.",
               insufficientData: true 
           });
           status.done("No Evidence Found");
@@ -245,7 +245,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       
       // 2. The Synthesis (Fan-In) - System Instruction Mode
       
-      // SOTA 2026: Parse Price for Fairness Check
+      // parse price for fairness check
       let numericPrice = 0;
       if (marketData && marketData.price) {
           const match = marketData.price.match(/[\d,.]+/);
@@ -293,9 +293,9 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       try {
         const model = geminiFlash; 
         
-        // SOTA 2026: Use Native JSON Mode (Structured Output)
+        // use native json mode (structured output)
         // Now with enhanced Audio Analysis
-        // SOTA 2026: Use Native JSON Mode (Structured Output) + System Instruction
+        // use native json mode (structured output) + system instruction
         const aiResult = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: userContext }] }],
           config: {
@@ -353,7 +353,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
       // Only save if we have REAL forensic data (Reddit comments or Videos)
       const hasForensicData = ((redditData?.comments?.length ?? 0) > 0) || ((videoData?.length ?? 0) > 0);
 
-      // SOTA: Save to Cache (Async, non-blocking) - IF SUFFICIENT DATA
+      // save to cache (async, non-blocking) - if sufficient data
       if (!fullReport.isSimulated && hasForensicData && !fullReport.isError) {
            setCachedProduct(query, fullReport.productName, fullReport.category, fullReport).catch(err => console.error("Cache Write Failed", err));
       } else {
@@ -613,11 +613,11 @@ async function handleComparison(items: string[], status: any, result: any) {
 
         result.done(json);
         
-        // SOTA: Cache the Comparison Result
+        // cache the comparison result
         const comparisonKey = items.sort().join(','); // Normalized key: "a,b"
         setCachedProduct(comparisonKey, json.title, "Comparison", json, 'compare').catch(e => console.error("Failed to cache comparison", e));
 
-        // SOTA: Cache Warming (Extract individual products from the Comparison JSON)
+        // cache warming (extract individual products from the comparison json)
         // The comparison JSON has `products: [{ name, score, verdict, ... }]`
         // We can save these as valid "individual" cache entries!
         if (json.products && Array.isArray(json.products)) {
@@ -702,7 +702,7 @@ export async function analyzeImage(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // 1.5 SOTA: Check Visual Cache
+    // 1.5 check visual cache
     const hash = crypto.createHash('sha256').update(buffer).digest('hex');
     const cacheKey = `visual:${hash}`;
     
@@ -749,7 +749,7 @@ export async function analyzeImage(formData: FormData) {
     
     const json = JSON.parse(text.substring(start, end + 1));
     
-    // SOTA: Visual Match with Cache
+    // visual match with cache
     // Try to find if we've already analyzed this product textually
     const cached = await getCachedProduct(json.productName);
     
@@ -758,11 +758,11 @@ export async function analyzeImage(formData: FormData) {
          cachedAnalysis: cached // Pass this back so frontend can show "Deep Analysis Available"
     };
 
-    // SOTA: Save to Visual Cache
+    // save to visual cache
     // We save the RESULT of the image analysis, keyed by the image hash.
     setCachedProduct(cacheKey, json.productName, "visual-scan", finalData, 'visual').catch(e => console.error("Visual Cache Failed", e));
     
-    // SOTA: Warm the Text Cache?
+    // warm the text cache?
     // If the image analysis was high confidence ("AirPods Pro"), users might search for it.
     // But the payload here is thin ({productName, isScamLikely}). 
     // It's not the full "Judge" report. So we probably SHOULDN'T overwrite the main text cache 

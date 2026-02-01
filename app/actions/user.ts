@@ -26,12 +26,7 @@ export async function getUserProfile() {
         // 1. Get current user (Secure)
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        console.log("[getUserProfile] Auth Check:", { 
-            hasUser: !!user, 
-            userId: user?.id, 
-            email: user?.email,
-            userError 
-        });
+        // debug: auth check passed
 
         if (!user) {
             // Return default "Guest" profile

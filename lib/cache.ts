@@ -1,14 +1,14 @@
 import { supabase } from './supabase';
 
 /**
- * Normalize query for cache key consistency
+ * normalize query for cache key consistency
  */
 export function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
 /**
- * Check if cached data exists and is not expired
+ * check if cached data exists and is not expired
  */
 export async function getCachedProduct(query: string) {
   const queryKey = normalizeQuery(query);
@@ -22,12 +22,12 @@ export async function getCachedProduct(query: string) {
 
   if (error || !data) return null;
   
-  console.log(`[Cache] HIT for "${query}"`);
-  return data.data; // Return the JSONB data field
+  // console.log(`[cache] hit for "${query}"`);
+  return data.data; // return the jsonb data field
 }
 
 /**
- * Save analysis result to cache
+ * save analysis result to cache
  */
 export async function setCachedProduct(
   query: string, 
@@ -39,20 +39,20 @@ export async function setCachedProduct(
   const queryKey = normalizeQuery(query);
   const expiresAt = new Date();
   
-  // Dynamic TTL based on Type
+  // dynamic ttl based on type
   switch (type) {
       case 'visual':
-          expiresAt.setDate(expiresAt.getDate() + 30); // 30 Days (Hash is stable)
+          expiresAt.setDate(expiresAt.getDate() + 30); // 30 days (hash is stable)
           break;
       case 'canonical':
       case 'alias':
-          expiresAt.setDate(expiresAt.getDate() + 7); // 7 Days (Mapping is relatively stable)
+          expiresAt.setDate(expiresAt.getDate() + 7); // 7 days (mapping is relatively stable)
           break;
       case 'compare':
-          expiresAt.setDate(expiresAt.getDate() + 3); // 3 Days
+          expiresAt.setDate(expiresAt.getDate() + 3); // 3 days
           break;
       default:
-          expiresAt.setHours(expiresAt.getHours() + 24); // 24 Hours (Standard text search)
+          expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours (standard text search)
   }
 
   const { error } = await supabase
@@ -69,14 +69,14 @@ export async function setCachedProduct(
     });
 
   if (error) {
-    console.error('[Cache] Failed to save:', error);
+    console.error('[cache] failed to save:', error);
   } else {
-    console.log(`[Cache] SAVED "${query}" [${type}] (expires: ${expiresAt.toISOString()})`);
+    // console.log(`[cache] saved "${query}" [${type}] (expires: ${expiresAt.toISOString()})`);
   }
 }
 
 /**
- * Fetch community field reports for a product
+ * fetch community field reports for a product
  */
 export async function getFieldReports(productName: string) {
   const { data, error } = await supabase
@@ -88,7 +88,7 @@ export async function getFieldReports(productName: string) {
     .limit(10);
 
   if (error) {
-    console.error('[Internal Scout] Failed to fetch field reports:', error);
+    console.error('[internal scout] failed to fetch field reports:', error);
     return [];
   }
 
@@ -96,7 +96,7 @@ export async function getFieldReports(productName: string) {
 }
 
 /**
- * Award XP to user and update rank
+ * award xp to user and update rank
  */
 export async function awardXP(userId: string, amount: number) {
   const { data: profile, error: fetchError } = await supabase
@@ -106,7 +106,7 @@ export async function awardXP(userId: string, amount: number) {
     .single();
 
   if (fetchError) {
-    console.error('[Gamification] Failed to fetch profile:', fetchError);
+    console.error('[gamification] failed to fetch profile:', fetchError);
     return;
   }
 
@@ -118,8 +118,8 @@ export async function awardXP(userId: string, amount: number) {
     .eq('id', userId);
 
   if (updateError) {
-    console.error('[Gamification] Failed to award XP:', updateError);
+    console.error('[gamification] failed to award xp:', updateError);
   } else {
-    console.log(`[Gamification] Awarded ${amount} XP to user ${userId} (Total: ${newXP})`);
+    // console.log(`[gamification] awarded ${amount} xp to user ${userId} (total: ${newXP})`);
   }
 }

@@ -13,14 +13,14 @@ import sys
 import json
 import time
 
-# Configure Logging
+# configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("scraper")
 
 app = Flask(__name__)
 
 def get_driver():
-    """Setup Headless Chrome Driver"""
+    """setup headless chrome driver"""
     chrome_options = Options()
     chrome_options.add_argument("--headless") 
     chrome_options.add_argument("--no-sandbox")
@@ -28,7 +28,7 @@ def get_driver():
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
-    # Auto-install/update driver
+    # auto-install/update driver
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
@@ -43,10 +43,10 @@ def get_transcript():
     if not video_id:
         return jsonify({"error": "Missing video_id"}), 400
         
-    # Attempt 1: Standard youtube_transcript_api (Fastest)
+    # attempt 1: standard youtube_transcript_api (fastest)
     try:
-        # SOTA 2026: Subprocess isolation to bypass import corruption
-        logger.info(f"Fetching transcript for {video_id} via subprocess...")
+        # subprocess isolation to bypass import corruption
+        logger.info(f"fetching transcript for {video_id} via subprocess...")
         
         process = subprocess.Popen(
             [sys.executable, "-m", "youtube_transcript_api", video_id, "--format", "json"],
@@ -65,16 +65,16 @@ def get_transcript():
                     transcript = json.loads(clean_json)
                     return jsonify({"video_id": video_id, "transcript": transcript})
              except:
-                 pass # Fallback to yt-dlp below
+                 pass # fallback to yt-dlp below
 
-        logger.warning(f"Primary Transcript Method Failed: {stderr[:200]}")
+        logger.warning(f"primary transcript method failed: {stderr[:200]}")
 
     except Exception as e:
-        logger.error(f"Primary Method Exception: {e}")
+        logger.error(f"primary method exception: {e}")
 
-    # Attempt 2: yt-dlp Fallback (Robust against IP blocks)
+    # attempt 2: yt-dlp fallback (robust against ip blocks)
     try:
-        logger.info(f"Attempting yt-dlp fallback for {video_id}...")
+        logger.info(f"attempting yt-dlp fallback for {video_id}...")
         transcript = fetch_transcript_ytdlp(video_id)
         if transcript:
              logger.info(f"yt-dlp fallback success for {video_id}")
@@ -86,7 +86,7 @@ def get_transcript():
 
 def fetch_transcript_ytdlp(video_id):
     """
-    Fallback using yt-dlp to extract automatic captions
+    fallback using yt-dlp to extract automatic captions
     """
     import yt_dlp
     import requests
@@ -105,16 +105,16 @@ def fetch_transcript_ytdlp(video_id):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             
-            # 1. Check Automatic Captions (Most common)
+            # 1. check automatic captions (most common)
             captions = info.get('automatic_captions', {}).get('en', [])
-            # 2. Check Manual Subtitles
+            # 2. check manual subtitles
             if not captions:
                 captions = info.get('subtitles', {}).get('en', [])
             
             if not captions:
                 return None
                 
-            # Prefer JSON3 format for easy parsing
+            # prefer json3 format for easy parsing
             json3_cap = next((c for c in captions if c.get('ext') == 'json3'), None)
             
             if json3_cap:
@@ -122,8 +122,8 @@ def fetch_transcript_ytdlp(video_id):
                 if res.ok:
                     data = res.json()
                     transcript = []
-                    # Parse JSON3 events
-                    # Format: { events: [ { tStartMs: 123, dDurationMs: 456, segs: [{utf8: "text"}] } ] }
+                    # parse json3 events
+                    # format: { events: [ { tStartMs: 123, dDurationMs: 456, segs: [{utf8: "text"}] } ] }
                     if 'events' in data:
                         for event in data['events']:
                             if 'segs' in event and event['segs']:
@@ -145,8 +145,8 @@ def fetch_transcript_ytdlp(video_id):
 @app.route("/verify", methods=['POST'])
 def verify_link():
     """
-    SOTA 2026: Verifies if a link is alive using Selenium.
-    Bypasses Cloudflare 403s that block simple fetch/HEAD requests.
+    verifies if a link is alive using selenium.
+    bypasses cloudflare 403s that block simple fetch/head requests.
     """
     data = request.json
     url = data.get('url') if data else None
@@ -161,21 +161,21 @@ def verify_link():
         
         try:
             driver.get(url)
-            # If we get here without exception, DNS/Connection is OK.
+            # if we get here without exception, dns/connection is ok.
             
-            # Check Title for "Access Denied" or "404"
+            # check title for "access denied" or "404"
             title = driver.title.lower()
             if "404" in title or "page not found" in title:
-                logger.info(f"Link Invalid (404 Title): {url}")
+                logger.info(f"link invalid (404 title): {url}")
                 return jsonify({"valid": False, "reason": "404 Title"})
             
-            # SOTA 2026: Redirect & NSFW Detection
+            # redirect & nsfw detection
             current_url = driver.current_url.lower()
             if "reddit.com" in url.lower() and "reddit.com" not in current_url:
-                 # Redirected away from Reddit (e.g. to spam site)
+                 # redirected away from reddit (e.g. to spam site)
                  return jsonify({"valid": False, "reason": "Redirected outside domain"})
 
-            # Check for NSFW Gates
+            # check for nsfw gates
             body = driver.find_element(By.TAG_NAME, "body").text.strip().lower()
             nsfw_triggers = ["over 18", "adult content", "nsfw", "click to enter", "mature content"]
             if any(trigger in body for trigger in nsfw_triggers):
@@ -187,11 +187,11 @@ def verify_link():
             return jsonify({"valid": True})
 
         except Exception as nav_err:
-            logger.warning(f"Navigation Error for {url}: {nav_err}")
+            logger.warning(f"navigation error for {url}: {nav_err}")
             return jsonify({"valid": False, "reason": str(nav_err)})
             
     except Exception as e:
-        logger.error(f"Verification Driver Error: {e}")
+        logger.error(f"verification driver error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if driver:
@@ -200,13 +200,13 @@ def verify_link():
 @app.route("/scrape", methods=['GET'])
 def scrape_url():
     """
-    Scrapes a dynamic SPA/JavaScript-heavy website using Selenium.
+    scrapes a dynamic spa/javascript-heavy website using selenium.
     """
     url = request.args.get('url')
     if not url:
         return jsonify({"error": "Missing URL parameter"}), 400
 
-    logger.info(f"Start scraping: {url}")
+    logger.info(f"start scraping: {url}")
     driver = None
     try:
         driver = get_driver()
@@ -214,7 +214,7 @@ def scrape_url():
         
         driver.get(url)
         
-        # SOTA 2026: Anti-Bot Detection (Amazon/Lazada)
+        # anti-bot detection (amazon/lazada)
         page_title = driver.title.lower()
         body_text = ""
         try:
@@ -227,29 +227,29 @@ def scrape_url():
         
         if any(t in page_title for t in bot_triggers) or \
            (any(t in body_text for t in amazon_triggers) and len(body_text) < 1500):
-            logger.warning(f"Bot Detection Triggered! Title: {page_title} | Body Match: True")
+            logger.warning(f"bot detection triggered! title: {page_title} | body match: true")
             return jsonify({
                 "error": "Bot Detection Triggered", 
                 "block_type": "captcha",
                 "title": page_title
             }), 403
 
-        # Specialized Waiting Strategy
+        # specialized waiting strategy
         try:
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
             
-            # SOTA 2026: Auto-Scroll to trigger Lazy Loading (Reviews/Price)
+            # auto-scroll to trigger lazy loading (reviews/price)
             total_height = int(driver.execute_script("return document.body.scrollHeight"))
             for i in range(1, total_height, 700):
                 driver.execute_script(f"window.scrollTo(0, {i});")
                 time.sleep(0.1)
             
-            # Final wait for settlement
+            # final wait for settlement
             time.sleep(2.5) 
 
-            # Deep Price Extraction (SOTA 2026)
+            # deep price extraction
             price_selectors = [
                 'span.a-price-whole', 'span.a-offscreen', '#corePrice_feature_div', 
                 'div.price-box', '.product-price', '[data-test="product-price"]',
@@ -265,14 +265,14 @@ def scrape_url():
                 except: continue
             
             if found_prices:
-                logger.info(f"Found potential prices: {found_prices[:3]}")
+                logger.info(f"found potential prices: {found_prices[:3]}")
             
         except Exception as e:
-             logger.warning(f"Wait/Scroll timeout, continuing: {e}")
+             logger.warning(f"wait/scroll timeout, continuing: {e}")
 
         content = driver.page_source
         
-        # Cleanup HTML with BS4
+        # cleanup html with bs4
         soup = BeautifulSoup(content, "html.parser")
         for script in soup(["script", "style", "svg", "nav", "footer"]):
             script.decompose()
@@ -286,7 +286,7 @@ def scrape_url():
         })
 
     except Exception as e:
-        logger.error(f"Scrape Failed: {e}")
+        logger.error(f"scrape failed: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if driver:
@@ -295,8 +295,8 @@ def scrape_url():
 @app.route("/tools/market_deep_dive", methods=['POST'])
 def market_tool():
     """
-    Agentic Tool Endpoint: Returns detailed market data for a specific URL.
-    This is favored by the "Brain" when it needs deep verification.
+    agentic tool endpoint: returns detailed market data for a specific url.
+    this is favored by the "brain" when it needs deep verification.
     """
     data = request.json
     url = data.get('url') if data else None
@@ -304,21 +304,13 @@ def market_tool():
     if not url:
         return jsonify({"error": "Missing URL"}), 400
 
-    # Reuse the logic of scrape_url but structured for an Agent Tool Response
-    # In a real microservice we would refactor the shared logic into a helper function.
-    # For now, we call the scrape helper (simulated refactor) or just reuse the route.
-    
-    # We will invoke the existing scrape logic properly
-    # Note: Flask 'test_request_context' is one way, but calling the function directly if logic was separated is better.
-    # Since logic isn't separated, let's just create a new specialized lightweight scraper for the tool.
-    
     driver = None
     try:
         driver = get_driver()
         driver.set_page_load_timeout(30)
         driver.get(url)
         
-        # SOTA: Fast Price & Title Check
+        # fast price & title check
         title = driver.title
         price = "Unknown"
         
@@ -338,7 +330,7 @@ def market_tool():
                 "title": title,
                 "price": price,
                 "url": url,
-                "is_available": True # Mock availability for now
+                "is_available": True # mock availability for now
             }
         })
     except Exception as e:
@@ -350,7 +342,7 @@ def market_tool():
 @app.route("/tools/video_insight", methods=['POST'])
 def video_tool():
     """
-    Agentic Tool Endpoint: Downloads YouTube video, extracts frames, and uses Gemini Vision to find visual defects.
+    agentic tool endpoint: downloads youtube video, extracts frames, and uses gemini vision to find visual defects.
     """
     data = request.json
     video_url = data.get('url') if data else None
@@ -363,23 +355,23 @@ def video_tool():
         import cv2
     except ImportError:
         cv2 = None
-        print("Warning: OpenCV (cv2) not found. Vision features disabled.")
+        logger.warning("warning: opencv (cv2) not found. vision features disabled.")
     import os
     import google.generativeai as genai
     from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
-    # Configure Gemini inside the tool (using Env var passed to backend or hardcoded for hackathon)
-    # Ideally this should be initialized globally
+    # configure gemini inside the tool (using env var passed to backend or hardcoded for hackathon)
+    # ideally this should be initialized globally
     api_key = os.environ.get("GOOGLE_API_KEY") 
     if api_key:
         genai.configure(api_key=api_key)
     
     try:
-        # 1. Download Video (Fastest format, worst quality sufficient for vision)
-        logger.info(f"Downloading video: {video_url}")
+        # 1. download video (fastest format, worst quality sufficient for vision)
+        logger.info(f"downloading video: {video_url}")
         
         ydl_opts = {
-            'format': 'worst[ext=mp4]', # We just need visual context, not 4K
+            'format': 'worst[ext=mp4]', # we just need visual context, not 4k
             'outtmpl': 'temp_video.%(ext)s',
             'quiet': True,
             'no_warnings': True
@@ -388,19 +380,19 @@ def video_tool():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([video_url])
             
-        # 2. Extract 3 Key Frames (Beginning, Middle, End)
+        # 2. extract 3 key frames (beginning, middle, end)
         cap = cv2.VideoCapture("temp_video.mp4")
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         fps = cap.get(cv2.CAP_PROP_FPS)
         duration = total_frames / fps
         
         frames = []
-        # Grab at 10%, 50%, 80% marks
+        # grab at 10%, 50%, 80% marks
         for percent in [0.1, 0.5, 0.8]:
             cap.set(cv2.CAP_PROP_POS_FRAMES, int(total_frames * percent))
             ret, frame = cap.read()
             if ret:
-                # Resize to save bandwidth (Gemini only needs small imgs)
+                # resize to save bandwidth (gemini only needs small imgs)
                 frame = cv2.resize(frame, (640, 360)) 
                 _, buffer = cv2.imencode('.jpg', frame)
                 frames.append({
@@ -410,8 +402,8 @@ def video_tool():
         
         cap.release()
         
-        # 3. Analyze with Gemini Flash (Fast Vision)
-        logger.info("Sending frames to Gemini Vision...")
+        # 3. analyze with gemini flash (fast vision)
+        logger.info("sending frames to gemini vision...")
         if not api_key:
              return jsonify({"status": "skipped", "reason": "No API Key configured on backend"}), 200
 
@@ -433,7 +425,7 @@ def video_tool():
             generation_config={"response_mime_type": "application/json"}
         )
         
-        # Cleanup
+        # cleanup
         if os.path.exists("temp_video.mp4"):
             os.remove("temp_video.mp4")
             
@@ -444,7 +436,7 @@ def video_tool():
         })
 
     except Exception as e:
-        logger.error(f"Video Tool Error: {e}")
+        logger.error(f"video tool error: {e}")
         if os.path.exists("temp_video.mp4"):
             os.remove("temp_video.mp4")
         return jsonify({"error": str(e), "status": "failed"}), 500
@@ -452,28 +444,28 @@ def video_tool():
 @app.route("/tools/reddit_search", methods=['POST'])
 def reddit_search_tool():
     """
-    Agentic Tool: Performs a "Headless Manual Search" for Reddit threads.
-    This bypasses API limitations by acting as a human user.
+    agentic tool: performs a "headless manual search" for reddit threads.
+    this bypasses api limitations by acting as a human user.
     """
     data = request.json
     query = data.get('query')
     if not query:
         return jsonify({"error": "Missing query"}), 400
 
-    logger.info(f"Reddit Manual Search for: {query}")
+    logger.info(f"reddit manual search for: {query}")
     driver = None
     links = []
     
     try:
         driver = get_driver()
-        # Use DuckDuckGo to avoid Google Captchas in Headless mode
+        # use duckduckgo to avoid google captchas in headless mode
         # "site:reddit.com" is key
         search_url = f"https://duckduckgo.com/?q=site%3Areddit.com+{query.replace(' ', '+')}&t=h_&ia=web"
         
         driver.get(search_url)
         time.sleep(2) # Wait for JS
         
-        # Extract Results
+        # extract results
         results = driver.find_elements(By.CSS_SELECTOR, "a[data-testid='result-title-a']")
         
         for res in results:
@@ -484,16 +476,16 @@ def reddit_search_tool():
                 
             if len(links) >= 5: break
             
-        # Fallback to Google if DDG fails (rare)
+        # fallback to google if ddg fails (rare)
         if not links:
-             logger.info("DDG yielded no results. Trying Google Fallback...")
+             logger.info("ddg yielded no results. trying google fallback...")
              driver.get(f"https://www.google.com/search?q=site:reddit.com+{query.replace(' ', '+')}")
              time.sleep(2)
              g_results = driver.find_elements(By.TAG_NAME, "a")
              for res in g_results:
                  href = res.get_attribute("href")
                  if href and "reddit.com/r/" in href and "/comments/" in href:
-                     # Google redirect filtering often needed, but raw href works usually
+                     # google redirect filtering often needed, but raw href works usually
                      links.append({"title": "Reddit Thread", "url": href})
                  if len(links) >= 5: break
         
@@ -504,13 +496,13 @@ def reddit_search_tool():
         })
 
     except Exception as e:
-        logger.error(f"Reddit Search Error: {e}")
+        logger.error(f"reddit search error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if driver:
             driver.quit()
 
 if __name__ == "__main__":
-    # Multi-threaded server by default in Flask dev, or use gevent for prod
-    print("🚀 Skeptek Backend Starting... (Endpoints: /scrape, /transcript, /verify, /tools/video_insight, /tools/reddit_search)")
+    # multi-threaded server by default in flask dev, or use gevent for prod
+    print("🚀 skeptek backend starting... (endpoints: /scrape, /transcript, /verify, /tools/video_insight, /tools/reddit_search)")
     app.run(host="0.0.0.0", port=8000, threaded=True)

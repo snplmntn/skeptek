@@ -24,7 +24,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [internalStatusIndex, setInternalStatusIndex] = useState(0);
   
-  // Refs for smooth lerp movement
+  // refs for smooth lerp movement
   const lensPosRef = useRef({ x: 300, y: 200, targetX: 300, targetY: 200 });
   const versusLensRefs = useRef([ 
     { x: 200, y: 100, targetX: 200, targetY: 100, nextUpdate: 0 },
@@ -35,7 +35,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
   const { resolvedTheme } = useTheme();
   const theme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
-  // Use refs for props to avoid restarting the effect
+  // use refs for props to avoid restarting the effect
   const isFinishingRef = useRef(isFinishing);
   const onCompleteRef = useRef(onComplete);
   const modeRef = useRef(mode);
@@ -56,7 +56,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
     const width = canvas.width;
     const height = canvas.height;
 
-    // Theme Config
+    // theme config
     const colors = {
         background: theme === 'dark' ? '#0a0c10' : '#ffffff',
         particle: theme === 'dark' ? '#334155' : '#cbd5e1',
@@ -66,7 +66,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
         text: theme === 'dark' ? '#3b82f6' : '#2563eb'
     };
 
-    // Create particles with random depth and drift
+    // create particles with random depth and drift
     const particles = Array.from({ length: 180 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -91,7 +91,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
       const offsetY = (Date.now() / 40) % gridSize;
       const offsetX = (Date.now() / 60) % gridSize;
 
-      // Vertical lines
+      // vertical lines
       for (let x = -gridSize; x <= width + gridSize; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x + offsetX, 0);
@@ -99,7 +99,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
         ctx.stroke();
       }
 
-      // Horizontal lines
+      // horizontal lines
       for (let y = -gridSize; y <= height + gridSize; y += gridSize) {
         ctx.beginPath();
         ctx.moveTo(0, y + offsetY);
@@ -112,7 +112,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
       const now = Date.now();
       let elapsed = now - startTime;
       
-      // Determine effective phase
+      // determine effective phase
       const canFinish = isFinishingRef.current;
 
       let currentPhase: 'noise' | 'investigation' | 'clarity' = 'noise';
@@ -137,12 +137,12 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
         }
       }
 
-    // Background
+    // background
     ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, width, height);
     drawGrid();
 
-    // Particle update
+    // particle update
     particles.forEach((p) => {
       p.x += p.vx;
       p.y += p.vy;
@@ -162,9 +162,9 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
       const loopTime = (elapsed - noiseDuration) / investigationLoopDuration;
       const currentMode = modeRef.current;
       
-      // --- Specialized Mode Drawing ---
+      // --- specialized mode drawing ---
       if (currentMode === 'versus') {
-          // Dynamic Random Wandering for Versus Mode
+          // dynamic random wandering for versus mode
           versusLensRefs.current.forEach((lens, i) => {
               if (now > lens.nextUpdate) {
                   // Pick new random target within safe bounds
@@ -178,7 +178,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
               lens.y += (lens.targetY - lens.y) * 0.03;
           });
 
-          // Draw Connection Beam first (so it's behind lenses)
+          // draw connection beam first (so it's behind lenses)
           const p1 = versusLensRefs.current[0];
           const p2 = versusLensRefs.current[1];
           ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
@@ -186,7 +186,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
           ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
           ctx.setLineDash([]);
 
-          // Draw Lenses
+          // draw lenses
           versusLensRefs.current.forEach((lens, i) => {
               const lx = lens.x;
               const ly = lens.y;
@@ -218,25 +218,25 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
               });
           });
       } else if (currentMode === 'review') {
-          // Verification Stamp / Document Flow
+          // verification stamp / document flow
           const centerX = width / 2;
           const centerY = height / 2;
           const stampRadius = 100 + Math.sin(loopTime * 10) * 10;
           
-          // Outer Ring
+          // outer ring
           ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
           ctx.lineWidth = 2;
           ctx.setLineDash([10, 5]);
           ctx.beginPath(); ctx.arc(centerX, centerY, stampRadius, 0, Math.PI * 2); ctx.stroke();
           ctx.setLineDash([]);
 
-          // Scanning Square (Document View)
+          // scanning square (document view)
           ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
           ctx.lineWidth = 2;
           const squareSize = 140;
           ctx.strokeRect(centerX - squareSize/2, centerY - squareSize/2, squareSize, squareSize);
           
-          // "Read" progress line
+          // "read" progress line
           const scanY = centerY - squareSize/2 + ((loopTime * 2) % 1) * squareSize;
           ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
           ctx.beginPath(); ctx.moveTo(centerX - squareSize/2, scanY); ctx.lineTo(centerX + squareSize/2, scanY); ctx.stroke();
@@ -249,7 +249,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
           ctx.font = '900 12px "Geist Mono"';
           ctx.fillText("V_CHECK_IN_PROGRESS", centerX, centerY + squareSize/2 + 25);
       } else {
-          // Standard Single Lens
+          // standard single lens
           const scanProgress = (1 + Math.sin(loopTime * Math.PI * 2 - Math.PI / 2)) / 2;
           lensPosRef.current.targetX = width * 0.15 + scanProgress * (width * 0.7);
           lensPosRef.current.targetY = height / 2 + Math.sin(loopTime * Math.PI * 4) * 50;
@@ -260,7 +260,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
           const { x, y } = lensPosRef.current;
           const radius = 90;
 
-          // Lens Glow (Neon)
+          // lens glow (neon)
           const glow = ctx.createRadialGradient(x, y, radius - 10, x, y, radius + 30);
           const glowColor = theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(37, 99, 235, 0.1)';
           glow.addColorStop(0, glowColor);
@@ -268,7 +268,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
           ctx.fillStyle = glow;
           ctx.beginPath(); ctx.arc(x, y, radius + 30, 0, Math.PI * 2); ctx.fill();
 
-          // Sharp Chrome Ring
+          // sharp chrome ring
           ctx.strokeStyle = `rgba(59, 130, 246, ${0.8 + Math.sin(loopTime * Math.PI * 2) * 0.1})`;
           ctx.lineWidth = 4;
           ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.stroke();
@@ -277,7 +277,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
           ctx.lineWidth = 1;
           ctx.beginPath(); ctx.arc(x, y, radius - 6, 0, Math.PI * 2); ctx.stroke();
 
-          // Handle (Technical)
+          // handle (technical)
           const handleAngle = Math.PI * 0.75;
           const handleStart = { x: x + Math.cos(handleAngle) * radius, y: y + Math.sin(handleAngle) * radius };
           const handleEnd = { x: handleStart.x + Math.cos(handleAngle) * 60, y: handleStart.y + Math.sin(handleAngle) * 60 };
@@ -370,7 +370,7 @@ export function ForensicLensLoader({ isFinishing, onComplete, status, mode = 'si
   };
 }, [theme]);
 
-// Determine the effective index for the progress dots
+// determine the effective index for the progress dots
 const getEffectiveIndex = () => {
   if (!status) return internalStatusIndex;
   
@@ -406,7 +406,7 @@ const getStatusIcon = () => {
 
 return (
   <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 overflow-hidden relative">
-    {/* Header with Float Animation */}
+    {/* header with float animation */}
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -420,7 +420,7 @@ return (
       </div>
     </motion.div>
 
-    {/* Main Canvas with Neural Glow wrapper */}
+    {/* main canvas with neural glow wrapper */}
     <div className="relative group">
       <div className="absolute -inset-4 bg-primary/20 rounded-[2.5rem] blur-3xl opacity-50 group-hover:opacity-100 transition duration-1000" />
       <canvas
@@ -431,7 +431,7 @@ return (
       />
     </div>
 
-    {/* FIXED HEIGHT Status Box */}
+    {/* fixed height status box */}
     <div className="mt-16 w-full max-w-lg h-24 flex flex-col items-center justify-start pointer-events-none">
       <AnimatePresence mode="wait">
         <motion.div
@@ -458,7 +458,7 @@ return (
       </AnimatePresence>
     </div>
 
-    {/* Premium Progress Indicators */}
+    {/* premium progress indicators */}
     <div className="mt-4 flex items-center gap-4">
       <div className="flex gap-2">
         {[0, 1, 2, 3].map((i) => (

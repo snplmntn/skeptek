@@ -1,120 +1,155 @@
-<p align="center">
-  <img src="./public/icon.png" width="120" height="120" alt="Skeptek Icon">
-</p>
+<div align="center">
+
+<img src="./public/icon.png" width="120" height="120" alt="Skeptek Icon">
 
 # Skeptek 👁️
-**Product Analysis Engine** | *Built for the Gemini 3 Hackathon*
+### Precision Optics for E-Commerce
+*"The Minority Report for Online Shopping"*
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/snplmntns-projects/v0-skeptek)
-[![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Gemini%203-4E8BF4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
-[![Status](https://img.shields.io/badge/Status-Beta-orange?style=for-the-badge)]()
+[![Powered by Gemini 3.0](https://img.shields.io/badge/Intelligence-Gemini%203.0%20Pro-4E8BF4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
+[![Next.js 14](https://img.shields.io/badge/Brain-Next.js%2014-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Python](https://img.shields.io/badge/Muscle-Python%203.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Supabase](https://img.shields.io/badge/Memory-Supabase-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 
-> "The Minority Report for E-Commerce."
+[**Launch Application**](https://vercel.com/snplmntns-projects/v0-skeptek) · [**Watch Demo**](#) · [**Report Bug**](https://github.com/snplmntn/skeptek/issues)
 
-## 🚀 The Pitch
-**Skeptek** is a "Precision Optics" engine designed to cut through the noise of the modern internet. In an era of AI-generated reviews, dropshipped white-label products, and inflated pricing, Skeptek acts as your trusted analyst.
+---
+</div>
 
-It doesn't just "search" for a product. It **investigates** it. By deploying a swarm of specialized Gemini 3 agents, Skeptek triangulates data from official retailers, Reddit discussion threads, and YouTube video reviews to deliver a single, irrefutable **Truth Score**.
+## 🚀 The Mission
+**Skeptek** is an agentic analysis engine designed to cut through the noise of modern e-commerce. In an era of AI-generated reviews, dropshipped white-label garbage, and inflated pricing, Skeptek acts as your **Forensic Analyst**.
 
-## 🧠 Powered by Gemini 3
-Skeptek is built on a multi-agent architecture powered by the **Gemini 3.0 model family**. We leverage the massive context window and multimodal capabilities to perform deep analysis that was previously impossible.
+It doesn't just "search" for a product. It **investigates**. By deploying a swarm of specialized agents, Skeptek triangulates data from official retailers, Reddit discussion threads, and YouTube video hardware reviews to deliver a single, irrefutable **Truth Score**.
 
-### The Agent Swarm
-1.  **🕵️ Market Scout (SOTA 2026 Grounding)**
-    *   **Model**: `gemini-3.0-flash`
-    *   **Role**: The first line of defense. It uses **Google Search Grounding** to traverse the live web, verifying product existence, **Original MSRP**, and **Competitor Pricing** to establish a baseline for value.
-    *   **Chronological Awareness**: It now tracks **Release Dates** and **Successor Models** (e.g., M1 vs M4), ensuring you don't buy "new" tech that is actually 4 years old.
-    *   **Python Muscle**: Connects to a dedicated **Python Microservice** for deep market verification when standard APIs fail.
+## 🧠 The Intelligence Engine
+Skeptek utilizes a split-brain architecture powered by the **Gemini 3.0 Model Family**.
 
-2.  **🎥 Video Scout (Vision & Audio)**
-    *   **Model**: `gemini-3.0-flash-preview`
-    *   **Role**: A multimodal hunter that **watches and listens** to reviews.
-    *   **Native Vision**: It downloads and "watches" product reviews using **Gemini Vision**, detecting physical defects (wobbly hinges, broken seals) and emotional cues (reviewer making a disgusted face).
-    *   **Audio Forensics**: It deep-scans transcripts for "micro-complaints" buried in the audio track.
+| Agent Role | Model Version | Capability |
+| :--- | :--- | :--- |
+| **The Judge** | **Gemini 3.0 Pro Preview** | Complex Reasoning, Verdict Synthesis, Cross-Referencing |
+| **The Scouts** | **Gemini 3.0 Flash Preview** | High-Speed Grounding, Video Vision Analysis, Real-time Scraping |
 
-3.  **⚖️ The Judge (Reasoning Core)**
-    *   **Model**: `gemini-3.0-flash`
-    *   **Role**: The synthesis engine. It ingests the raw data from the Scouts, cross-references Reddit user sentiment against official specs.
-    *   **Price Integrity**: It enforces a **Zero-Hallucination Protocol**, using verified numeric price data to calculate Fair Value (MSRP - Depreciation) rather than guessing.
-    *   **SOTA Verification**: It applies **Bot/Astroturfing Detection** algorithms to Reddit threads and penalizes products with suspicious praise.
-    *   **Output**: A detailed "Verdict" (Buy/Avoid/Consider) and a "Truth Score" calibrated to the current date (Jan 2026).
+### ITECTURE
+```mermaid
+graph TD
+    User[USER QUEST] --> Lens[LENS CONTROLLER]
+    Lens --> |Orchestrate| Swarm{AGENT SWARM}
+    
+    subgraph "The Scouts (Gemini 3.0 Flash)"
+        Swarm --> Market[🕵️ MARKET SCOUT<br/>Google Grounding + Price Check]
+        Swarm --> Video[🎥 VIDEO SCOUT<br/>Vision & Audio Analysis]
+        Swarm --> Reddit[🛡️ REDDIT SCOUT<br/>Community Intel & Bot Filtering]
+    end
+    
+    Market --> Evidence[RAW EVIDENCE]
+    Video --> Evidence
+    Reddit --> Evidence
+    
+    Evidence --> Judge[⚖️ THE JUDGE<br/>Gemini 3.0 Pro Preview]
+    Judge --> Verdict[FINAL TRUTH SCORE]
+```
+
+## 🔍 How It Works
+Our forensic pipeline works in four stages to ensure maximum accuracy:
+
+1.  **Grounded Recon** 🔭
+    *   We track down the product's **Original Launch Price (MSRP)** and compare it to current retailer prices.
+    *   *Goal: Ensure you aren't paying a "hype tax" on aging tech.*
+
+2.  **Visual & Audio Analysis** 🔬
+    *   Our agents watch and listen to YouTube reviews. We detect **physical defects** in video frames (wobbly hinges, cheap plastic) and analyze spoken audio for complaints not listed in the specs.
+
+3.  **Community Intel** 🛡️
+    *   We combine **Skeptek Field Reports** with deep scans of Reddit.
+    *   Our system filters out fake "bot" reviews, isolating genuine owner feedback.
+
+4.  **The Verdict** ⚖️
+    *   Every data point is fed to **The Judge (Gemini 3.0 Pro)**.
+    *   You receive a Buy/Consider/Avoid rating and a detailed "Why" explanation.
 
 ## ✨ Key Features
-*   **🔍 Lens Search**: A unified, "command-line" style input for rapid product investigation.
-*   **🆚 Versus Mode**: Compare two products side-by-side with component-level analysis.
-*   **📉 Fairness Meter**: An algorithmic visualization that compares the *asking price* vs. the *fair market value* based on verified defects and competitor pricing.
-*   **🎮 Gamified Field Reports**: Earn **XP** and rank up from **Window Shopper** to **Skeptek God** by submitting your own verified user reviews. Your community rank influences the weight of your reviews in the global analysis engine.
-*   **🛡️ Analysis UI**: A "Glassmorphism" design system featuring scanlines, focal loaders, and high-contrast data displays.
-*   **🧠 Hive Mind Memory (New!)**: A multi-modal caching system that remembers everything.
-    *   **Visual Hashing**: Uploading a photo of a product instantly unlocks its text-based analysis (SHA-256).
-    *   **Comparison Warming**: Analyzing "iPhone 15 vs S24" automatically pre-caches the individual data for both phones, making future searches instant.
-    *   **Canonical Aliasing**: Intelligently links "Macbook M1" (alias) to "Apple MacBook Air 2020" (canonical), preventing redundant AI analysis.
+*   **Lens Search**: A unified, "command-line" style input for rapid product investigation.
+*   **Versus Mode**: Compare two products side-by-side with component-level analysis.
+*   **Fairness Meter**: Algorithmic visualization of *Asking Price* vs. *Fair Market Value*.
+*   **Review Gamification**: Earn **XP** and rank up from *Window Shopper* to *Skeptek God*.
+*   **Hive Mind Memory**: Visual Hashing (SHA-256) and Canonical Aliasing ensure we never analyze the same product twice.
 
-## 🛠️ Tech Stack
-*   **Brain (Frontend)**: Next.js 14, Tailwind CSS, Framer Motion
-*   **Muscle (Backend)**: Python, Flask, Selenium, OpenCV
-*   **Intelligence**: Google Gemini 3.0 (Flash & Pro Preview)
-*   **Database**: Supabase (PostgreSQL, Realtime)
+## 🏗️ System Architecture
 
-## 📦 Installation & Setup
+```mermaid
+graph TD
+    User([User]) <--> Client[Next.js Frontend]
+    Client <--> Orchestrator[Server Actions / Orchestrator]
+    
+    subgraph "Memory Core"
+        Orchestrator <--> DB[(Supabase Postgres)]
+        DB <--> Field[📝 Field Reports]
+    end
+
+    subgraph "Agent Swarm"
+        Orchestrator --> Judge[⚖️ The Judge]
+        Judge --> Market[🕵️ Market Scout]
+        Judge --> Video[🎥 Video Scout]
+        Judge --> Reddit[🌐 Reddit Scout]
+        Field -.-> Judge
+    end
+    
+    subgraph "Python Microservice"
+        Market --> PyMarket[Selenium Scraper]
+        Video --> PyVideo[yt-dlp + OpenCV]
+        Reddit --> PyReddit[Headless Search]
+    end
+    
+    subgraph "External World"
+        PyMarket <--> WWW((Live Web))
+        PyVideo <--> YT((YouTube))
+        PyReddit <--> Red((Reddit))
+    end
+    
+    subgraph "Gemini 3.0 Intelligence"
+        Market -.-> GFlash[Gemini 3.0 Flash]
+        Video -.-> GVision[Gemini 3.0 Flash Vision]
+        Reddit -.-> GFlash
+        Judge -.-> GPro[Gemini 3.0 Pro]
+    end
+    
+    Judge ==> Verdict([Trusted Verdict])
+    Verdict ==> Client
+```
+
+## 🛠️ Installation & Setup
 
 ### 1. Prerequisites
 - **Node.js** (v18+)
 - **Python** (v3.10+)
-- **Supabase Account** (for Auth & Database)
-- **Google Cloud Platform Account** (for Gemini & Vertex AI)
+- **Supabase Account**
+- **Google Cloud Platform Account**
 
 ### 2. Environment Variables
-Create a `.env.local` file in the root directory:
-
+Create a `.env.local` file:
 ```bash
-# Core AI Keys (Gemini 3)
+# Core AI Keys (Gemini 3.0)
 GOOGLE_API_KEY=your_gemini_api_key
-YOUTUBE_API_KEY=your_youtube_data_api_key
 
 # Supabase (Database & Auth)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_supabase_anon_key
 
-# Google Cloud Vertex AI (Optional - for Enterprise Grounding)
-GOOGLE_GENAI_USE_VERTEXAI=true
-GOOGLE_CLOUD_PROJECT=your_gcp_project_id
-GOOGLE_CLOUD_LOCATION=global
-VERTEX_SEARCH_DATA_STORE_ID=your_vertex_datastore_id
+# Python Microservice Connection
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-### 3. Install Dependencies
-
+### 3. Run Locally
 **Frontend (The Brain)**
 ```bash
 npm install
+npm run dev
 ```
 
 **Backend (The Muscle)**
 ```bash
 cd backend
 pip install -r requirements.txt
-cd ..
+python main.py
 ```
 
-### 4. Running Skeptek
-
-**Step 1: Ignite the Python Microservice**
-This handles complex Selenium scraping and deep market verification.
-```bash
-# Terminal 1
-python backend/main.py
-# Runs on http://localhost:8000
-```
-
-**Step 2: Launch the Next.js Frontend**
-The main application interface.
-```bash
-# Terminal 2
-npm run dev
-# Runs on http://localhost:3000
-```
-
-## 🏆 Hackathon Submission Details
-*   **Challenge**: Build a NEW application using the Gemini 3 API.
-*   **Innovation**: Skeptek moves beyond simple "chat" interfaces to a structured, agentic workflow that solves a real-world problem (consumer trust) using the speed and reasoning of Gemini 3.

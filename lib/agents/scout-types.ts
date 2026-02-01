@@ -6,7 +6,7 @@ export interface VideoData {
   moment: string; // e.g., "02:45"
   tag: string; // e.g., "✅ Confirmed"
   tagType: 'success' | 'warning' | 'alert';
-  transcript?: string; // SOTA 2026: Transcription-derived text
+  transcript?: string; // transcription-derived text
 }
 
 export interface ScoutResult {
@@ -21,11 +21,11 @@ export interface MarketData {
   specs: Record<string, string>;
   imageUrl?: string;
   productUrl: string;
-  launchDate?: string; // SOTA 2026: Track product age
-  supersededBy?: string; // SOTA 2026: Track newer alternatives
-  msrp?: string; // SOTA 2026: Original Launch Price
-  competitorPriceRange?: string; // SOTA 2026: Market Context
-  isRateLimited?: boolean; // SOTA 2026: Flag if data fetch was throttled
+  launchDate?: string; // track product age
+  supersededBy?: string; // track newer alternatives
+  msrp?: string; // original launch price
+  competitorPriceRange?: string; // market context
+  isRateLimited?: boolean; // flag if data fetch was throttled
 }
 
 export interface RedditData {
@@ -43,13 +43,12 @@ export interface RedditData {
 }
 
 /**
- * SOTA 2026: Hive Mind Shared State
  * Used to pass context between agents in the DAG.
  */
 export interface AgentState {
     initialQuery: string;
     canonicalName?: string; // The verified product name found by Market Scout
-    marketData?: MarketData | null;
+    // standard metadata | null;
     socialData?: RedditData | null;
     videoData?: VideoData[];
     errors: string[];
