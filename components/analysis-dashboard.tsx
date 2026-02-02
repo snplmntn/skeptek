@@ -7,6 +7,7 @@ import { Check, AlertTriangle, Play, HelpCircle, MessageSquare, AlertCircle, Shi
 
 import { VerificationModule } from '@/components/verification-module';
 import { BentoGrid, BentoGridItem } from '@/components/BentoGrid';
+import { FairnessMeter } from '@/components/fairness-meter';
 
 interface AnalysisDashboardProps {
   search: { title: string; url: string };
@@ -394,138 +395,18 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
         )}
 
         {/* Price Fairness Meter */}
-        <div className="mb-12">
-          <h2 className="mb-6 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
-             Price Analysis
-            <div className="group relative">
-                <HelpCircle className="w-3.5 h-3.5 text-slate-400 cursor-help" />
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 w-64 p-4 forensic-glass text-slate-300 text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 shadow-2xl border border-white/10 font-mono leading-relaxed">
-                    <p className="font-bold mb-1 text-primary">HOW WE CHECK PRICE</p>
-                    WE COMPARE SPECS, BUILD QUALITY, AND USER REVIEWS. IF A PRODUCT HAS ISSUES, ITS "FAIR PRICE" IS LOWER THAN WHAT STORES CHARGE.
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full border-[6px] border-transparent border-t-white/10" />
-                </div>
-            </div>
-          </h2>
-          <div className="p-8 forensic-glass rounded-2xl border border-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            
-            
-            {/* Visual Guide to the Graph */}
-            <div className="mb-6 flex items-end justify-between px-2">
-                <div className="text-left">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono mb-1">Scale Start</p>
-                  <p className="text-lg font-mono text-foreground">$0</p>
-                </div>
-                 {/* Legend (Middle) */}
-                 <div className="flex gap-6 pb-2">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] uppercase tracking-widest text-emerald-500 dark:text-emerald-400">Fair Price</span>
-                    </div>
-                    {fairnessData.current > fairnessData.fairValue.max && (
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-rose-500" />
-                            <span className="text-[10px] uppercase tracking-widest text-rose-500 dark:text-rose-400">Overpriced</span>
-                        </div>
-                    )}
-                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono mb-1">Scale End</p>
-                  <p className="text-lg font-mono text-foreground">${Math.round(fairnessData.max)}</p>
-                </div>
-            </div>
-
-            {/* The Main Connective Bar - Added mx-12 to prevent label clipping */}
-            <div className="relative h-6 bg-slate-200 dark:bg-slate-800/50 rounded-full mb-32 mt-8 mx-4 md:mx-12">
-                
-                {/* Fair Value Zone (Green Pill) */}
-                <div 
-                    className="absolute top-0 bottom-0 bg-emerald-500/20 rounded-full border border-emerald-500/30"
-                    style={{
-                        left: `${(fairnessData.fairValue.min / fairnessData.max) * 100}%`,
-                        width: `${((fairnessData.fairValue.max - fairnessData.fairValue.min) / fairnessData.max) * 100}%`
-                    }}
-                >
-                     <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap z-10 flex flex-col items-center">
-                        <div className="w-px h-2 bg-emerald-500/50" />
-                        <div className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:border-emerald-500/50 dark:text-emerald-200 border px-3 py-1.5 rounded-lg text-xs font-mono font-bold shadow-xl">
-                            FAIR: ${fairnessData.fairValue.min}-${fairnessData.fairValue.max}
-                        </div>
-                     </div>
-                </div>
-
-                <div 
-                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-[0_0_15px_rgba(59,130,246,1)] z-30 transition-all duration-1000"
-                    style={{ left: `${Math.min(100, (fairnessData.current / fairnessData.max) * 100)}%`, marginLeft: '-10px' }}
-                >
-                    {/* Label Below - Staggered further down */}
-                    <div className="absolute top-full mt-12 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center z-40">
-                        <div className="w-px h-12 bg-blue-500/50 mb-[-2px] absolute bottom-full left-1/2 -translate-x-1/2" />
-                        <div className={`px-4 py-2.5 rounded-xl border-2 shadow-2xl text-center flex flex-col gap-1 min-w-[100px] ${
-                            fairnessData.current > fairnessData.fairValue.max 
-                            ? 'bg-rose-100 border-rose-500 text-rose-900 dark:bg-rose-950 dark:text-rose-100' 
-                            : 'bg-blue-100 border-blue-500 text-blue-900 dark:bg-blue-950 dark:text-white'
-                        }`}>
-                            <span className="text-[10px] uppercase tracking-widest font-bold opacity-70">You Pay</span>
-                            <span className="text-xl font-black font-mono tracking-tight">${fairnessData.current}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Red Overpriced Zone (Connects Fair Max to Current if higher) */}
-                {fairnessData.current > fairnessData.fairValue.max && (
-                     <div 
-                        className="absolute top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-rose-500/0 via-rose-500/50 to-rose-500/0 dashed-line"
-                        style={{
-                            left: `${(fairnessData.fairValue.max / fairnessData.max) * 100}%`,
-                            width: `${Math.min(100 - ((fairnessData.fairValue.max / fairnessData.max) * 100), ((fairnessData.current - fairnessData.fairValue.max) / fairnessData.max) * 100)}%`
-                        }}
-                     />
-                )}
-            </div>
-              
-            {/* Price Health Summary & View Deal */}
-            <div className="mt-8 mb-4 flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-foreground/5 border border-foreground/5 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                <div className="flex items-start gap-4 flex-1">
-                    <div className={`p-3 rounded-xl shrink-0 ${fairnessData.current > fairnessData.fairValue.max ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                        {fairnessData.current > fairnessData.fairValue.max ? <AlertTriangle className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
-                    </div>
-                    <div>
-                        <h4 className={`text-sm font-black uppercase tracking-widest mb-1.5 ${fairnessData.current > fairnessData.fairValue.max ? 'text-rose-500' : 'text-emerald-500'}`}>
-                            {fairnessData.current > fairnessData.fairValue.max ? 'Price Alert: Overpriced' : 'Verified: Fair Market Value'}
-                        </h4>
-                        <p className="text-xs text-muted-foreground font-mono leading-relaxed">
-                            {fairnessData.current > fairnessData.fairValue.max 
-                            ? `Current pricing is $${(fairnessData.current - fairnessData.fairValue.max).toFixed(2)} above the identified fair market valuation.${data?.sources?.market?.msrp ? ` (MSRP: ${data.sources.market.msrp})` : ''} Recommended to wait for a discount or explore alternatives with higher utility-to-cost ratios.`
-                            : `The current list price of $${fairnessData.current.toFixed(2)} aligns with our analysis model.${data?.sources?.market?.msrp ? ` (MSRP: ${data.sources.market.msrp})` : ''} This represents a transparent transaction with no identified "skeptic" red flags.`
-                            }
-                        </p>
-                    </div>
-                </div>
-
-                {/* Integrated View Deal Button */}
-                {fairnessData.url && (
-                    <Button 
-                        size="sm"
-                        className="shrink-0 bg-primary hover:bg-blue-500 text-white gap-3 rounded-xl px-6 font-mono text-[10px] tracking-widest uppercase h-12 shadow-lg shadow-blue-500/20"
-                        onClick={() => window.open(fairnessData.url, '_blank')}
-                    >
-                        <img 
-                            src={`https://www.google.com/s2/favicons?domain=${(() => {
-                                try { return new URL(fairnessData.url).hostname; }
-                                catch { return 'google.com'; }
-                            })()}&sz=64`}
-                            className="w-5 h-5 rounded bg-white p-0.5 object-contain"
-                            alt="store"
-                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                        View Deal <span className="text-xs opacity-50">↗</span>
-                    </Button>
-                )}
-            </div>
-          </div>
-
-        </div>
+        <FairnessMeter
+          currentPrice={fairnessData.current}
+          msrp={data?.sources?.market?.msrp ? parseFloat(data.sources.market.msrp.replace(/[^0-9.]/g, '')) : undefined}
+          launchDate={data?.sources?.market?.launchDate}
+          competitorPriceRange={data?.sources?.market?.competitorPriceRange ? {
+            min: parseFloat(data.sources.market.competitorPriceRange.split('-')[0].replace(/[^0-9.]/g, '')),
+            max: parseFloat(data.sources.market.competitorPriceRange.split('-')[1]?.replace(/[^0-9.]/g, '') || data.sources.market.competitorPriceRange.replace(/[^0-9.]/g, ''))
+          } : undefined}
+          qualityScore={product.rating}
+          productUrl={fairnessData.url || undefined}
+          className="mb-12"
+        />
 
         {/* Quick Nav: Search Again */}
         <div className="mt-12 mb-24 flex flex-col items-center gap-6">
