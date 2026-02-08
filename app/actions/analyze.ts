@@ -314,10 +314,18 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
         
         finalJson = JSON.parse(jsonStr);
 
-        // [CRITICAL] Override AI-hallucinated URL with the REAL scraped market URL
-        if (finalJson.priceAnalysis && marketData && marketData.productUrl) {
-            console.log(`[Judge] Injecting real market URL: ${marketData.productUrl}`);
-            finalJson.priceAnalysis.sourceUrl = marketData.productUrl;
+        // [CRITICAL] Override AI-hallucinated URL with the REAL market URL
+        if (finalJson.priceAnalysis) {
+             const isUrlInput = query.startsWith('http://') || query.startsWith('https://');
+             
+             if (isUrlInput) {
+                  // If user provided a link, ALWAYS use it (even if we had to verify details externally)
+                  console.log(`[Judge] Preserving User Input URL: ${query}`);
+                  finalJson.priceAnalysis.sourceUrl = query;
+             } else if (marketData && marketData.productUrl) {
+                  console.log(`[Judge] Injecting real market URL: ${marketData.productUrl}`);
+                  finalJson.priceAnalysis.sourceUrl = marketData.productUrl;
+             }
         }
 
         console.log("--- [DEBUG] Gemini Brain Output ---");

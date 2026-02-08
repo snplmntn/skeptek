@@ -6,5 +6,8 @@ beautifulsoup4
 requests
 youtube-transcript-api
 yt-dlp
-opencv-python
+opencv-python-headless
 google-generativeai
+undetected-chromedriver
+fake-useragent
+waitress

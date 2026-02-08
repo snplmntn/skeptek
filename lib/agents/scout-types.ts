@@ -48,6 +48,7 @@ export interface RedditData {
 export interface AgentState {
     initialQuery: string;
     canonicalName?: string; // The verified product name found by Market Scout
+    marketData?: MarketData; // Context from market scout (price, specs)
     // standard metadata | null;
     socialData?: RedditData | null;
     videoData?: VideoData[];
