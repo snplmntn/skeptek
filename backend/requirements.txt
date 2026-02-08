@@ -10,3 +10,4 @@ opencv-python-headless
 google-generativeai
 undetected-chromedriver
 fake-useragent
+waitress

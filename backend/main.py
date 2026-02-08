@@ -61,9 +61,14 @@ def get_driver():
         service = Service(ChromeDriverManager().install())
         return webdriver.Chrome(service=service, options=chrome_options)
 
-@app.route("/")
+@app.route("/health")
 def health_check():
-    return jsonify({"status": "active", "service": "Skeptek Scraper (Stealth Mode)"})
+    """Endpoint for Render health checks and Cronitor heartbeats."""
+    return jsonify({
+        "status": "active", 
+        "service": "Skeptek Scraper (Stealth Mode)",
+        "timestamp": time.time()
+    })
 
 @app.route("/transcript", methods=['GET'])
 def get_transcript():

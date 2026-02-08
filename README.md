@@ -71,6 +71,8 @@ Our forensic pipeline works in four stages to ensure maximum accuracy:
 *   **Lens Search**: A unified, "command-line" style input for rapid product investigation.
 *   **Versus Mode**: Compare two products side-by-side with component-level analysis.
 *   **Fairness Meter**: Algorithmic visualization of *Asking Price* vs. *Fair Market Value*.
+*   **Anti-Scam Shield**: "Too Good To Be True" detection flags suspiciously low prices (<30% FMV) as high-risk anomalies.
+*   **Stealth Scouts**: Python agents powered by `undetected-chromedriver` bypass anti-bot protections on Amazon, Shopee, and Lazada.
 *   **Review Gamification**: Earn **XP** and rank up from *Window Shopper* to *Skeptek God*.
 *   **Hive Mind Memory**: Visual Hashing (SHA-256) and Canonical Aliasing ensure we never analyze the same product twice.
 
@@ -95,9 +97,9 @@ graph TD
     end
     
     subgraph "Python Microservice"
-        Market --> PyMarket[Selenium Scraper]
+        Market --> PyMarket[Stealth Scraper (undetected-chromedriver)]
         Video --> PyVideo[yt-dlp + OpenCV]
-        Reddit --> PyReddit[Headless Search]
+        Reddit --> PyReddit[Headless Search (fake-useragent)]
     end
     
     subgraph "External World"
