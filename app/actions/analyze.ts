@@ -525,7 +525,7 @@ async function handleComparison(items: string[], status: any, result: any) {
                     "score": 0, 
                     "isWinner": boolean,
                     "recommendation": "BUY" | "CONSIDER" | "AVOID",
-                    "verdictType": "positive" | "caution" | "alert",
+                    "verdictType": "BUY" | "CONSIDER" | "AVOID",
                     "verdict": "string",
                     "details": {
                         "trustScore": { "score": 0, "label": "string" },
@@ -547,15 +547,15 @@ async function handleComparison(items: string[], status: any, result: any) {
             2. Determine a SINGLE WINNER (The "Top Choice").
             3. Provide a short "Win Reason".
             4. Assign a "Recommendation" (BUY, CONSIDER, or AVOID).
-            5. Assign a "Verdict Type" (positive, caution, or alert).
+            5. Assign a "Verdict Type" (BUY, CONSIDER, or AVOID).
             6. Write a "Verdict" summary (2 sentences) explaining the recommendation.
             7. Compare them across 3-4 distinct categories (e.g. Build Quality, Performance, Value). Scores 0-10.
             
             CRITICAL CONSISTENCY RULES:
-            - IF Trust Score >= 9.0 THEN Recommdendation MUST be 'BUY'.
-            - IF Trust Score < 6.0 THEN Recommdendation MUST be 'AVOID'.
+            - IF Trust Score >= 8.0 THEN Recommdendation MUST be 'BUY'.
+            - IF Trust Score < 5.0 THEN Recommdendation MUST be 'AVOID'.
             - IF isWinner is TRUE THEN Recommendation MUST be 'BUY' (unless there is a fatal flaw).
-            - Do NOT give a "CONSIDER" rating to a product with a score > 8.5.
+            - Do NOT give a "CONSIDER" rating to a product with a score > 8.0.
             
             IMPORTANT: PRICE FORMATTING (Few-Shot Examples)
             You MUST keep the 'price' field extremely short (under 15 chars) to fit the UI card.
