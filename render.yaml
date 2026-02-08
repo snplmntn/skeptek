@@ -11,23 +11,3 @@ services:
         sync: false # User must provide this in Render dashboard
       - key: PORT
         value: 8000
-
-  # Next.js Frontend
-  - type: web
-    name: skeptek-frontend
-    env: node
-    plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-    envVars:
-      - key: NEXT_PUBLIC_BACKEND_URL
-        fromService:
-          name: skeptek-backend
-          type: web
-          property: host
-      - key: DATABASE_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        sync: false

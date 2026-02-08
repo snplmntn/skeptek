@@ -6,7 +6,7 @@
 ### Precision Optics for E-Commerce
 *"The Minority Report for Online Shopping"*
 
-[![Powered by Gemini 3.0](https://img.shields.io/badge/Intelligence-Gemini%203.0%20Pro-4E8BF4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
+[![Powered by Gemini 3](https://img.shields.io/badge/Intelligence-Gemini%203%20Pro-4E8BF4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
 [![Next.js 14](https://img.shields.io/badge/Brain-Next.js%2014-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![Python](https://img.shields.io/badge/Muscle-Python%203.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Supabase](https://img.shields.io/badge/Memory-Supabase-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
@@ -22,12 +22,12 @@
 It doesn't just "search" for a product. It **investigates**. By deploying a swarm of specialized agents, Skeptek triangulates data from official retailers, Reddit discussion threads, and YouTube video hardware reviews to deliver a single, irrefutable **Truth Score**.
 
 ## 🧠 The Intelligence Engine
-Skeptek utilizes a split-brain architecture powered by the **Gemini 3.0 Model Family**.
+Skeptek utilizes a split-brain architecture powered by the **Gemini 3 Model Family**.
 
 | Agent Role | Model Version | Capability |
 | :--- | :--- | :--- |
-| **The Judge** | **Gemini 3.0 Pro Preview** | Complex Reasoning, Verdict Synthesis, Cross-Referencing |
-| **The Scouts** | **Gemini 3.0 Flash Preview** | High-Speed Grounding, Video Vision Analysis, Real-time Scraping |
+| **The Judge** | **Gemini 3 Pro Preview** | Complex Reasoning, Verdict Synthesis, Cross-Referencing |
+| **The Scouts** | **Gemini 3 Flash Preview** | High-Speed Grounding, Video Vision Analysis, Real-time Scraping |
 
 ### ITECTURE
 ```mermaid
