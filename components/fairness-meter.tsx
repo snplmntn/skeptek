@@ -238,7 +238,7 @@ export function FairnessMeter({
                 {isOverpriced 
                   ? `Current pricing is $${(currentPrice - fmv.max).toFixed(2)} above the identified fair market valuation.${msrp ? ` (MSRP: $${msrp})` : ''} Recommended to wait for a discount.`
                   : isTGTBT
-                  ? `CAUTION: This item is priced ${(100 - (currentPrice / fmv.min * 100)).toFixed(0)}% BELOW fair market value. This is statistically improbable. It is either a SCAM/FAKE or the DEAL OF A LIFETIME. Verify the seller reputation immediately.`
+                  ? `WARNING: This item is priced ${(100 - (currentPrice / fmv.min * 100)).toFixed(0)}% BELOW fair market value. This is statistically improbable. It is either a SCAM/FAKE or the DEAL OF A LIFETIME. Verify the seller reputation immediately.`
                   : isUnderpriced
                   ? `Excellent value! Current price is $${(fmv.min - currentPrice).toFixed(2)} below fair market value.${msrp ? ` (MSRP: $${msrp})` : ''} This represents a strong deal opportunity.`
                   : `The current list price of $${currentPrice.toFixed(2)} aligns with our analysis model.${msrp ? ` (MSRP: $${msrp})` : ''} This represents a transparent transaction.`

@@ -35,9 +35,9 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
   const product = data ? {
     name: data.productName || search.title,
     rating: data.score || 0,
-    recommendation: (data.recommendation || (data.score > 80 ? 'BUY' : data.score > 50 ? 'CONSIDER' : 'AVOID')) as 'BUY' | 'CONSIDER' | 'AVOID',
+    recommendation: (data.recommendation || (data.score >= 80 ? 'BUY' : data.score >= 50 ? 'CONSIDER' : 'AVOID')) as 'BUY' | 'CONSIDER' | 'AVOID',
     verdict: data.verdict || "Analysis Inconclusive",
-    verdictType: (data.score > 80 ? 'positive' : data.score > 60 ? 'caution' : 'alert') as 'positive' | 'caution' | 'alert',
+    verdictType: (data.score >= 80 ? 'BUY' : data.score >= 50 ? 'CONSIDER' : 'AVOID') as 'BUY' | 'CONSIDER' | 'AVOID',
     pros: data.pros || [],
     cons: data.cons || [],
   } : {
@@ -45,7 +45,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
     rating: 8.2,
     recommendation: 'CONSIDER' as const,
     verdict: 'Good build quality and features, but the price is about 25% higher than it should be.',
-    verdictType: 'positive' as const,
+    verdictType: 'CONSIDER' as const,
     pros: ['Durable Build', 'Fast Performance', 'Premium Materials'],
     cons: ['Slightly Overpriced', 'Takes time to learn'],
   };
@@ -81,11 +81,11 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
 
   const getVerdictStyle = () => {
     switch (product.verdictType) {
-      case 'positive':
+      case 'BUY':
         return 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-200';
-      case 'caution':
+      case 'CONSIDER':
         return 'border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-200';
-      case 'alert':
+      case 'AVOID':
         return 'border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-200';
       default:
         return 'border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-200';
@@ -173,7 +173,7 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
                     cy="50"
                     r="45"
                     fill="none"
-                    stroke={product.verdictType === 'alert' ? '#f43f5e' : product.verdictType === 'positive' ? '#10b981' : '#f59e0b'}
+                    stroke={product.verdictType === 'AVOID' ? '#f43f5e' : product.verdictType === 'BUY' ? '#10b981' : '#f59e0b'}
                     strokeWidth="6"
                     strokeDasharray={`${(product.rating / 100) * 282.7} 282.7`}
                     strokeLinecap="round"
@@ -216,10 +216,10 @@ export function AnalysisDashboard({ search, data, onBack, userRank = 'Guest', is
            <BentoGridItem
              title="Score Analysis"
              description={<div className={`text-[10px] font-bold font-mono mt-2 px-2 py-0.5 rounded-full border w-fit ${
-                product.verdictType === 'positive' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                product.verdictType === 'caution' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                product.verdictType === 'BUY' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                product.verdictType === 'CONSIDER' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
                 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-             }`}>{product.verdictType.toUpperCase()}</div>}
+             }`}>{product.verdictType}</div>}
              header={
                 <div className="h-24 w-full rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 flex items-center justify-center border border-black/5 dark:border-white/5 shadow-inner">
                     <span className="text-5xl font-black tracking-tighter text-foreground drop-shadow-sm">{product.rating}</span>

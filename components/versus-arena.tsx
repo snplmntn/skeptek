@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
         score: number; 
         isWinner: boolean;
         recommendation?: 'BUY' | 'CONSIDER' | 'AVOID';
-        verdictType?: 'positive' | 'caution' | 'alert';
+    verdictType?: 'BUY' | 'CONSIDER' | 'AVOID';
         verdict?: string;
         details?: ProductDetails; 
         sources?: {
@@ -50,7 +50,7 @@ import { cn } from '@/lib/utils';
             score: 8.5, 
             isWinner: true,
             recommendation: 'BUY',
-            verdictType: 'positive',
+            verdictType: 'BUY',
             verdict: 'The gold standard for mobile cinematography and performance.',
             details: {
                 trustScore: { score: 9.8, label: 'High Trust' },
@@ -116,11 +116,11 @@ export function VersusArena({ data, onBack }: VersusArenaProps) {
 
   const getVerdictStyle = (verdictType?: string) => {
     switch (verdictType) {
-      case 'positive':
+      case 'BUY':
         return 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-200';
-      case 'caution':
+      case 'CONSIDER':
         return 'border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-200';
-      case 'alert':
+      case 'AVOID':
         return 'border-rose-500/30 bg-rose-500/5 text-rose-600 dark:text-rose-200';
       default:
         return 'border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-200';

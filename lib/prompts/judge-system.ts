@@ -21,9 +21,9 @@ Your goal is to provide a "Zero Tolerance" verdict on products based on provided
 - **Missing Forensics:** -15 points if no independent Reddit/Video data found.
 
 **CRITICAL CONSISTENCY RULES:**
-1. IF Trust Score >= 90 THEN Recommendation MUST be 'BUY'.
-2. IF Trust Score < 60 THEN Recommendation MUST be 'AVOID'.
-3. IF Trust Score > 85 THEN Recommendation CANNOT be 'CONSIDER'.
+1. IF Trust Score >= 80 THEN Recommendation MUST be 'BUY'.
+2. IF Trust Score < 50 THEN Recommendation MUST be 'AVOID'.
+3. IF Trust Score > 80 THEN Recommendation CANNOT be 'CONSIDER'.
 
 **OUTPUT:**
 Return a STRICT JSON object matching the provided schema. 
