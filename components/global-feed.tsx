@@ -10,7 +10,7 @@ interface Scan {
   id: string;
   product_name: string;
   trust_score: number;
-  status: 'verified' | 'caution' | 'rejected';
+  status: 'BUY' | 'CONSIDER' | 'AVOID';
   created_at: string;
 }
 
@@ -78,8 +78,8 @@ export const GlobalFeed = memo(function GlobalFeed() {
                 {/* product info */}
                 <div className="flex items-center gap-3 overflow-hidden">
                     <div className={`w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor] shrink-0 ${
-                         scan.status === 'verified' ? 'bg-emerald-500 text-emerald-500' :
-                         scan.status === 'caution' ? 'bg-amber-500 text-amber-500' :
+                         scan.status === 'BUY' ? 'bg-emerald-500 text-emerald-500' :
+                         scan.status === 'CONSIDER' ? 'bg-amber-500 text-amber-500' :
                          'bg-rose-500 text-rose-500'
                     }`} />
                     
@@ -97,8 +97,8 @@ export const GlobalFeed = memo(function GlobalFeed() {
                 <div className="flex items-center gap-3 shrink-0">
                     {/* status pill */}
                     <div className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
-                        scan.status === 'verified' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
-                        scan.status === 'caution' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+                        scan.status === 'BUY' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                        scan.status === 'CONSIDER' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
                         'bg-rose-500/10 text-rose-600 border-rose-500/20'
                     }`}>
                         {scan.status}
@@ -107,8 +107,8 @@ export const GlobalFeed = memo(function GlobalFeed() {
                     {/* trust score */}
                     <div className="flex flex-col items-end leading-none">
                          <span className={`text-lg font-black tabular-nums tracking-tighter ${
-                            scan.status === 'verified' ? 'text-emerald-500' :
-                            scan.status === 'caution' ? 'text-amber-500' :
+                            scan.status === 'BUY' ? 'text-emerald-500' :
+                            scan.status === 'CONSIDER' ? 'text-amber-500' :
                             'text-rose-500'
                          }`}>
                              {scan.trust_score.toFixed(0)}
