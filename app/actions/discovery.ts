@@ -57,7 +57,7 @@ export async function getTrendingScans(categoryFilter: string = 'All') {
              id: trapRaw.product_name,
              product_name: trapRaw.product_name,
              trust_score: trapRaw.avg_trust_score,
-             verdict: "Avoid",
+             verdict: "AVOID",
              rank: 0,
              category: trapRaw.category || 'General',
              trend_label: "Warning",

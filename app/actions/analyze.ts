@@ -378,7 +378,7 @@ export async function analyzeProduct(rawQuery: string, options?: { isReviewMode?
                 product_name: finalJson.productName,
                 trust_score: finalJson.score,
                 verdict: finalJson.verdict,
-                status: finalJson.score >= 80 ? 'verified' : finalJson.score >= 50 ? 'caution' : 'rejected',
+                status: finalJson.score >= 80 ? 'BUY' : finalJson.score >= 50 ? 'CONSIDER' : 'AVOID',
                 category: finalJson.category // New Field
              });
              console.log(`[Watchtower] Scan saved: ${finalJson.productName} (${finalJson.score})`);
