@@ -11,7 +11,7 @@
 [![Python](https://img.shields.io/badge/Muscle-Python%203.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Supabase](https://img.shields.io/badge/Memory-Supabase-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 
-[**Launch Application**](https://vercel.com/snplmntns-projects/v0-skeptek) · [**Watch Demo**](#) · [**Report Bug**](https://github.com/snplmntn/skeptek/issues)
+[**Launch Application**](https://skeptek.vercel.app/) · [**Watch Demo**](https://youtu.be/TdSlVGyZHLI) · [**Report Bug**](https://github.com/snplmntn/skeptek/issues)
 
 ---
 </div>
